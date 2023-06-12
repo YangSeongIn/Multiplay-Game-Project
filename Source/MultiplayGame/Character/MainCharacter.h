@@ -22,7 +22,7 @@ protected:
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
-	void Jump();
+	void StartJump();
 	void Crouch();
 	void Fire();
 	void Esc();

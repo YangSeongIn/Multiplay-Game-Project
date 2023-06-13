@@ -11,6 +11,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Components/WidgetComponent.h"
+#include "../HUD/OverheadWidget.h"
+#include "Net/UnrealNetwork.h"
+#include "../Weapon/Weapon.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -46,6 +49,13 @@ void AMainCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	UOverheadWidget* Ohw = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
+	if (Ohw)
+	{
+		//Ohw->ShowPlayerName(this);
+		Ohw->ShowPlayerNetRole(this);
+	}
 }
 
 void AMainCharacter::Move(const FInputActionValue& Value)
@@ -77,10 +87,9 @@ void AMainCharacter::Look(const FInputActionValue& Value)
 void AMainCharacter::StartJump()
 {
 	Super::Jump();
-	GLog->Log("Jump!!");
 }
 
-void AMainCharacter::Crouch()
+void AMainCharacter::StartCrouch()
 {
 }
 
@@ -90,6 +99,60 @@ void AMainCharacter::Fire()
 
 void AMainCharacter::Esc()
 {
+}
+
+void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	/*if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}*/
+}
+
+void AMainCharacter::SetOverlappingWeapon(AWeapon* Weapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(false);
+	}
+	OverlappingWeapon = Weapon;
+	// for server
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+
+
+		ENetMode NetMode = GetNetMode();
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15,
+				FColor::Red,
+				FString::Printf(TEXT("Locally Controlled: %s"), ENetMode{ NetMode })
+			);
+		}
+	}
+	else
+	{
+		ENetMode NetMode = GetNetMode();
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15,
+				FColor::Red,
+				FString::Printf(TEXT("!!Locally Controlled"), ENetMode{ NetMode })
+			);
+		}
+	}
 }
 
 // Called every frame
@@ -109,5 +172,12 @@ void AMainCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
 	}
+}
+
+void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 

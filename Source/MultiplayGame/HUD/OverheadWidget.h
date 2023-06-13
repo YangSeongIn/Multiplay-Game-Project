@@ -7,7 +7,7 @@
 #include "OverheadWidget.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYGAME_API UOverheadWidget : public UUserWidget
@@ -23,7 +23,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void ShowPlayerNetRole(APawn* InPawn);
 
+	UFUNCTION(BlueprintCallable)
+		void ShowPlayerName(APawn* InPawn);
+
 protected:
 	virtual void NativeDestruct() override;
-	
+
+private:
+	float TotalTime{ 0 };
+	float TimeLimit{ 10 };
+	float TimeInterval{ 1 };
+
 };

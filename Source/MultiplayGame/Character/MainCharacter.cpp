@@ -14,6 +14,7 @@
 #include "../HUD/OverheadWidget.h"
 #include "Net/UnrealNetwork.h"
 #include "../Weapon/Weapon.h"
+#include "../MainCharacterComponent/CombatComponent.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -35,6 +36,11 @@ AMainCharacter::AMainCharacter()
 
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(RootComponent);
+
+	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CombatComponent->SetIsReplicated(true);
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 // Called when the game starts or when spawned
@@ -55,6 +61,45 @@ void AMainCharacter::BeginPlay()
 	{
 		//Ohw->ShowPlayerName(this);
 		Ohw->ShowPlayerNetRole(this);
+	}
+}
+
+// Called every frame
+void AMainCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+// Called to bind functionality to input
+void AMainCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMainCharacter::StartJump);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AMainCharacter::EquipButtonPressed);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AMainCharacter::CrouchButtonPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AMainCharacter::AimButtonPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AMainCharacter::AimButtonReleased);
+	}
+}
+
+void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingWeapon, COND_OwnerOnly);
+}
+
+void AMainCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (CombatComponent)
+	{
+		CombatComponent->Character = this;
 	}
 }
 
@@ -89,12 +134,51 @@ void AMainCharacter::StartJump()
 	Super::Jump();
 }
 
-void AMainCharacter::StartCrouch()
+void AMainCharacter::CrouchButtonPressed()
 {
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch();
+	}
 }
 
 void AMainCharacter::Fire()
 {
+}
+
+void AMainCharacter::EquipButtonPressed()
+{
+	if (CombatComponent)
+	{
+		if (HasAuthority())
+		{
+			CombatComponent->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			ServerEquipButtonPressed();
+		}
+	}
+}
+
+void AMainCharacter::AimButtonPressed()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->SetAiming(true);
+	}
+}
+
+void AMainCharacter::AimButtonReleased()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->SetAiming(false);
+	}
 }
 
 void AMainCharacter::Esc()
@@ -107,10 +191,18 @@ void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	{
 		OverlappingWeapon->ShowPickupWidget(true);
 	}
-	/*if (LastWeapon)
+	if (LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
-	}*/
+	}
+}
+
+void AMainCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->EquipWeapon(OverlappingWeapon);
+	}
 }
 
 void AMainCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -127,57 +219,15 @@ void AMainCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 		{
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
-
-
-		ENetMode NetMode = GetNetMode();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				15,
-				FColor::Red,
-				FString::Printf(TEXT("Locally Controlled: %s"), ENetMode{ NetMode })
-			);
-		}
-	}
-	else
-	{
-		ENetMode NetMode = GetNetMode();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				15,
-				FColor::Red,
-				FString::Printf(TEXT("!!Locally Controlled"), ENetMode{ NetMode })
-			);
-		}
 	}
 }
 
-// Called every frame
-void AMainCharacter::Tick(float DeltaTime)
+bool AMainCharacter::IsWeaponEquipped()
 {
-	Super::Tick(DeltaTime);
-
+	return (CombatComponent && CombatComponent->EquippedWeapon);
 }
 
-// Called to bind functionality to input
-void AMainCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+bool AMainCharacter::IsAiming()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMainCharacter::StartJump);
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
-	}
+	return (CombatComponent && CombatComponent->bAiming);
 }
-
-void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingWeapon, COND_OwnerOnly);
-}
-

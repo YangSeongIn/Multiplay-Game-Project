@@ -17,6 +17,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -24,8 +25,11 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartJump();
-	void StartCrouch();
+	void CrouchButtonPressed();
 	void Fire();
+	void EquipButtonPressed();
+	void AimButtonPressed();
+	void AimButtonReleased();
 	void Esc();
 
 private:
@@ -41,7 +45,14 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon) // Using Callback when property update
 		class AWeapon* OverlappingWeapon;
 
+	UFUNCTION()
+		void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
+	UPROPERTY(VisibleAnywhere)
+		class UCombatComponent* CombatComponent;
+
+	UFUNCTION(Server, Reliable)
+		void ServerEquipButtonPressed();
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -65,10 +76,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* LookAction;
 
-	UFUNCTION()
-		void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* InteractAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* AimAction;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
-
+	bool IsWeaponEquipped();
+	bool IsAiming();
 };

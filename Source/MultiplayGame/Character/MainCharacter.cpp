@@ -15,6 +15,7 @@
 #include "Net/UnrealNetwork.h"
 #include "../Weapon/Weapon.h"
 #include "../MainCharacterComponent/CombatComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -41,6 +42,8 @@ AMainCharacter::AMainCharacter()
 	CombatComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 }
 
 // Called when the game starts or when spawned
@@ -69,6 +72,7 @@ void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	AimOffset(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -183,6 +187,42 @@ void AMainCharacter::AimButtonReleased()
 
 void AMainCharacter::Esc()
 {
+}
+
+void AMainCharacter::AimOffset(float DeltaTime)
+{
+	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr) return;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.f && !bIsInAir)	// not jump & stand
+	{
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+
+	if (Speed > 0.f || bIsInAir) // run & jump
+	{
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AO_Yaw = 0.f;
+		bUseControllerRotationYaw = true;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
+	if (AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
+	if (IsLocallyControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pitch: %f, Yaw: %f"), AO_Pitch, AO_Yaw);
+	}
 }
 
 void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

@@ -8,17 +8,17 @@
 
 class AWeapon;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MULTIPLAYGAME_API UCombatComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	UCombatComponent();
 	friend class AMainCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
+
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
 protected:
@@ -40,8 +40,13 @@ private:
 	UPROPERTY(Replicated)
 		bool bAiming;
 
-public:
-	
+	UPROPERTY(EditAnywhere)
+		float BaseWalkSpeed;
+	UPROPERTY(EditAnywhere)
+		float AimWalkSpeed;
 
-		
+public:
+
+
+
 };

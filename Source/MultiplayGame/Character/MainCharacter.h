@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "../Types/TurningInPlace.h"
 #include "MainCharacter.generated.h"
 
 UCLASS()
@@ -56,8 +57,12 @@ private:
 		void ServerEquipButtonPressed();
 
 	float AO_Yaw;
+	float InterpAO_Yaw;
 	float AO_Pitch;
 	FRotator StartingAimRotation;
+
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
@@ -90,6 +95,9 @@ public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
 	bool IsAiming();
-	FORCEINLINE float GetAO_Yaw() { return AO_Yaw; };
-	FORCEINLINE float GetAO_Pitch() { return AO_Pitch; };
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; };
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; };
+	AWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; };
+	FORCEINLINE void SetTurningInPlace(ETurningInPlace Type) { TurningInPlace = Type; };
 };

@@ -19,6 +19,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	void PlayFireMontage(bool bAiming);
 
 protected:
 	virtual void BeginPlay() override;
@@ -27,12 +28,14 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void StartJump();
 	void CrouchButtonPressed();
-	void Fire();
+	void FireButtonPressed();
+	void FireButtonReleased();
 	void EquipButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void Esc();
 	void AimOffset(float DeltaTime);
+	virtual void Jump() override;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -63,6 +66,9 @@ private:
 
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		class UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;

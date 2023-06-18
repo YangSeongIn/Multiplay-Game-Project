@@ -204,7 +204,7 @@ void AMainCharacter::EquipButtonPressed()
 
 void AMainCharacter::AimButtonPressed()
 {
-	if (CombatComponent)
+	if (IsWeaponEquipped())
 	{
 		CombatComponent->SetAiming(true);
 	}
@@ -348,4 +348,10 @@ AWeapon* AMainCharacter::GetEquippedWeapon()
 {
 	if (CombatComponent == nullptr) return nullptr;
 	return CombatComponent->EquippedWeapon;
+}
+
+FVector AMainCharacter::GetHitTarget() const
+{
+	if (CombatComponent == nullptr) return FVector();
+	return CombatComponent->HitTarget;
 }

@@ -4,17 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Projectile.generated.h"
+#include "Casing.generated.h"
 
 UCLASS()
-class MULTIPLAYGAME_API AProjectile : public AActor
+class MULTIPLAYGAME_API ACasing : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	AProjectile();
+	ACasing();
 	virtual void Tick(float DeltaTime) override;
-	virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -23,22 +22,17 @@ protected:
 		virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 private:
-	UPROPERTY(EditAnywhere)
-		class UBoxComponent* CollisionBox;
-
 	UPROPERTY(VisibleAnywhere)
-		class UProjectileMovementComponent* ProjectileMovementComponent;
+		UStaticMeshComponent* CasingMesh;
 
 	UPROPERTY(EditAnywhere)
-		class UParticleSystem* Tracer;
-
-	class UParticleSystemComponent* TracerComponent;
+		float ShellEjectionImpulseMin;
 
 	UPROPERTY(EditAnywhere)
-		class UParticleSystem* ImpactParticles;
+		float ShellEjectionImpulseMax;
 
 	UPROPERTY(EditAnywhere)
-		class USoundCue* ImpactSound;
+		class USoundCue* ShellSound;
 
 public:	
 	

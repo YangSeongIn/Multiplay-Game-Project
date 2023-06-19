@@ -36,6 +36,7 @@ void UMainCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsCrouched = MainCharacter->bIsCrouched;
 	bAiming = MainCharacter->IsAiming();
 	TurningInPlace = MainCharacter->GetTurningInPlace();
+	bRotateRootBone = MainCharacter->ShouldRotateRootBone();
 
 	FRotator AimRotation = MainCharacter->GetBaseAimRotation(); // world is standard. not character.
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(MainCharacter->GetVelocity());
@@ -66,7 +67,8 @@ void UMainCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		{
 			bLocallyControlled = true;
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);
-			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - MainCharacter->GetHitTarget()));
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - MainCharacter->GetHitTarget()));
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 20.f);
 		}	
 	}
 }

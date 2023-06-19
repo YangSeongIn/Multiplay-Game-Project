@@ -6,10 +6,12 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "../Types/TurningInPlace.h"
+#include "../Interfaces/InteractWithCrosshairsInterface.h"
+
 #include "MainCharacter.generated.h"
 
 UCLASS()
-class MULTIPLAYGAME_API AMainCharacter : public ACharacter
+class MULTIPLAYGAME_API AMainCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -20,6 +22,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	UFUNCTION(NetMulticast, Unreliable)
+		void MulticastHit();
+
+	virtual void OnRep_ReplicatedMovement() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -35,6 +41,9 @@ protected:
 	void AimButtonReleased();
 	void Esc();
 	void AimOffset(float DeltaTime);
+	void CalculateAO_Pitch();
+	void SimProxiesTurn();
+	void PlayHitReactMontage();
 	virtual void Jump() override;
 
 private:
@@ -69,6 +78,22 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		class UAnimMontage* FireWeaponMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		class UAnimMontage* HitReactMontage;
+
+	void HideCameraIfCharacterClose();
+
+	UPROPERTY(EditAnywhere)
+		float CameraThreshold = 200.f;
+
+	bool bRotateRootBone;
+	float TurnThreshold = 0.5f;
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyYaw;
+	float TimeSinceLastMovementReplication;
+	float CalculateSpeed();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
@@ -107,4 +132,6 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; };
 	FORCEINLINE void SetTurningInPlace(ETurningInPlace Type) { TurningInPlace = Type; };
 	FVector GetHitTarget() const;
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; };
+	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; };
 };

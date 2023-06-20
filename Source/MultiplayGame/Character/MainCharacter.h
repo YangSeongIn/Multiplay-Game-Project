@@ -22,10 +22,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-	UFUNCTION(NetMulticast, Unreliable)
-		void MulticastHit();
-
 	virtual void OnRep_ReplicatedMovement() override;
+	void Elim();
 
 protected:
 	virtual void BeginPlay() override;
@@ -45,6 +43,9 @@ protected:
 	void SimProxiesTurn();
 	void PlayHitReactMontage();
 	virtual void Jump() override;
+	UFUNCTION()
+		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDHealth();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -94,6 +95,21 @@ private:
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;
 	float CalculateSpeed();
+
+	/**
+	* Player Health
+	*/
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+		float MaxHealth = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+		float Health = 100.f;
+
+	UFUNCTION()
+		void OnRep_Health();
+
+	class AMainPlayerController* MainPlayerController;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;

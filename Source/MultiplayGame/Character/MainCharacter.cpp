@@ -18,6 +18,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "MainCharacterAnimInstance.h"
 #include "../MultiplayGame.h"
+#include "../PlayerController/MainPlayerController.h"
+#include "../HUD/CharacterOverlay.h"
+#include "../GameMode/MainGameMode.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -62,6 +65,11 @@ void AMainCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
+void AMainCharacter::Elim()
+{
+
+}
+
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay()
 {
@@ -74,12 +82,12 @@ void AMainCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+	
+	UpdateHUDHealth();
 
-	UOverheadWidget* Ohw = Cast<UOverheadWidget>(OverheadWidget->GetUserWidgetObject());
-	if (Ohw)
+	if (HasAuthority())
 	{
-		//Ohw->ShowPlayerName(this);
-		Ohw->ShowPlayerNetRole(this);
+		OnTakeAnyDamage.AddDynamic(this, &AMainCharacter::ReceiveDamage);
 	}
 }
 
@@ -128,6 +136,7 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(AMainCharacter, Health);
 }
 
 void AMainCharacter::PostInitializeComponents()
@@ -359,6 +368,39 @@ void AMainCharacter::Jump()
 	}
 }
 
+void AMainCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+
+	if (Health == 0.f)
+	{
+		AMainGameMode* MainGameMode = GetWorld()->GetAuthGameMode<AMainGameMode>();
+		if (MainGameMode)
+		{
+			MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
+			AMainPlayerController* AttackerController = Cast<AMainPlayerController>(InstigatorController);
+			MainGameMode->PlayerEliminated(this, MainPlayerController, AttackerController);
+		}
+	}
+}
+
+void AMainCharacter::OnRep_Health()
+{
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
+
+void AMainCharacter::UpdateHUDHealth()
+{
+	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
+	if (MainPlayerController)
+	{
+		MainPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
 void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
@@ -392,11 +434,6 @@ void AMainCharacter::TurnInPlace(float DeltaTime)
 			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		}
 	}
-}
-
-void AMainCharacter::MulticastHit_Implementation()
-{
-	PlayHitReactMontage();
 }
 
 void AMainCharacter::HideCameraIfCharacterClose()

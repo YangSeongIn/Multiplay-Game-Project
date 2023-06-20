@@ -10,6 +10,8 @@
 #include "Sound/SoundCue.h"
 #include "../Character/MainCharacter.h"
 #include "../MultiplayGame.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Net/UnrealNetwork.h"
 
 AProjectile::AProjectile()
 {
@@ -24,6 +26,7 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
+	CollisionBox->bReturnMaterialOnMove = true;
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
@@ -32,7 +35,7 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (Tracer)
 	{
 		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
@@ -53,13 +56,63 @@ void AProjectile::BeginPlay()
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OtherActor);
-	if (MainCharacter)
+	if (OtherComp && Hit.bBlockingHit)
 	{
-		MainCharacter->MulticastHit();
+		//MulticastHitImpact(Hit);
+		switch (UGameplayStatics::GetSurfaceType(Hit))
+		{
+		case SurfaceType1:
+			SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
+			break;
+		case SurfaceType2:
+			break;
+		case SurfaceType3:
+			break;
+		case SurfaceType4:
+			SetBulletMarks(ImpactParticlesBody, ImpactSoundBody);
+			break;
+		default:
+			SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
+			break;
+		}
 	}
 
 	Destroy();
+}
+
+//void AProjectile::MulticastHitImpact_Implementation(const FHitResult HitResult)
+//{
+//	switch (UGameplayStatics::GetSurfaceType(HitResult))
+//	{
+//	case SurfaceType1:
+//		GLog->Log("Metal");
+//		SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
+//		break;
+//	case SurfaceType2:
+//		break;
+//	case SurfaceType3:
+//		break;
+//	case SurfaceType4:
+//		GLog->Log("Body");
+//		SetBulletMarks(ImpactParticlesBody, ImpactSoundBody);
+//		break;
+//	default:
+//		GLog->Log("Default");
+//		SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
+//		break;
+//	}
+//}
+//
+void AProjectile::SetBulletMarks(UParticleSystem* Particle, USoundCue* SoundCue)
+{
+	if (Particle)
+	{
+		FinalImpactParticles = Particle;
+	}
+	if (SoundCue)
+	{
+		FinalImpactSound = SoundCue;
+	}
 }
 
 void AProjectile::Tick(float DeltaTime)
@@ -72,13 +125,13 @@ void AProjectile::Destroyed()
 {
 	Super::Destroyed();
 
-	if (ImpactParticles)
+	if (FinalImpactParticles)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FinalImpactParticles, GetActorTransform());
 	}
-	if (ImpactSound)
+	if (FinalImpactSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FinalImpactSound, GetActorLocation());
 	}
 }
 

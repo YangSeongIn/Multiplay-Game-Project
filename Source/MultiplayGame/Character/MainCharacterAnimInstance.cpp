@@ -37,7 +37,9 @@ void UMainCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bAiming = MainCharacter->IsAiming();
 	TurningInPlace = MainCharacter->GetTurningInPlace();
 	bRotateRootBone = MainCharacter->ShouldRotateRootBone();
+	bElimmed = MainCharacter->IsElimmed();
 
+	// Offset Yaw for Strafing
 	FRotator AimRotation = MainCharacter->GetBaseAimRotation(); // world is standard. not character.
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(MainCharacter->GetVelocity());
 	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation);

@@ -41,10 +41,13 @@ private:
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* Tracer;
 
-	class UParticleSystemComponent* TracerComponent;
+	UPROPERTY()
+		class UParticleSystemComponent* TracerComponent;
 
-	UParticleSystem* FinalImpactParticles;
-	USoundCue* FinalImpactSound;
+	UPROPERTY()
+		UParticleSystem* FinalImpactParticles;
+	UPROPERTY()
+		USoundCue* FinalImpactSound;
 
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* ImpactParticlesMetal;

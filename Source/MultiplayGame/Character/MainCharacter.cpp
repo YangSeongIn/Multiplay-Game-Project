@@ -21,12 +21,15 @@
 #include "../PlayerController/MainPlayerController.h"
 #include "../HUD/CharacterOverlay.h"
 #include "../GameMode/MainGameMode.h"
+#include "TimerManager.h"
+#include "../PlayerState/MainPlayerState.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
@@ -67,7 +70,44 @@ void AMainCharacter::OnRep_ReplicatedMovement()
 
 void AMainCharacter::Elim()
 {
+	if (bElimmed) return;
+	if (CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		CombatComponent->EquippedWeapon->Dropped();
+	}
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(
+		ElimTimer,
+		this,
+		&AMainCharacter::ElimTimerFinished,
+		ElimDelay
+	);
+}
 
+void AMainCharacter::MulticastElim_Implementation()
+{
+	bElimmed = true;
+	PlayElimMontage();
+
+	// Disable character movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (MainPlayerController)
+	{
+		DisableInput(MainPlayerController);
+	}
+	// Disable Collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AMainCharacter::ElimTimerFinished()
+{
+	AMainGameMode* MainGameMode = GetWorld()->GetAuthGameMode<AMainGameMode>();
+	if (MainGameMode)
+	{
+		MainGameMode->RequestRespawn(this, Controller);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -88,6 +128,8 @@ void AMainCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &AMainCharacter::ReceiveDamage);
+		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
+		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
 }
 
@@ -111,6 +153,7 @@ void AMainCharacter::Tick(float DeltaTime)
 	}
 	
 	HideCameraIfCharacterClose();
+	PollInit();
 }
 
 // Called to bind functionality to input
@@ -158,6 +201,30 @@ void AMainCharacter::PlayFireMontage(bool bAiming)
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void AMainCharacter::PlayElimMontage()
+{
+	if (CombatComponent == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ElimMontage)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+		FString SectionName;
+		if (IsWeaponEquipped())
+		{
+			SectionName = FString("Death_Equipped_");
+			int32 EquippedMaxIndex = UKismetMathLibrary::RandomIntegerInRange(3, 5);
+			SectionName += FString::FromInt(EquippedMaxIndex);
+		}
+		else
+		{
+			SectionName = FString("Death_Unequipped_");
+			int32 UnequippedMaxIndex = UKismetMathLibrary::RandomIntegerInRange(0, 3);
+			SectionName += FString::FromInt(UnequippedMaxIndex);
+		}
+		AnimInstance->Montage_JumpToSection(FName(SectionName));
 	}
 }
 
@@ -401,6 +468,19 @@ void AMainCharacter::UpdateHUDHealth()
 	}
 }
 
+void AMainCharacter::PollInit()
+{
+	if (MainPlayerState == nullptr)
+	{
+		MainPlayerState = GetPlayerState<AMainPlayerState>();
+		if (MainPlayerState)
+		{
+			MainPlayerState->AddToScore(0.f);
+			MainPlayerState->AddToDefeats(0);
+		}
+	}
+}
+
 void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
@@ -433,6 +513,19 @@ void AMainCharacter::TurnInPlace(float DeltaTime)
 			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		}
+	}
+}
+
+void AMainCharacter::OnMontageNotifyBegin()
+{
+	MultiCastMontageMotify();
+}
+
+void AMainCharacter::MultiCastMontageMotify_Implementation()
+{
+	if (GetCurrentMontage() == ElimMontage)
+	{
+		GetMesh()->GetAnimInstance()->Montage_Pause();
 	}
 }
 

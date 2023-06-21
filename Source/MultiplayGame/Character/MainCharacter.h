@@ -22,8 +22,11 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim();
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastElim();
 
 protected:
 	virtual void BeginPlay() override;
@@ -46,6 +49,9 @@ protected:
 	UFUNCTION()
 		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
+
+	// Poll for any relevant classes and initialize our HUD
+	void PollInit();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -77,11 +83,22 @@ private:
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
 
+	UFUNCTION()
+		void OnMontageNotifyBegin();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MultiCastMontageMotify();
+
+	FScriptDelegate Delegate_OnMontageNotifyBegin;
+
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		class UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		class UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		class UAnimMontage* ElimMontage;
 
 	void HideCameraIfCharacterClose();
 
@@ -109,7 +126,20 @@ private:
 	UFUNCTION()
 		void OnRep_Health();
 
-	class AMainPlayerController* MainPlayerController;
+	UPROPERTY()
+		class AMainPlayerController* MainPlayerController;
+
+	bool bElimmed = false;
+
+	FTimerHandle ElimTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+		float ElimDelay = 3.f;
+
+	void ElimTimerFinished();
+
+	UPROPERTY()
+		class AMainPlayerState* MainPlayerState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
@@ -150,4 +180,7 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; };
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; };
+	FORCEINLINE bool IsElimmed() const { return bElimmed; };
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; };
 };

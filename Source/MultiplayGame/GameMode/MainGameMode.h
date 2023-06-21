@@ -16,5 +16,5 @@ class MULTIPLAYGAME_API AMainGameMode : public AGameMode
 
 public:
 	virtual void PlayerEliminated(class AMainCharacter* ElimmedCharacter, class AMainPlayerController* VictimController, AMainPlayerController* AttackerController);
-	
+	virtual void RequestRespawn(class ACharacter* ElimmedCharacter, AController* ElimmedController);
 };

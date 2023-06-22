@@ -64,6 +64,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 
 	DOREPLIFETIME(AWeapon, WeaponState);
 	DOREPLIFETIME(AWeapon, Ammo);
+	DOREPLIFETIME(AWeapon, CarriedAmmo);
 }
 
 void AWeapon::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -103,9 +104,27 @@ void AWeapon::SetHUDAmmo()
 	}
 }
 
+void AWeapon::SetHUDCarriedAmmo()
+{
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<AMainCharacter>(GetOwner()) : OwnerCharacter;
+	if (OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<AMainPlayerController>(OwnerCharacter->GetController()) : OwnerController;
+		if (OwnerController)
+		{
+			OwnerController->SetHUDCarriedAmmo(CarriedAmmo);
+		}
+	}
+}
+
 void AWeapon::OnRep_Ammo()
 {
 	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_CarriedAmmo()
+{
+	SetHUDCarriedAmmo();
 }
 
 void AWeapon::OnRep_Owner()

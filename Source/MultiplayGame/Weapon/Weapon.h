@@ -27,6 +27,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
+	void SetHUDCarriedAmmo();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
@@ -105,8 +106,14 @@ private:
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 		int32 Ammo;
 
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+		int32 CarriedAmmo;
+
 	UFUNCTION()
 		void OnRep_Ammo();
+
+	UFUNCTION()
+		void OnRep_CarriedAmmo();
 
 	void SpendRound();
 
@@ -132,4 +139,6 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; };
 	FORCEINLINE int32 GetAmmo() const { return Ammo; };
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; };
+	FORCEINLINE void SetCarriedAmmo(int32 AmmoToCarring) { CarriedAmmo = AmmoToCarring; };
+	FORCEINLINE int32 GetCarriedAmmo() { return CarriedAmmo; };
 };

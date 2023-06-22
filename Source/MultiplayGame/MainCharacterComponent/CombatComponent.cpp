@@ -84,15 +84,17 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
+
 	// Set ammo when equipped weapon
 	EquippedWeapon->SetHUDAmmo();
 
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		// CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		CarriedAmmo = EquippedWeapon->GetCarriedAmmo();
 	}
 
-	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : nullptr;
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
 	if (Controller)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
@@ -138,8 +140,8 @@ void UCombatComponent::UpdateAmmoValues()
 	int32 ReloadAmount = AmountToReload();	// Used Amount
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		CarriedAmmo -= ReloadAmount;
+		EquippedWeapon->SetCarriedAmmo(CarriedAmmo);
 	}
 
 	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;

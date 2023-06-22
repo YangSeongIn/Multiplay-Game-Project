@@ -23,6 +23,7 @@
 #include "../GameMode/MainGameMode.h"
 #include "TimerManager.h"
 #include "../PlayerState/MainPlayerState.h"
+#include "../Weapon/WeaponTypes.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -86,6 +87,10 @@ void AMainCharacter::Elim()
 
 void AMainCharacter::MulticastElim_Implementation()
 {
+	if (MainPlayerController)
+	{
+		MainPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bElimmed = true;
 	PlayElimMontage();
 
@@ -171,6 +176,7 @@ void AMainCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AMainCharacter::AimButtonReleased);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AMainCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &AMainCharacter::FireButtonReleased);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &AMainCharacter::ReloadButtonPressed);
 	}
 }
 
@@ -225,6 +231,28 @@ void AMainCharacter::PlayElimMontage()
 			SectionName += FString::FromInt(UnequippedMaxIndex);
 		}
 		AnimInstance->Montage_JumpToSection(FName(SectionName));
+	}
+}
+
+void AMainCharacter::PlayReloadMontage()
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (CombatComponent->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
 
@@ -333,6 +361,13 @@ void AMainCharacter::AimButtonReleased()
 
 void AMainCharacter::Esc()
 {
+	
+}
+
+void AMainCharacter::ReloadButtonPressed()
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+	CombatComponent->Reload();
 }
 
 float AMainCharacter::CalculateSpeed()
@@ -595,4 +630,10 @@ FVector AMainCharacter::GetHitTarget() const
 {
 	if (CombatComponent == nullptr) return FVector();
 	return CombatComponent->HitTarget;
+}
+
+ECombatState AMainCharacter::GetCombatState() const
+{
+	if (CombatComponent == nullptr) return ECombatState::ECS_MAX;
+	return CombatComponent->CombatState;
 }

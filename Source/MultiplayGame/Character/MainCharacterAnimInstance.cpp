@@ -73,4 +73,8 @@ void UMainCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 20.f);
 		}	
 	}
+
+	bUseFABRIK = MainCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffsets = MainCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bTransformRightHand = MainCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 }

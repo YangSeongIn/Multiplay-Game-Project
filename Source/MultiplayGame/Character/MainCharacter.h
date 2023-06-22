@@ -7,7 +7,7 @@
 #include "InputActionValue.h"
 #include "../Types/TurningInPlace.h"
 #include "../Interfaces/InteractWithCrosshairsInterface.h"
-
+#include "../Types/CombatState.h"
 #include "MainCharacter.generated.h"
 
 UCLASS()
@@ -23,6 +23,7 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 	void PlayElimMontage();
+	void PlayReloadMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim();
 	UFUNCTION(NetMulticast, Reliable)
@@ -41,6 +42,7 @@ protected:
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void Esc();
+	void ReloadButtonPressed();
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
 	void SimProxiesTurn();
@@ -69,7 +71,7 @@ private:
 	UFUNCTION()
 		void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class UCombatComponent* CombatComponent;
 
 	UFUNCTION(Server, Reliable)
@@ -91,14 +93,21 @@ private:
 
 	FScriptDelegate Delegate_OnMontageNotifyBegin;
 
+	/**
+	* Animation montages
+	*/
+
 	UPROPERTY(EditAnywhere, Category = "Combat")
 		class UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		class UAnimMontage* HitReactMontage;
+		UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		class UAnimMontage* ElimMontage;
+		UAnimMontage* ElimMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+		UAnimMontage* ReloadMontage;
 
 	void HideCameraIfCharacterClose();
 
@@ -134,7 +143,7 @@ private:
 	FTimerHandle ElimTimer;
 
 	UPROPERTY(EditDefaultsOnly)
-		float ElimDelay = 3.f;
+		float ElimDelay = 5.f;
 
 	void ElimTimerFinished();
 
@@ -168,6 +177,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* AimAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* ReloadAction;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -183,4 +195,6 @@ public:
 	FORCEINLINE bool IsElimmed() const { return bElimmed; };
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; };
+	ECombatState GetCombatState() const;
+
 };

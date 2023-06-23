@@ -40,23 +40,23 @@ void UCombatComponent::BeginPlay()
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-		
+
 		if (Character->GetFollowCamera())
 		{
 			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
 			CurrentFOV = DefaultFOV;
 		}
-		if (Character->HasAuthority())
+	/*	if (Character->HasAuthority())
 		{
 			InitializeCarriedAmmo();
-		}
+		}*/
 	}
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
+
 	if (Character && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
@@ -101,8 +101,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (EquippedWeapon->EquipSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
-			this, 
-			EquippedWeapon->EquipSound, 
+			this,
+			EquippedWeapon->EquipSound,
 			Character->GetActorLocation()
 		);
 	}
@@ -168,17 +168,17 @@ void UCombatComponent::OnRep_CombatState()
 {
 	switch (CombatState)
 	{
-		case ECombatState::ECS_Reloading:
-			HandleReload();
-			break;
-		case ECombatState::ECS_Unoccupied:
-			if (bFireButtonPressed)
-			{
-				Fire();
-			}
-			break;
-		default:
-			break;
+	case ECombatState::ECS_Reloading:
+		HandleReload();
+		break;
+	case ECombatState::ECS_Unoccupied:
+		if (bFireButtonPressed)
+		{
+			Fire();
+		}
+		break;
+	default:
+		break;
 	}
 }
 
@@ -229,9 +229,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
-	if (EquippedWeapon == nullptr) return;
 	bFireButtonPressed = bPressed;
-
 	if (bFireButtonPressed)
 	{
 		Fire();
@@ -457,7 +455,7 @@ void UCombatComponent::OnRep_CarriedAmmo()
 	}
 }
 
-void UCombatComponent::InitializeCarriedAmmo()
-{
-	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
-}
+//void UCombatComponent::InitializeCarriedAmmo()
+//{
+//	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+//}

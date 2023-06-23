@@ -9,7 +9,6 @@ void APlayerHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AddCharacterOvelay();
 }
 
 void APlayerHUD::AddCharacterOvelay()

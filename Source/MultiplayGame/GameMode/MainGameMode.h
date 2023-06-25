@@ -6,6 +6,11 @@
 #include "GameFramework/GameMode.h"
 #include "MainGameMode.generated.h"
 
+namespace MatchState
+{
+	extern MULTIPLAYGAME_API const FName Cooldown;	// Match duration has been reached.
+}
+
 /**
  * 
  */
@@ -22,6 +27,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 		float WarmupTime = 10.f;
+
+	UPROPERTY(EditDefaultsOnly)
+		float MatchTime = 120.f;
+
+	UPROPERTY(EditDefaultsOnly)
+		float CooldownTime = 10.f;
 
 	float LevelStartingTime = 0.f;
 

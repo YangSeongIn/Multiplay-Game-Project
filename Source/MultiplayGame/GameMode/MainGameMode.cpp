@@ -7,6 +7,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "../PlayerState/MainPlayerState.h"
+#include "../GameState/MainGameState.h"
+
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");	// Match duration has been reached.
+}
 
 AMainGameMode::AMainGameMode()
 {
@@ -32,6 +38,14 @@ void AMainGameMode::Tick(float DeltaTime)
 			StartMatch();
 		}
 	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			SetMatchState(MatchState::Cooldown);
+		}
+	}
 }
 
 void AMainGameMode::OnMatchStateSet()
@@ -53,9 +67,12 @@ void AMainGameMode::PlayerEliminated(AMainCharacter* ElimmedCharacter, AMainPlay
 	AMainPlayerState* AttackerPlayerState = AttackerController ? Cast<AMainPlayerState>(AttackerController->PlayerState) : nullptr;
 	AMainPlayerState* VictimPlayerState = VictimController ? Cast<AMainPlayerState>(VictimController->PlayerState) : nullptr;
 
-	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	AMainGameState* MainGameState = GetGameState<AMainGameState>();
+
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && MainGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);
+		MainGameState->UpdateTopScore(AttackerPlayerState);
 	}
 
 	if (VictimPlayerState)

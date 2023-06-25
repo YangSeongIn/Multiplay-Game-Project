@@ -24,6 +24,7 @@
 #include "TimerManager.h"
 #include "../PlayerState/MainPlayerState.h"
 #include "../Weapon/WeaponTypes.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -194,6 +195,18 @@ void AMainCharacter::PostInitializeComponents()
 	if (CombatComponent)
 	{
 		CombatComponent->Character = this;
+	}
+}
+
+void AMainCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = MainGameMode && MainGameMode->GetMatchState() != MatchState::InProgress;
+	if (CombatComponent && CombatComponent->EquippedWeapon && bMatchNotInProgress)
+	{
+		CombatComponent->EquippedWeapon->Destroy();
 	}
 }
 

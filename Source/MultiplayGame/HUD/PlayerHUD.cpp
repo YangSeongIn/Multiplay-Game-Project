@@ -4,6 +4,7 @@
 #include "PlayerHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "CharacterOverlay.h"
+#include "Announcement.h"
 
 void APlayerHUD::BeginPlay()
 {
@@ -20,6 +21,19 @@ void APlayerHUD::AddCharacterOvelay()
 		if (CharacterOverlay)
 		{
 			CharacterOverlay->AddToViewport();
+		}
+	}
+}
+
+void APlayerHUD::AddAnnouncement()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && AnnouncementClass)
+	{
+		Announcement = CreateWidget<UAnnouncement>(PlayerController, AnnouncementClass);
+		if (Announcement)
+		{
+			Announcement->AddToViewport();
 		}
 	}
 }

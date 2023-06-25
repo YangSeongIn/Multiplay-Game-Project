@@ -10,12 +10,16 @@
 #include "GameFramework/PlayerState.h"
 #include "Net/UnrealNetwork.h"
 #include "../GameMode/MainGameMode.h"
+#include "../HUD/Announcement.h"
+#include "Kismet/GameplayStatics.h"
+#include "../GameState/MainGameState.h"
 
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
+	ServerCheckMatchState();
 }
 
 void AMainPlayerController::OnPossess(APawn* InPawn)
@@ -38,6 +42,23 @@ void AMainPlayerController::Tick(float DeltaTime)
 	PollInit();
 }
 
+void AMainPlayerController::PollInit()
+{
+	if (CharacterOverlay == nullptr)
+	{
+		if (PlayerHUD && PlayerHUD->CharacterOverlay)
+		{
+			CharacterOverlay = PlayerHUD->CharacterOverlay;
+			if (CharacterOverlay)
+			{
+				SetHUDHealth(HUDHealth, HUDMaxHealth);
+				SetHUDScore(HUDScore);
+				SetHUDDefeats(HUDDefeats);
+			}
+		}
+	}
+}
+
 void AMainPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -55,12 +76,54 @@ void AMainPlayerController::CheckTimeSync(float DeltaTime)
 	}
 }
 
+void AMainPlayerController::ServerCheckMatchState_Implementation()
+{
+	AMainGameMode* GameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+		LevelStartingTime = GameMode->LevelStartingTime;
+		MatchState = GameMode->GetMatchState();
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+	}
+}
+
+void AMainPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StartingTime)
+{
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	LevelStartingTime = StartingTime;
+	MatchState = StateOfMatch;
+	OnMatchStateSet(MatchState);
+	if (PlayerHUD && MatchState == MatchState::WaitingToStart)
+	{
+		if (PlayerHUD)
+		{
+			PlayerHUD->AddAnnouncement();
+		}
+	}
+}
+
 void AMainPlayerController::SetHUDTime()
 {
-	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+	// set time
+	float TimeLeft = 0.f;
+	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+
+	// show time
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	if (CountdownInt != SecondsLeft)
 	{
-		SetHUDMatchCountdown(MatchTime - GetServerTime());
+		if (MatchState == MatchState::WaitingToStart)
+		{
+			SetHUDAnnouncementCountdown(TimeLeft);
+		}
+		if (MatchState == MatchState::InProgress)
+		{
+			SetHUDMatchCountdown(TimeLeft);
+		}
 	}
 	CountdownInt = SecondsLeft;
 }
@@ -179,6 +242,21 @@ void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	}
 }
 
+void AMainPlayerController::SetHUDAnnouncementCountdown(float Warmup)
+{
+	PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
+	bool bHUDValid = PlayerHUD &&
+		PlayerHUD->Announcement &&
+		PlayerHUD->Announcement->WarmupTime;
+	if (bHUDValid)
+	{
+		int32 Minutes = FMath::FloorToInt(Warmup / 60.f);
+		int32 Seconds = Warmup - Minutes * 60;
+		FString WarmupTimeText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		PlayerHUD->Announcement->WarmupTime->SetText(FText::FromString(WarmupTimeText));
+	}
+}
+
 float AMainPlayerController::GetServerTime()
 {
 	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
@@ -201,11 +279,11 @@ void AMainPlayerController::OnMatchStateSet(FName State)
 
 	if (MatchState == MatchState::InProgress)
 	{
-		PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
-		if (PlayerHUD)
-		{
-			PlayerHUD->AddCharacterOvelay();
-		}
+		HandleMatchHasStarted();
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
 	}
 }
 
@@ -213,27 +291,33 @@ void AMainPlayerController::OnRep_MatchState()
 {
 	if (MatchState == MatchState::InProgress)
 	{
-		PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
-		if (PlayerHUD)
+		HandleMatchHasStarted();
+	}
+}
+
+void AMainPlayerController::HandleMatchHasStarted()
+{
+	PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
+	if (PlayerHUD)
+	{
+		PlayerHUD->AddCharacterOvelay();
+		if (PlayerHUD->Announcement)
 		{
-			PlayerHUD->AddCharacterOvelay();
+			PlayerHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }
 
-void AMainPlayerController::PollInit()
+
+void AMainPlayerController::HandleCooldown()
 {
-	if (CharacterOverlay == nullptr)
+	PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
+	if (PlayerHUD)
 	{
-		if (PlayerHUD && PlayerHUD->CharacterOverlay)
+		PlayerHUD->CharacterOverlay->RemoveFromParent();
+		if (PlayerHUD->Announcement)
 		{
-			CharacterOverlay = PlayerHUD->CharacterOverlay;
-			if (CharacterOverlay)
-			{
-				SetHUDHealth(HUDHealth, HUDMaxHealth);
-				SetHUDScore(HUDScore);
-				SetHUDDefeats(HUDDefeats);
-			}
+			PlayerHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
 }

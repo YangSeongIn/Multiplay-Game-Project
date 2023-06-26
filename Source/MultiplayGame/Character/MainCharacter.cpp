@@ -97,7 +97,11 @@ void AMainCharacter::MulticastElim_Implementation()
 
 	// Disable character movement
 	GetCharacterMovement()->DisableMovement();
-	GetCharacterMovement()->StopMovementImmediately();
+	if (CombatComponent)
+	{
+		CombatComponent->FireButtonPressed(false);
+	}
+	//GetCharacterMovement()->StopMovementImmediately();
 	if (MainPlayerController)
 	{
 		DisableInput(MainPlayerController);
@@ -260,6 +264,9 @@ void AMainCharacter::PlayReloadMontage()
 		{
 		case EWeaponType::EWT_AssaultRifle:
 			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_RocketLauncher:
+			SectionName = FName("Rocket");
 			break;
 		default:
 			break;

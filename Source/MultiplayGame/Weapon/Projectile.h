@@ -25,18 +25,18 @@ protected:
 	UFUNCTION()
 		virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-	/*UFUNCTION(NetMulticast, Unreliable)
-		void MulticastHitImpact(const FHitResult HitResult);*/
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastHitImpact(const FHitResult HitResult);
 
 	UPROPERTY(EditAnywhere)
 		float Damage = 20.f;
 
+	UPROPERTY(EditAnywhere)
+		class UProjectileMovementComponent* ProjectileMovementComponent;
+
 private:
 	UPROPERTY(EditAnywhere)
 		class UBoxComponent* CollisionBox;
-
-	UPROPERTY(VisibleAnywhere)
-		class UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* Tracer;

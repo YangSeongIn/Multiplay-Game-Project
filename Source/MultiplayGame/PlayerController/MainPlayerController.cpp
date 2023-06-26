@@ -293,6 +293,10 @@ void AMainPlayerController::OnRep_MatchState()
 	{
 		HandleMatchHasStarted();
 	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 
 void AMainPlayerController::HandleMatchHasStarted()
@@ -300,7 +304,7 @@ void AMainPlayerController::HandleMatchHasStarted()
 	PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
 	if (PlayerHUD)
 	{
-		PlayerHUD->AddCharacterOvelay();
+		if (PlayerHUD->CharacterOverlay == nullptr) PlayerHUD->AddCharacterOvelay();
 		if (PlayerHUD->Announcement)
 		{
 			PlayerHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);

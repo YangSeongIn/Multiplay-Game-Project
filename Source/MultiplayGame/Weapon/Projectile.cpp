@@ -25,11 +25,9 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+	//CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
 	CollisionBox->bReturnMaterialOnMove = true;
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 }
 
 void AProjectile::BeginPlay()
@@ -58,51 +56,35 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 {
 	if (OtherComp && Hit.bBlockingHit)
 	{
-		//MulticastHitImpact(Hit);
-		switch (UGameplayStatics::GetSurfaceType(Hit))
-		{
-		case SurfaceType1:
-			SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
-			break;
-		case SurfaceType2:
-			break;
-		case SurfaceType3:
-			break;
-		case SurfaceType4:
-			SetBulletMarks(ImpactParticlesBody, ImpactSoundBody);
-			break;
-		default:
-			SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
-			break;
-		}
+		MulticastHitImpact(Hit);
 	}
 
 	Destroy();
 }
 
-//void AProjectile::MulticastHitImpact_Implementation(const FHitResult HitResult)
-//{
-//	switch (UGameplayStatics::GetSurfaceType(HitResult))
-//	{
-//	case SurfaceType1:
-//		GLog->Log("Metal");
-//		SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
-//		break;
-//	case SurfaceType2:
-//		break;
-//	case SurfaceType3:
-//		break;
-//	case SurfaceType4:
-//		GLog->Log("Body");
-//		SetBulletMarks(ImpactParticlesBody, ImpactSoundBody);
-//		break;
-//	default:
-//		GLog->Log("Default");
-//		SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
-//		break;
-//	}
-//}
-//
+void AProjectile::MulticastHitImpact_Implementation(const FHitResult HitResult)
+{
+	switch (UGameplayStatics::GetSurfaceType(HitResult))
+	{
+	case SurfaceType1:
+		GLog->Log("Metal");
+		SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
+		break;
+	case SurfaceType2:
+		break;
+	case SurfaceType3:
+		break;
+	case SurfaceType4:
+		GLog->Log("Body");
+		SetBulletMarks(ImpactParticlesBody, ImpactSoundBody);
+		break;
+	default:
+		GLog->Log("Default");
+		SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
+		break;
+	}
+}
+
 
 void AProjectile::SetBulletMarks(UParticleSystem* Particle, USoundCue* SoundCue)
 {

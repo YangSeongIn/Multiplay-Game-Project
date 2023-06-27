@@ -133,7 +133,7 @@ private:
 	UPROPERTY(EditAnywhere)
 		TMap<EWeaponType, int32> CarriedAmmoMap;
 
-	//void InitializeCarriedAmmo();
+	// void InitializeCarriedAmmo();
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 		ECombatState CombatState = ECombatState::ECS_Unoccupied;

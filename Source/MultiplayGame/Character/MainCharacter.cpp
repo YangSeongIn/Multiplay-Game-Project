@@ -268,6 +268,9 @@ void AMainCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_RocketLauncher:
 			SectionName = FName("Rocket");
 			break;
+		case EWeaponType::EWT_SniperRifle:
+			SectionName = FName("Sniper");
+			break;
 		default:
 			break;
 		}

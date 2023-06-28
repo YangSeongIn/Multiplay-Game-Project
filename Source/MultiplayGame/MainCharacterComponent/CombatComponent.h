@@ -29,6 +29,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void FinishReloading();
 
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -133,7 +135,19 @@ private:
 	UPROPERTY(EditAnywhere)
 		TMap<EWeaponType, int32> CarriedAmmoMap;
 
-	// void InitializeCarriedAmmo();
+	UPROPERTY(EditAnywhere)
+		int32 StartingARAmmo = 45;
+
+	UPROPERTY(EditAnywhere)
+		int32 StartingRocketAmmo = 12;
+
+	UPROPERTY(EditAnywhere)
+		int32 MaxARAmmo = 90;
+
+	UPROPERTY(EditAnywhere)
+		int32 MaxRocketAmmo = 24;
+
+	void InitializeCarriedAmmo();
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 		ECombatState CombatState = ECombatState::ECS_Unoccupied;
@@ -142,6 +156,12 @@ private:
 		void OnRep_CombatState();
 
 	void UpdateAmmoValues();
+
+	void DropEquippedWeapon();
+	void AttachActorToRightHand(AActor* ActorToAttach);
+	void UpdateCarriedAmmo();
+	void PlayEquipWeaponSound();
+	void ReloadEmptyWeapon();
 
 public:
 

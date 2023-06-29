@@ -30,6 +30,7 @@ public:
 		void FinishReloading();
 
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+	void SwapWeapon(class AWeapon* WeaponToEquip);
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,6 +41,9 @@ protected:
 
 	UFUNCTION()
 		void OnRep_EquippedWeapon();
+
+	UFUNCTION()
+		void OnRep_SecondaryWeapon();
 
 	void FireButtonPressed(bool bPressed);
 
@@ -72,6 +76,12 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 		AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+		AWeapon* PrimaryWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+		AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 		bool bAiming;
@@ -160,8 +170,11 @@ private:
 	void DropEquippedWeapon();
 	void AttachActorToRightHand(AActor* ActorToAttach);
 	void UpdateCarriedAmmo();
-	void PlayEquipWeaponSound();
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
 	void ReloadEmptyWeapon();
+	void EquipPimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
+	void AttachActorToBack(AActor* ActorToAttach);
 
 public:
 

@@ -11,15 +11,9 @@ UCLASS()
 class MULTIPLAYGAME_API AAmmoPickup : public APickup
 {
 	GENERATED_BODY()
-	
-public:
-	AAmmoPickup();
 
 protected:
-	virtual void BeginPlay() override;
-
-	virtual void OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	virtual void OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	virtual void OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 private:
 	UPROPERTY(EditAnywhere)

@@ -5,20 +5,10 @@
 #include "../MainCharacterComponent/CombatComponent.h"
 #include "../Character/MainCharacter.h"
 
-AAmmoPickup::AAmmoPickup()
-{
-}
-
-void AAmmoPickup::BeginPlay()
-{
-
-}
-
 void AAmmoPickup::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
-	GLog->Log("111");
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OtherActor);
 	if (MainCharacter)
 	{
@@ -29,8 +19,4 @@ void AAmmoPickup::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AAct
 		}
 		Destroy();
 	}
-}
-
-void AAmmoPickup::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
 }

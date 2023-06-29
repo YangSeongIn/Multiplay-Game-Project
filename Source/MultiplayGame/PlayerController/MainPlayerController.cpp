@@ -132,7 +132,6 @@ void AMainPlayerController::ServerRequestServerTime_Implementation(float TimeOfC
 {
 	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
 	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
-	if (GetPawn()) UE_LOG(LogTemp, Log, TEXT("Server : %s"), *GetPawn()->GetPlayerState()->GetPlayerName());
 }
 
 void AMainPlayerController::ClientReportServerTime_Implementation(float TimeOfClientRequest, float TimeServerReceivedClientRequest)
@@ -140,7 +139,6 @@ void AMainPlayerController::ClientReportServerTime_Implementation(float TimeOfCl
 	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
 	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime);
 	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
-	if (GetPawn()) UE_LOG(LogTemp, Log, TEXT("Client : %s"), *GetPawn()->GetPlayerState()->GetPlayerName());
 }
 
 void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
@@ -216,6 +214,7 @@ void AMainPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 
 void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 {
+	GLog->Log("SetHUDCarriedAmmo");
 	PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
 	bool bHUDValid = PlayerHUD &&
 		PlayerHUD->CharacterOverlay &&

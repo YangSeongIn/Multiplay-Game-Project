@@ -182,6 +182,8 @@ void AMainCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AMainCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &AMainCharacter::FireButtonReleased);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &AMainCharacter::ReloadButtonPressed);
+		EnhancedInputComponent->BindAction(PrimaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectPrimaryWeapon);
+		EnhancedInputComponent->BindAction(SecondaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectSecondaryWeapon);
 	}
 }
 
@@ -391,6 +393,18 @@ void AMainCharacter::ReloadButtonPressed()
 {
 	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
 	CombatComponent->Reload();
+}
+
+void AMainCharacter::SelectPrimaryWeapon()
+{
+	if (CombatComponent == nullptr) return;
+	CombatComponent->SwapWeapon(CombatComponent->);
+}
+
+void AMainCharacter::SelectSecondaryWeapon()
+{
+	if (CombatComponent == nullptr) return;
+	CombatComponent->EquipSecondaryWeapon(GetEquippedWeapon());
 }
 
 float AMainCharacter::CalculateSpeed()
@@ -659,4 +673,10 @@ ECombatState AMainCharacter::GetCombatState() const
 {
 	if (CombatComponent == nullptr) return ECombatState::ECS_MAX;
 	return CombatComponent->CombatState;
+}
+
+AWeapon* AMainCharacter::GetEquippedWeapon() const
+{
+	if (CombatComponent == nullptr) return nullptr;
+	return CombatComponent->EquippedWeapon;
 }

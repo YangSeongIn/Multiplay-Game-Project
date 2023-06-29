@@ -48,6 +48,8 @@ protected:
 	void CalculateAO_Pitch();
 	void SimProxiesTurn();
 	void PlayHitReactMontage();
+	void SelectPrimaryWeapon();
+	void SelectSecondaryWeapon();
 	virtual void Jump() override;
 	UFUNCTION()
 		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -181,6 +183,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* ReloadAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* PrimaryWeaponAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* SecondaryWeaponAction;
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -198,5 +206,5 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; };
 	ECombatState GetCombatState() const;
 	UCombatComponent* GetCombatComponent() const { return CombatComponent; };
-
+	class AWeapon* GetEquippedWeapon() const;
 };

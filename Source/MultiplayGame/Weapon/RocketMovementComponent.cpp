@@ -11,5 +11,5 @@ URocketMovementComponent::EHandleBlockingHitResult URocketMovementComponent::Han
 
 void URocketMovementComponent::HandleImpact(const FHitResult& Hit, float TimeSlice, const FVector& MoveDelta)
 {
-	
+
 }

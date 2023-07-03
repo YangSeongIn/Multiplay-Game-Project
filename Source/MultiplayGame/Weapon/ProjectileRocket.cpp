@@ -20,6 +20,7 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 {
 	if (OtherActor == GetOwner())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("!!"));
 		return;
 	}
 	APawn* FiringPawn = GetInstigator();

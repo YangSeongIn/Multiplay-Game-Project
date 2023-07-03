@@ -45,6 +45,9 @@ protected:
 	UFUNCTION()
 		void OnRep_SecondaryWeapon();
 
+	UFUNCTION()
+		void OnRep_PrimaryWeapon();
+
 	void FireButtonPressed(bool bPressed);
 
 	void Fire();
@@ -66,6 +69,12 @@ protected:
 
 	int32 AmountToReload();
 
+	UFUNCTION(Server, Reliable)
+		void ServerSwapWeapon(AWeapon* WeaponToEquip);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastSwapWeapon(AWeapon* WeaponToEquip);
+
 private:
 	UPROPERTY()
 		class AMainCharacter* Character;
@@ -77,7 +86,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 		AWeapon* EquippedWeapon;
 
-	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	UPROPERTY(ReplicatedUsing = OnRep_PrimaryWeapon)
 		AWeapon* PrimaryWeapon;
 
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)

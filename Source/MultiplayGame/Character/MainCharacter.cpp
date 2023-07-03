@@ -281,6 +281,15 @@ void AMainCharacter::PlayReloadMontage()
 	}
 }
 
+void AMainCharacter::StopReloadMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Stop(0, ReloadMontage);
+	}
+}
+
 void AMainCharacter::PlayHitReactMontage()
 {
 	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
@@ -398,13 +407,13 @@ void AMainCharacter::ReloadButtonPressed()
 void AMainCharacter::SelectPrimaryWeapon()
 {
 	if (CombatComponent == nullptr) return;
-	CombatComponent->SwapWeapon(CombatComponent->);
+	CombatComponent->SwapWeapon(CombatComponent->PrimaryWeapon);
 }
 
 void AMainCharacter::SelectSecondaryWeapon()
 {
 	if (CombatComponent == nullptr) return;
-	CombatComponent->EquipSecondaryWeapon(GetEquippedWeapon());
+	CombatComponent->SwapWeapon(CombatComponent->SecondaryWeapon);
 }
 
 float AMainCharacter::CalculateSpeed()

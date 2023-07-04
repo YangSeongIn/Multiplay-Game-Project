@@ -30,7 +30,7 @@ public:
 		void FinishReloading();
 
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
-	void SwapWeapon(class AWeapon* WeaponToEquip);
+	void SwapWeapon(int32 WeaponNum);
 
 protected:
 	virtual void BeginPlay() override;
@@ -43,10 +43,7 @@ protected:
 		void OnRep_EquippedWeapon();
 
 	UFUNCTION()
-		void OnRep_SecondaryWeapon();
-
-	UFUNCTION()
-		void OnRep_PrimaryWeapon();
+		void OnRep_Weapons();
 
 	void FireButtonPressed(bool bPressed);
 
@@ -70,10 +67,10 @@ protected:
 	int32 AmountToReload();
 
 	UFUNCTION(Server, Reliable)
-		void ServerSwapWeapon(AWeapon* WeaponToEquip);
+		void ServerSwapWeapon(int32 WeaponNum);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void MulticastSwapWeapon(AWeapon* WeaponToEquip);
+		void MulticastSwapWeapon(int32 WeaponNum);
 
 private:
 	UPROPERTY()
@@ -86,11 +83,14 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 		AWeapon* EquippedWeapon;
 
-	UPROPERTY(ReplicatedUsing = OnRep_PrimaryWeapon)
-		AWeapon* PrimaryWeapon;
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Weapons)
+		TArray<AWeapon*> Weapons;
 
-	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
-		AWeapon* SecondaryWeapon;
+	UPROPERTY(VisibleAnywhere)
+		TMap<AWeapon*, int32> WeaponLoc;
+
+	UPROPERTY(VisibleAnywhere)
+		TMap<AActor*, const class USkeletalMeshSocket*> WeaponSocketLoc;
 
 	UPROPERTY(Replicated)
 		bool bAiming;
@@ -181,12 +181,12 @@ private:
 	void UpdateCarriedAmmo();
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
 	void ReloadEmptyWeapon();
-	void EquipPimaryWeapon(AWeapon* WeaponToEquip);
-	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
+	void EquipOnHand(AWeapon* WeaponToEquip);
+	void EquipOnBack(AWeapon* WeaponToEquip);
 	void AttachActorToBack(AActor* ActorToAttach);
 
 public:
-
+	int32 GetEmptyWeapon();
 
 
 };

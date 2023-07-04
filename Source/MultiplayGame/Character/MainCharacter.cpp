@@ -184,6 +184,7 @@ void AMainCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &AMainCharacter::ReloadButtonPressed);
 		EnhancedInputComponent->BindAction(PrimaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectPrimaryWeapon);
 		EnhancedInputComponent->BindAction(SecondaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectSecondaryWeapon);
+		EnhancedInputComponent->BindAction(TertiaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectTertiaryWeapon);
 	}
 }
 
@@ -407,13 +408,19 @@ void AMainCharacter::ReloadButtonPressed()
 void AMainCharacter::SelectPrimaryWeapon()
 {
 	if (CombatComponent == nullptr) return;
-	CombatComponent->SwapWeapon(CombatComponent->PrimaryWeapon);
+	CombatComponent->SwapWeapon(0);
 }
 
 void AMainCharacter::SelectSecondaryWeapon()
 {
 	if (CombatComponent == nullptr) return;
-	CombatComponent->SwapWeapon(CombatComponent->SecondaryWeapon);
+	CombatComponent->SwapWeapon(1);
+}
+
+void AMainCharacter::SelectTertiaryWeapon()
+{
+	if (CombatComponent == nullptr) return;
+	CombatComponent->SwapWeapon(2);
 }
 
 float AMainCharacter::CalculateSpeed()

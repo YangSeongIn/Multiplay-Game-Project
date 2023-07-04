@@ -21,6 +21,8 @@ UCombatComponent::UCombatComponent()
 
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
+
+	Weapons.SetNum(3);
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -28,11 +30,10 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
-	DOREPLIFETIME(UCombatComponent, PrimaryWeapon);
-	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
+	DOREPLIFETIME(UCombatComponent, Weapons);
 }
 
 void UCombatComponent::BeginPlay()
@@ -138,59 +139,91 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
-	if (PrimaryWeapon == nullptr)
-	{
-		EquipPimaryWeapon(WeaponToEquip);
-	}
-	else if (SecondaryWeapon == nullptr)
-	{
-		EquipSecondaryWeapon(WeaponToEquip);
-	}
-	else
+	// weapon inventory full
+	if (GetEmptyWeapon() == -1)
 	{
 		DropEquippedWeapon();
-		if (EquippedWeapon == PrimaryWeapon)
-		{
-			PrimaryWeapon = WeaponToEquip;
-		}
-		else if (EquippedWeapon == SecondaryWeapon)
-		{
-			SecondaryWeapon = WeaponToEquip;
-		}
-		EquippedWeapon = WeaponToEquip;
-		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		AttachActorToRightHand(Character);
-		EquippedWeapon->SetOwner(Character);
-		EquippedWeapon->SetHUDAmmo();
-		UpdateCarriedAmmo();
-		PlayEquipWeaponSound(WeaponToEquip);
-		ReloadEmptyWeapon();
+		EquipOnHand(WeaponToEquip);
+	}
+	// Empty weapon slot exist
+	else if (EquippedWeapon)
+	{
+		EquipOnBack(WeaponToEquip);
+	}
+	// Weapon slot is empty
+	else
+	{
+		EquipOnHand(WeaponToEquip);
 	}
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
 
-void UCombatComponent::EquipPimaryWeapon(AWeapon* WeaponToEquip)
+
+void UCombatComponent::OnRep_Weapons()
 {
-	PrimaryWeapon = WeaponToEquip;
+	int idx = -1;
+	for (int i = 0; i < Weapons.Num(); i++)
+	{
+		if (EquippedWeapon == Weapons[i])
+		{
+			idx = i;
+			break;
+		}
+	}
+	if (idx == -1) return;
+	AWeapon* Weapon = Weapons[idx];
+
+	if (Character)
+	{
+		Weapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		if (EquippedWeapon)
+		{
+			AttachActorToBack(Weapon);
+		}
+		else
+		{
+			AttachActorToRightHand(Weapon);
+		}
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+		PlayEquipWeaponSound(Weapon);
+		Weapon->SetHUDAmmo();
+		UpdateCarriedAmmo();
+	}
+}
+
+void UCombatComponent::EquipOnHand(AWeapon* WeaponToEquip)
+{
+	//	When first equip of this weapon
+	if (!WeaponLoc.Find(WeaponToEquip))
+	{
+		int32 EmptyWeapon = GetEmptyWeapon();
+		Weapons[EmptyWeapon] = WeaponToEquip;
+		WeaponLoc.Add({ WeaponToEquip, EmptyWeapon});
+	}
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	AttachActorToRightHand(Character);
 	EquippedWeapon->SetOwner(Character);
-	// Set ammo when equipped weapon
 	EquippedWeapon->SetHUDAmmo();
 	UpdateCarriedAmmo();
 	PlayEquipWeaponSound(WeaponToEquip);
 	ReloadEmptyWeapon();
 }
 
-void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+void UCombatComponent::EquipOnBack(AWeapon* WeaponToEquip)
 {
-	SecondaryWeapon = WeaponToEquip;
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	int32 EmptyWeapon = GetEmptyWeapon();
+	if (!WeaponLoc.Find(WeaponToEquip))
+	{
+		Weapons[EmptyWeapon] = WeaponToEquip;
+		WeaponLoc.Add({ WeaponToEquip, EmptyWeapon });
+	}
+	Weapons[EmptyWeapon]->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBack(WeaponToEquip);
-	EquippedWeapon->SetOwner(Character);
+	WeaponToEquip->SetOwner(Character);
 	PlayEquipWeaponSound(WeaponToEquip);
 }
 
@@ -208,49 +241,30 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
-void UCombatComponent::OnRep_PrimaryWeapon()
+void UCombatComponent::SwapWeapon(int32 WeaponNum)
 {
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	AttachActorToRightHand(Character);
-	EquippedWeapon->SetHUDAmmo();
-	UpdateCarriedAmmo();
-	PlayEquipWeaponSound(EquippedWeapon);
-	ReloadEmptyWeapon();
+	if (Weapons[WeaponNum] == EquippedWeapon) return;
+
+	ServerSwapWeapon(WeaponNum);
 }
 
-void UCombatComponent::OnRep_SecondaryWeapon()
+void UCombatComponent::ServerSwapWeapon_Implementation(int32 WeaponNum)
 {
-	if (SecondaryWeapon && Character)
-	{
-		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-		AttachActorToBack(SecondaryWeapon);
-		PlayEquipWeaponSound(EquippedWeapon);
-	}
+	MulticastSwapWeapon(WeaponNum);
 }
 
-void UCombatComponent::SwapWeapon(AWeapon* WeaponToEquip)
+void UCombatComponent::MulticastSwapWeapon_Implementation(int32 WeaponNum)
 {
-	ServerSwapWeapon(WeaponToEquip);
-}
-
-void UCombatComponent::ServerSwapWeapon_Implementation(AWeapon* WeaponToEquip)
-{
-	MulticastSwapWeapon(WeaponToEquip);
-}
-
-void UCombatComponent::MulticastSwapWeapon_Implementation(AWeapon* WeaponToEquip)
-{
-	if (EquippedWeapon == WeaponToEquip || WeaponToEquip == nullptr) return;
 	if (CombatState == ECombatState::ECS_Reloading)
 	{
 		Character->StopReloadMontage();
 		CombatState = ECombatState::ECS_Unoccupied;
 	}
-	AttachActorToBack(EquippedWeapon);
-	EquippedWeapon = WeaponToEquip;
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	AttachActorToRightHand(EquippedWeapon);
 
+	AttachActorToBack(EquippedWeapon);
+	AWeapon* SwapTarget = Weapons[WeaponNum];
+	EquippedWeapon = SwapTarget;
+	AttachActorToRightHand(SwapTarget);
 	EquippedWeapon->SetHUDAmmo();
 	UpdateCarriedAmmo();
 	PlayEquipWeaponSound(EquippedWeapon);
@@ -259,17 +273,46 @@ void UCombatComponent::MulticastSwapWeapon_Implementation(AWeapon* WeaponToEquip
 void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
 {
 	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
-	const USkeletalMeshSocket* WeaponSocket1 = Character->GetMesh()->GetSocketByName(FName("WeaponSocket1"));
-	if (WeaponSocket1)
+	if (!WeaponSocketLoc.Find(ActorToAttach))
 	{
-		WeaponSocket1->AttachActor(ActorToAttach, Character->GetMesh());
+		const USkeletalMeshSocket* WeaponSocket1 = Character->GetMesh()->GetSocketByName(FName("WeaponSocket1"));
+		if (WeaponSocket1)
+		{
+			WeaponSocket1->AttachActor(ActorToAttach, Character->GetMesh());
+			WeaponSocketLoc.Add({ ActorToAttach, WeaponSocket1 });
+		}
 	}
+	else
+	{
+		const USkeletalMeshSocket* WeaponSocket2 = Character->GetMesh()->GetSocketByName(FName("WeaponSocket2"));
+		if (WeaponSocket2)
+		{
+			WeaponSocket2->AttachActor(ActorToAttach, Character->GetMesh());
+			WeaponSocketLoc.Add({ ActorToAttach, WeaponSocket2 });
+		}
+	}
+}
+
+int32 UCombatComponent::GetEmptyWeapon()
+{
+	for (int i = 0; i < Weapons.Num(); i++)
+	{
+		if (Weapons[i] == nullptr)
+		{
+			return i;
+		}
+	}
+	return -1;
 }
 
 void UCombatComponent::DropEquippedWeapon()
 {
 	if (EquippedWeapon)
 	{
+		int32 Loc = WeaponLoc[EquippedWeapon];
+		Weapons[Loc] = nullptr;
+		WeaponLoc.Add({ EquippedWeapon, -1 });
+		WeaponSocketLoc.Add({ EquippedWeapon, nullptr });
 		EquippedWeapon->Dropped();
 	}
 }

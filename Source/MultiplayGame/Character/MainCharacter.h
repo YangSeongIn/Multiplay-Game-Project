@@ -51,6 +51,7 @@ protected:
 	void PlayHitReactMontage();
 	void SelectPrimaryWeapon();
 	void SelectSecondaryWeapon();
+	void SelectTertiaryWeapon();
 	virtual void Jump() override;
 	UFUNCTION()
 		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -189,6 +190,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* SecondaryWeaponAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* TertiaryWeaponAction;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

@@ -75,6 +75,10 @@ void AMainCharacter::Elim()
 	if (bElimmed) return;
 	if (CombatComponent && CombatComponent->EquippedWeapon)
 	{
+		for (AWeapon* Weapon : CombatComponent->Weapons)
+		{
+			Weapon->Dropped();
+		}
 		CombatComponent->EquippedWeapon->Dropped();
 	}
 	MulticastElim();

@@ -43,7 +43,7 @@ protected:
 		void OnRep_EquippedWeapon();
 
 	UFUNCTION()
-		void OnRep_Weapons();
+		void OnRep_Weapons(TArray<AWeapon*> PreviousWeapons);
 
 	void FireButtonPressed(bool bPressed);
 
@@ -72,6 +72,18 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastSwapWeapon(int32 WeaponNum);
 
+	UFUNCTION(Server, Reliable)
+		void ServerAttachActorToBack(AActor* ActorToAttach, const class USkeletalMeshSocket* WeaponSocket);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastAttachActorToBack(AActor* ActorToAttach, const class USkeletalMeshSocket* WeaponSocket);
+
+	UFUNCTION(Server, Reliable)
+		void ServerAttachActorToRightHand(AActor* ActorToAttach, const class USkeletalMeshSocket* HandSocket);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastAttachActorToRightHand(AActor* ActorToAttach, const class USkeletalMeshSocket* HandSocket);
+
 private:
 	UPROPERTY()
 		class AMainCharacter* Character;
@@ -83,14 +95,20 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 		AWeapon* EquippedWeapon;
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Weapons)
-		TArray<AWeapon*> Weapons;
+	//UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Weapons)
+	//	TArray<AWeapon*> Weapons;
 
 	UPROPERTY(VisibleAnywhere)
 		TMap<AWeapon*, int32> WeaponLoc;
 
+	UPROPERTY()
+		bool bUsedBackSocket1 = false;
+
+	UPROPERTY()
+		bool bUsedBackSocket2 = false;
+
 	UPROPERTY(VisibleAnywhere)
-		TMap<AActor*, const class USkeletalMeshSocket*> WeaponSocketLoc;
+		TMap<AActor*, int32> WeaponSocketLoc;
 
 	UPROPERTY(Replicated)
 		bool bAiming;
@@ -176,7 +194,7 @@ private:
 
 	void UpdateAmmoValues();
 
-	void DropEquippedWeapon();
+	void DropWeapon(AWeapon* WeaponToDrop);
 	void AttachActorToRightHand(AActor* ActorToAttach);
 	void UpdateCarriedAmmo();
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);

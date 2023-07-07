@@ -75,10 +75,6 @@ void AMainCharacter::Elim()
 	if (bElimmed) return;
 	if (CombatComponent && CombatComponent->EquippedWeapon)
 	{
-		for (AWeapon* Weapon : CombatComponent->Weapons)
-		{
-			Weapon->Dropped();
-		}
 		CombatComponent->EquippedWeapon->Dropped();
 	}
 	MulticastElim();
@@ -423,8 +419,7 @@ void AMainCharacter::SelectSecondaryWeapon()
 
 void AMainCharacter::SelectTertiaryWeapon()
 {
-	if (CombatComponent == nullptr) return;
-	CombatComponent->SwapWeapon(2);
+	
 }
 
 float AMainCharacter::CalculateSpeed()

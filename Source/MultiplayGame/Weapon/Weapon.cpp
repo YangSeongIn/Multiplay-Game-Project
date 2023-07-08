@@ -211,6 +211,15 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 
 void AWeapon::Fire(const FVector& HitTarget)
 {
+	if (OwnerCharacter && OwnerCharacter->GetLocalRole() == ENetRole::ROLE_AutonomousProxy)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			3,
+			FColor::Blue,
+			FString::Printf(TEXT("current weapon : %s"), *GetName())
+		);
+	}
 	if (FireAnimation)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);

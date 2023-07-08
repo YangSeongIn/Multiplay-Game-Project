@@ -408,13 +408,27 @@ void AMainCharacter::ReloadButtonPressed()
 void AMainCharacter::SelectPrimaryWeapon()
 {
 	if (CombatComponent == nullptr) return;
-	CombatComponent->SwapWeapon(0);
+	if (HasAuthority())
+	{
+		CombatComponent->SwapWeapon(0);
+	}
+	else
+	{
+		ServerWeaponSwapButtonPressed(0);
+	}
 }
 
 void AMainCharacter::SelectSecondaryWeapon()
 {
 	if (CombatComponent == nullptr) return;
-	CombatComponent->SwapWeapon(1);
+	if (HasAuthority())
+	{
+		CombatComponent->SwapWeapon(1);
+	}
+	else
+	{
+		ServerWeaponSwapButtonPressed(1);
+	}
 }
 
 void AMainCharacter::SelectTertiaryWeapon()
@@ -642,6 +656,14 @@ void AMainCharacter::ServerEquipButtonPressed_Implementation()
 	if (CombatComponent)
 	{
 		CombatComponent->EquipWeapon(OverlappingWeapon);
+	}
+}
+
+void AMainCharacter::ServerWeaponSwapButtonPressed_Implementation(int32 WeaponNum)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->SwapWeapon(WeaponNum);
 	}
 }
 

@@ -29,10 +29,10 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
-	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, Weapon1);
 	DOREPLIFETIME(UCombatComponent, Weapon2);
 	DOREPLIFETIME(UCombatComponent, Weapons);
@@ -57,7 +57,11 @@ void UCombatComponent::BeginPlay()
 		}
 	}
 
-	ServerSetWeaponsNum();
+
+	Weapons.SetNum(2);
+
+
+	//ServerSetWeaponsNum();
 }
 
 void UCombatComponent::ServerSetWeaponsNum_Implementation()
@@ -67,7 +71,7 @@ void UCombatComponent::ServerSetWeaponsNum_Implementation()
 
 void UCombatComponent::MulticastSetWeaponsNum_Implementation()
 {
-	Weapons.SetNum(2);
+	
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -168,7 +172,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	else if (Weapon1 == nullptr && Weapon2 == nullptr)
 	{
 		Weapon1 = WeaponToEquip;
-		ServerAddToWeapons(0, WeaponToEquip);
+		Weapons[0] = WeaponToEquip;
+		/*if (Character->GetLocalRole() == ENetRole::ROLE_Authority)
+		{
+			Weapons[0] = WeaponToEquip;
+		}*/
 		EquipOnHand(Weapon1);
 	}
 	// Empty weapon slot exist
@@ -177,12 +185,20 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		if (Weapon1 == nullptr) 
 		{
 			Weapon1 = WeaponToEquip;
-			ServerAddToWeapons(0, WeaponToEquip);
+			Weapons[0] = WeaponToEquip;
+			/*if (Character->GetLocalRole() == ENetRole::ROLE_Authority)
+			{
+				Weapons[0] = WeaponToEquip;
+			}*/
 		}
 		else if (Weapon2 == nullptr)
 		{
 			Weapon2 = WeaponToEquip;
-			ServerAddToWeapons(1, WeaponToEquip);
+			Weapons[1] = WeaponToEquip;
+			/*if (Character->GetLocalRole() == ENetRole::ROLE_Authority)
+			{
+				Weapons[1] = WeaponToEquip;
+			}*/
 		}
 
 		if (EquippedWeapon == nullptr)
@@ -206,15 +222,7 @@ void UCombatComponent::ServerAddToWeapons_Implementation(int32 WeaponLoc, AWeapo
 
 void UCombatComponent::MulticastAddToWeapons_Implementation(int32 WeaponLoc, AWeapon* WeaponToAdd)
 {
-	if (Character->GetLocalRole() == ENetRole::ROLE_AutonomousProxy)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			3,
-			FColor::Blue,
-			FString::Printf(TEXT("Weapons size : %d"), Weapons.Num())
-		);
-	}
+	if (WeaponToAdd == nullptr && !Weapons.Find(WeaponToAdd)) return;
 	Weapons[WeaponLoc] = WeaponToAdd;
 }
 
@@ -242,6 +250,7 @@ void UCombatComponent::EquipOnBack(AWeapon* WeaponToEquip)
 	SecondaryWeapon->SetOwner(Character);
 }
 
+// when swap weapon, this function doesn't work
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
@@ -256,51 +265,38 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
-void UCombatComponent::OnRep_SecondaryWeapon()
+void UCombatComponent::OnRep_SecondaryWeapon(AWeapon* PrevWeapon)
 {
 	if (SecondaryWeapon && Character)
 	{
 		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBack(SecondaryWeapon);
-		SecondaryWeapon->SetOwner(Character);
-		PlayEquipWeaponSound(SecondaryWeapon);
+
+		if (PrevWeapon == nullptr)
+		{
+			SecondaryWeapon->SetOwner(Character);
+			PlayEquipWeaponSound(SecondaryWeapon);
+		}	
 	}
 }
 
 void UCombatComponent::SwapWeapon(int32 WeaponNum)
 {
-	if (EquippedWeapon == nullptr || Weapons[WeaponNum] == EquippedWeapon) return;
-	if (WeaponNum == 0)
-	{
-		if (Weapon1 == nullptr) return;
-		EquippedWeapon = Weapon1;
-		if (Weapon2)
-		{
-			SecondaryWeapon = Weapon2;
-		}
-	}
-	else if (WeaponNum == 1)
-	{
-		if (Weapon2 == nullptr) return;
-		EquippedWeapon = Weapon2;
-		if (Weapon1)
-		{
-			SecondaryWeapon = Weapon1;
-		}
-	}
+	if (Weapons[WeaponNum] == EquippedWeapon) return;
+	if (EquippedWeapon == nullptr || SecondaryWeapon == nullptr) return;
+	AWeapon* WeaponTemp = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = WeaponTemp;
+
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	PlayEquipWeaponSound(EquippedWeapon);
 	EquippedWeapon->SetHUDAmmo();
 	UpdateCarriedAmmo();
-
-	//SecondaryWeapon = WeaponTemp;
-	//AttachActorToBack(WeaponTemp);
-	ServerSwapWeapon(EquippedWeapon, SecondaryWeapon);
-	//AttachActorToRightHand(EquippedWeapon);
-	
 	CombatState = ECombatState::ECS_Unoccupied;
 
-	
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+
+	ServerSwapWeapon(EquippedWeapon, SecondaryWeapon);
 }
 
 void UCombatComponent::ServerSwapWeapon_Implementation(AWeapon* WeaponToHand, AWeapon* WeaponToBack)
@@ -310,8 +306,16 @@ void UCombatComponent::ServerSwapWeapon_Implementation(AWeapon* WeaponToHand, AW
 
 void UCombatComponent::MulticastSwapWeapon_Implementation(AWeapon* WeaponToHand, AWeapon* WeaponToBack)
 {
-	AttachActorToBack(WeaponToBack);
-	AttachActorToRightHand(WeaponToHand);
+	if (WeaponToBack == nullptr || WeaponToHand == nullptr) return;
+	if (WeaponToHand)
+	{
+		AttachActorToRightHand(WeaponToHand);
+	}
+	if (WeaponToBack)
+	{
+		AttachActorToBack(WeaponToBack);
+	}
+	
 	if (CombatState == ECombatState::ECS_Reloading)
 	{
 		Character->StopReloadMontage();

@@ -82,6 +82,9 @@ private:
 	UFUNCTION(Server, Reliable)
 		void ServerEquipButtonPressed();
 
+	UFUNCTION(Server, Reliable)
+		void ServerWeaponSwapButtonPressed(int32 WeaponNum);
+
 	float AO_Yaw;
 	float InterpAO_Yaw;
 	float AO_Pitch;

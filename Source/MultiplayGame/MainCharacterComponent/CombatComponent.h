@@ -45,7 +45,7 @@ protected:
 		void OnRep_EquippedWeapon();
 
 	UFUNCTION()
-		void OnRep_SecondaryWeapon();
+		void OnRep_SecondaryWeapon(AWeapon* PrevWeapon);
 
 	void FireButtonPressed(bool bPressed);
 

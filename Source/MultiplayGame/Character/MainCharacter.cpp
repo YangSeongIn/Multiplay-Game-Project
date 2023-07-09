@@ -25,6 +25,9 @@
 #include "../PlayerState/MainPlayerState.h"
 #include "../Weapon/WeaponTypes.h"
 #include "Kismet/GameplayStatics.h"
+#include "../MainCharacterComponent/InventoryComponent.h"
+#include "../HUD/Inventory.h"
+#include "../HUD/InventoryGrid.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -50,6 +53,9 @@ AMainCharacter::AMainCharacter()
 
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatComponent->SetIsReplicated(true);
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -185,6 +191,7 @@ void AMainCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(PrimaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectPrimaryWeapon);
 		EnhancedInputComponent->BindAction(SecondaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectSecondaryWeapon);
 		EnhancedInputComponent->BindAction(TertiaryWeaponAction, ETriggerEvent::Triggered, this, &AMainCharacter::SelectTertiaryWeapon);
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Triggered, this, &AMainCharacter::InventoryKeyPressed);
 	}
 }
 
@@ -434,6 +441,27 @@ void AMainCharacter::SelectSecondaryWeapon()
 void AMainCharacter::SelectTertiaryWeapon()
 {
 	
+}
+
+void AMainCharacter::InventoryKeyPressed()
+{
+	if (InventoryWidgetClass)
+	{
+		if (InventoryWidget)
+		{
+			InventoryWidget->RemoveFromParent();
+			InventoryWidget = nullptr;
+		}
+		else
+		{
+			InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
+			if (InventoryWidget)
+			{
+				InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+				InventoryWidget->AddToViewport();
+			}
+		}
+	}
 }
 
 float AMainCharacter::CalculateSpeed()

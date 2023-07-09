@@ -12,6 +12,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "../Character/MainCharacter.h"
 #include "../PlayerController/MainPlayerController.h"
+#include "../MainCharacterComponent/ItemDataComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -45,6 +46,7 @@ AWeapon::AWeapon()
 	WeaponMesh->SetEnableGravity(true);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+	ItemDataComponent = CreateDefaultSubobject<UItemDataComponent>(TEXT("ItemDataComponent"));
 }
 
 void AWeapon::BeginPlay()

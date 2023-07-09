@@ -68,23 +68,8 @@ protected:
 
 	int32 AmountToReload();
 
-	UFUNCTION(Server, Reliable)
-		void ServerSwapWeapon(AWeapon* WeaponToHand, AWeapon* WeaponToBack);
-
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastSwapWeapon(AWeapon* WeaponToHand, AWeapon* WeaponToBack);
-
-	UFUNCTION(Server, Reliable)
-		void ServerAddToWeapons(int32 WeaponLoc, AWeapon* WeaponToAdd);
-
-	UFUNCTION(NetMulticast, Reliable)
-		void MulticastAddToWeapons(int32 WeaponLoc, AWeapon* WeaponToAdd);
-
-	UFUNCTION(Server, Reliable)
-		void ServerSetWeaponsNum();
-
-	UFUNCTION(NetMulticast, Reliable)
-		void MulticastSetWeaponsNum();
 
 private:
 	UPROPERTY()

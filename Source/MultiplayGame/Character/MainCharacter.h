@@ -52,6 +52,7 @@ protected:
 	void SelectPrimaryWeapon();
 	void SelectSecondaryWeapon();
 	void SelectTertiaryWeapon();
+	void InventoryKeyPressed();
 	virtual void Jump() override;
 	UFUNCTION()
 		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -78,6 +79,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class UCombatComponent* CombatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		class UInventoryComponent* InventoryComponent;
 
 	UFUNCTION(Server, Reliable)
 		void ServerEquipButtonPressed();
@@ -193,8 +197,18 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* SecondaryWeaponAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* TertiaryWeaponAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* InventoryAction;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<UUserWidget> InventoryWidgetClass;
+
+	UPROPERTY()
+		class UInventory* InventoryWidget;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -214,4 +228,6 @@ public:
 	ECombatState GetCombatState() const;
 	UCombatComponent* GetCombatComponent() const { return CombatComponent; };
 	class AWeapon* GetEquippedWeapon() const;
+	FORCEINLINE UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; };
+	FORCEINLINE void SetInventoryWidgetNull() { InventoryWidget = nullptr; };
 };

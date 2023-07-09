@@ -14,6 +14,7 @@
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
+#include "ItemDataComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -59,19 +60,6 @@ void UCombatComponent::BeginPlay()
 
 
 	Weapons.SetNum(2);
-
-
-	//ServerSetWeaponsNum();
-}
-
-void UCombatComponent::ServerSetWeaponsNum_Implementation()
-{
-	MulticastSetWeaponsNum();
-}
-
-void UCombatComponent::MulticastSetWeaponsNum_Implementation()
-{
-	
 }
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -173,10 +161,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Weapon1 = WeaponToEquip;
 		Weapons[0] = WeaponToEquip;
-		/*if (Character->GetLocalRole() == ENetRole::ROLE_Authority)
-		{
-			Weapons[0] = WeaponToEquip;
-		}*/
 		EquipOnHand(Weapon1);
 	}
 	// Empty weapon slot exist
@@ -186,19 +170,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		{
 			Weapon1 = WeaponToEquip;
 			Weapons[0] = WeaponToEquip;
-			/*if (Character->GetLocalRole() == ENetRole::ROLE_Authority)
-			{
-				Weapons[0] = WeaponToEquip;
-			}*/
 		}
 		else if (Weapon2 == nullptr)
 		{
 			Weapon2 = WeaponToEquip;
 			Weapons[1] = WeaponToEquip;
-			/*if (Character->GetLocalRole() == ENetRole::ROLE_Authority)
-			{
-				Weapons[1] = WeaponToEquip;
-			}*/
 		}
 
 		if (EquippedWeapon == nullptr)
@@ -213,17 +189,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
-}
 
-void UCombatComponent::ServerAddToWeapons_Implementation(int32 WeaponLoc, AWeapon* WeaponToAdd)
-{
-	MulticastAddToWeapons(WeaponLoc, WeaponToAdd);
-}
-
-void UCombatComponent::MulticastAddToWeapons_Implementation(int32 WeaponLoc, AWeapon* WeaponToAdd)
-{
-	if (WeaponToAdd == nullptr && !Weapons.Find(WeaponToAdd)) return;
-	Weapons[WeaponLoc] = WeaponToAdd;
+	if (WeaponToEquip->GetItemDataComponent())
+	{
+		WeaponToEquip->GetItemDataComponent()->Interact(Character);
+	}
 }
 
 void UCombatComponent::EquipOnHand(AWeapon* WeaponToEquip)
@@ -296,30 +266,17 @@ void UCombatComponent::SwapWeapon(int32 WeaponNum)
 
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 
-	ServerSwapWeapon(EquippedWeapon, SecondaryWeapon);
-}
+	AttachActorToRightHand(EquippedWeapon);
+	AttachActorToBack(SecondaryWeapon);
 
-void UCombatComponent::ServerSwapWeapon_Implementation(AWeapon* WeaponToHand, AWeapon* WeaponToBack)
-{
-	MulticastSwapWeapon(WeaponToHand, WeaponToBack);
+	MulticastSwapWeapon(EquippedWeapon, SecondaryWeapon);
 }
 
 void UCombatComponent::MulticastSwapWeapon_Implementation(AWeapon* WeaponToHand, AWeapon* WeaponToBack)
 {
-	if (WeaponToBack == nullptr || WeaponToHand == nullptr) return;
-	if (WeaponToHand)
-	{
-		AttachActorToRightHand(WeaponToHand);
-	}
-	if (WeaponToBack)
-	{
-		AttachActorToBack(WeaponToBack);
-	}
-	
-	if (CombatState == ECombatState::ECS_Reloading)
-	{
-		Character->StopReloadMontage();
-	}
+
+	Character->StopReloadMontage();
+
 }
 
 void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)

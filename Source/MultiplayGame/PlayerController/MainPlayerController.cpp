@@ -31,6 +31,7 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 	{
 		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
 	}
+
 }
 
 void AMainPlayerController::Tick(float DeltaTime)

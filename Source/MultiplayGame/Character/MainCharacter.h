@@ -207,6 +207,9 @@ private:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<UUserWidget> InventoryWidgetClass;
 
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AActor> CharacterMeshCaptureClass;
+
 	UPROPERTY()
 		class UInventory* InventoryWidget;
 

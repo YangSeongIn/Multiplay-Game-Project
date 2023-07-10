@@ -128,31 +128,33 @@ void UInventoryComponent::DEBUGPrintContents()
 	}
 }
 
-//void UInventoryComponent::TransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
-//{
-//	FInventorySlotStruct LocalSlotContent = SourceInventory->Slots[SourceIndex];
-//	if (TargetIndex >= 0)
-//	{
-//		if (Slots[TargetIndex].ItemID != LocalSlotContent.ItemID)
-//		{
-//			SourceInventory->Slots[SourceIndex] = Slots[TargetIndex];
-//			Slots[TargetIndex] = LocalSlotContent;
-//			MulticastUpdate();
-//		}
-//	}
-//}
-//
-//void UInventoryComponent::MulticastUpdate()
-//{
-//	if (OnInventoryUpdate.IsBound())
-//	{
-//		OnInventoryUpdate.Broadcast();
-//	}
-//}
-//
-//void UInventoryComponent::ServerTransferSlots_Implementation(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
-//{
-//	TransferSlots(SourceIndex, SourceInventory, TargetIndex);
-//}
-//
+void UInventoryComponent::TransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
+{
+	if (SourceInventory == nullptr || Slots.Num() <= SourceIndex) return;
+	FInventorySlotStruct SlotContentTemp = SourceInventory->Slots[SourceIndex];
+	if (TargetIndex >= 0)
+	{
+		if (Slots[TargetIndex].ItemID != SlotContentTemp.ItemID)
+		{
+			SourceInventory->Slots[SourceIndex] = Slots[TargetIndex];
+			Slots[TargetIndex] = SlotContentTemp;
+			MulticastUpdate();
+			SourceInventory->MulticastUpdate();
+		}
+	}
+}
+
+void UInventoryComponent::MulticastUpdate_Implementation()
+{
+	if (OnInventoryUpdate.IsBound())
+	{
+		OnInventoryUpdate.Broadcast();
+	}
+}
+
+void UInventoryComponent::ServerTransferSlots_Implementation(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
+{
+	TransferSlots(SourceIndex, SourceInventory, TargetIndex);
+}
+
 

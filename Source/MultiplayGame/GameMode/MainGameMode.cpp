@@ -8,6 +8,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "../PlayerState/MainPlayerState.h"
 #include "../GameState/MainGameState.h"
+#include "../CharacterMeshCapture/CharacterMeshCapture.h"
 
 namespace MatchState
 {
@@ -99,5 +100,25 @@ void AMainGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* El
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+	}
+}
+
+void AMainGameMode::SetMeshCapture(UWorld* World, AController* Controller, USkeletalMeshComponent* SkeletalMeshComp)
+{
+	TArray<AActor*> MeshCaptureActors;
+	UGameplayStatics::GetAllActorsOfClass(World, ACharacterMeshCapture::StaticClass(), MeshCaptureActors);
+	for (int i = 0; i < MeshCaptureActors.Num(); i++)
+	{
+		GLog->Log("SetMEshCapture");
+		if (!MeshCaptureMapIC.Find(i))
+		{
+			MeshCaptureMapCI.Add({ Controller, i });
+			MeshCaptureMapIC.Add({ i, Controller });
+			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MeshCaptureActors[i]);
+			if (MeshCapture)
+			{
+				MeshCapture->SetSkeletaMesh(SkeletalMeshComp->GetSkeletalMeshAsset());
+			}		
+		}
 	}
 }

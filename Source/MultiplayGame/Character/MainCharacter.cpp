@@ -28,6 +28,7 @@
 #include "../MainCharacterComponent/InventoryComponent.h"
 #include "../HUD/Inventory.h"
 #include "../HUD/InventoryGrid.h"
+#include "../CharacterMeshCapture/CharacterMeshCapture.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -146,6 +147,12 @@ void AMainCharacter::BeginPlay()
 		OnTakeAnyDamage.AddDynamic(this, &AMainCharacter::ReceiveDamage);
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
+	}
+	
+	AMainGameMode* GameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		GameMode->SetMeshCapture(GetWorld(), Controller, GetMesh());
 	}
 }
 

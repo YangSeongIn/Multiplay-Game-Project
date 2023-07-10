@@ -25,7 +25,7 @@ void UInventoryGrid::DisplayInventory(UInventoryComponent* InventoryComp)
 void UInventoryGrid::UpdateInventory()
 {
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
-	if (Character != nullptr)
+	if (Character)
 	{
 		InventoryComponent = Character->GetInventoryComponent();
 		if (InventoryComponent)
@@ -36,10 +36,10 @@ void UInventoryGrid::UpdateInventory()
 				for (int i = 0; i < Arr.Num(); i++)
 				{
 					UInventorySlot* ItemSlot = Cast<UInventorySlot>(CreateWidget(this, InventorySlotWidgetClass));
-					ItemSlot->ItemID = Arr[i].ItemID;
-					ItemSlot->Quantity = Arr[i].Quantity;
-					ItemSlot->InventoryComponent = InventoryComponent;
-					ItemSlot->ContentIndex = i;
+					ItemSlot->SetItemID(Arr[i].ItemID);
+					ItemSlot->SetQuantity(Arr[i].Quantity);
+					ItemSlot->SetInventoryComponent(InventoryComponent);
+					ItemSlot->SetSlotIndex(i);
 					ItemGrid->AddChildToWrapBox(ItemSlot);
 				}
 				InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));

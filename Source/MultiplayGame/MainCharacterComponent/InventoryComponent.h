@@ -16,6 +16,8 @@ class MULTIPLAYGAME_API UInventoryComponent : public UActorComponent
 
 public:
 	UInventoryComponent();
+	friend class AMainCharacter;
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	FOnInventoryUpdate OnInventoryUpdate;
@@ -30,11 +32,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void DEBUGPrintContents();
-	//void TransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
-	//void MulticastUpdate();
+	void TransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
 
-	//UFUNCTION(Server, Reliable)
-	//	void ServerTransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastUpdate();
+
+	UFUNCTION(Server, Reliable)
+		void ServerTransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
 
 protected:
 	virtual void BeginPlay() override;

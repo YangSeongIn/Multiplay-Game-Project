@@ -7,6 +7,10 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "../HUD/DragItemVisual.h"
+#include "../DragDrop/DragDropSlot.h"
+#include "../MainCharacterComponent/InventoryComponent.h"
+#include "Components/Border.h"
 
 void UInventorySlot::NativePreConstruct()
 {
@@ -16,10 +20,8 @@ void UInventorySlot::NativePreConstruct()
 		FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemID), "");
 		if (ItemStruct)
 		{
-			GLog->Log("11");
 			if (IconImage)
 			{
-				GLog->Log("00");
 				IconImage->SetBrushFromTexture(ItemStruct->Thumbnail);
 				IconImage->SetVisibility(ESlateVisibility::Visible);
 			}
@@ -57,44 +59,70 @@ FReply UInventorySlot::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometr
 void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
-	/*if (DragItemVisualClass != nullptr)
+	if (DragItemVisualClass)
 	{
 		DragItemVisual = Cast<UDragItemVisual>(CreateWidget(this, DragItemVisualClass));
-		if (DragItemVisual != nullptr)
+		if (DragItemVisual)
 		{
-			DragItemVisual->ItemID = ItemID;
-			DragDropOperation = Cast<UItemDragDropOperation>(UWidgetBlueprintLibrary::CreateDragDropOperation(UItemDragDropOperation::StaticClass()));
-			if (DragDropOperation != nullptr)
+			DragItemVisual->SetItemID(ItemID);
+			DragDropSlot = Cast<UDragDropSlot>(UWidgetBlueprintLibrary::CreateDragDropOperation(UDragDropSlot::StaticClass()));
+			if (DragDropSlot)
 			{
-				DragDropOperation->SetInventoryComponent(InventorySystem);
-				DragDropOperation->SetContentIndex(ContentIndex);
-				DragDropOperation->DefaultDragVisual = DragItemVisual;
+				DragDropSlot->SetInventoryComponent(InventoryComponent);
+				DragDropSlot->SetContentIndex(SlotIndex);
+				DragDropSlot->DefaultDragVisual = DragItemVisual;
 			}
 		}
 	}
-	OutOperation = DragDropOperation;*/
+	OutOperation = DragDropSlot;
 }
 
 bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-	/*UItemDragDropOperation* DDO = Cast<UItemDragDropOperation>(InOperation);
-	if (DDO != nullptr)
+	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
+	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
+	if (SlotForDragDrop)
 	{
-		if (DDO->GetContentIndex() != ContentIndex || DDO->GetInventoryComponent() != InventorySystem)
+		if (SlotForDragDrop->GetContentIndex() != SlotIndex || SlotForDragDrop->GetInventoryComponent() != InventoryComponent)
 		{
-			GLog->Log("Drop success!");
-			InventorySystem->ServerTransferSlots(DDO->GetContentIndex(), DDO->GetInventoryComponent(), ContentIndex);
+			InventoryComponent->ServerTransferSlots(SlotForDragDrop->GetContentIndex(), SlotForDragDrop->GetInventoryComponent(), SlotIndex);
 		}
-		else
+		// return true;
+	}
+	return false;
+}
+
+void UInventorySlot::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDragEnter(InGeometry, InDragDropEvent, InOperation);
+	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
+	if (SlotForDragDrop)
+	{
+		if (OutBorder)
 		{
-			GLog->Log("Drop fail!");
+			OutBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f));
+			InBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f));
 		}
 	}
-	else
+}
+
+void UInventorySlot::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDragLeave(InDragDropEvent, InOperation);
+	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
+	if (SlotForDragDrop)
 	{
-		GLog->Log("Drop null!");
-	}*/
-	return false;
+		if (OutBorder)
+		{
+			OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
+			InBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
+		}
+	}
+}
+
+void UInventorySlot::SetQuantity(int32 TargetQuantity)
+{
+	QuantityText->SetText(FText::FromString(FString::FromInt(TargetQuantity)));
 }
 
 void UInventorySlot::SetSlot()
@@ -104,10 +132,8 @@ void UInventorySlot::SetSlot()
 		FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemID), "");
 		if (ItemStruct)
 		{
-			GLog->Log("11");
 			if (IconImage)
 			{
-				GLog->Log("00");
 				IconImage->SetBrushFromTexture(ItemStruct->Thumbnail);
 				IconImage->SetVisibility(ESlateVisibility::Visible);
 			}

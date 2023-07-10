@@ -13,7 +13,7 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 		FString ItemID;
 	UPROPERTY(BlueprintReadWrite)
-		int Quantity;
+		int32 Quantity;
 };
 
 USTRUCT(BlueprintType)
@@ -31,5 +31,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		AActor* ItemClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int StackSize;
+		int32 StackSize;
 };

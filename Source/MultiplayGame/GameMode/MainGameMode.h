@@ -36,10 +36,16 @@ public:
 
 	float LevelStartingTime = 0.f;
 
+	void SetMeshCapture(UWorld* World, AController* Controller, USkeletalMeshComponent* SkeletalMeshComp);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
 
 private:
 	float CountdownTime = 0.f;
+
+	UPROPERTY(VisibleAnywhere)
+	TMap<AController*, int32> MeshCaptureMapCI;
+	TMap<int32, AController*> MeshCaptureMapIC;
 };

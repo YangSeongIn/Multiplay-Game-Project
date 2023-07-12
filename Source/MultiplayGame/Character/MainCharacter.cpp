@@ -149,71 +149,7 @@ void AMainCharacter::BeginPlay()
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
-
-	if (IsLocallyControlled())
-	{
-		if (ENetRole::ROLE_Authority == GetLocalRole())
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Server Call"));
-			AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-			if (MainGameMode)
-			{
-				ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
-				if (MeshCapture)
-				{
-					PlayerInherenceNum = MainGameMode->GetPlayerNum();
-					CharacterMeshCapture = MeshCapture;
-					MainGameMode->AddPlayerNum();
-				}
-			}
-		}
-		else if (ENetRole::ROLE_AutonomousProxy == GetLocalRole())
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Client Call"));
-			ServerSetMeshCapture();
-		}
-	}
 	
-}
-
-void AMainCharacter::ServerSetMeshCapture_Implementation()
-{
-	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (MainGameMode)
-	{
-		if (MainGameMode->CanAddPlayerNum())
-		{
-			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
-			if (MeshCapture)
-			{
-				ClientSetMeshCapture(PlayerInherenceNum, MeshCapture);
-			}
-		}
-	}
-}
-
-void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
-{
-	PlayerInherenceNum = n;
-	if (MeshCapture)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("MeshCapture : Client Set Player Num"));
-		CharacterMeshCapture = MeshCapture;
-		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-		//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : %d"), PlayerInherenceNum);
-	}
-	ServerAddPlayerNum();
-}
-
-void AMainCharacter::ServerAddPlayerNum_Implementation()
-{
-	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
-	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (MainGameMode)
-	{
-		MainGameMode->AddPlayerNum();
-	}
 }
 
 // Called every frame
@@ -523,10 +459,10 @@ void AMainCharacter::InventoryKeyPressed()
 		else
 		{
 			InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
-			if (CharacterMeshCapture)
+			/*if (CharacterMeshCapture)
 			{
 				CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
-			}
+			}*/
 			if (InventoryWidget)
 			{
 				InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);

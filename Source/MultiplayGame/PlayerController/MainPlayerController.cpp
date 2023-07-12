@@ -13,6 +13,7 @@
 #include "../HUD/Announcement.h"
 #include "Kismet/GameplayStatics.h"
 #include "../GameState/MainGameState.h"
+#include "../CharacterMeshCapture/CharacterMeshCapture.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -30,8 +31,88 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 	if (MainCharacter)
 	{
 		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
-	}
+		AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+		if (MainGameMode)
+		{
+			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
+			if (MeshCapture)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Server Call"));
+				PlayerInherenceNum = MainGameMode->GetPlayerNum();
+				CharacterMeshCapture = MeshCapture;
+				MainCharacter->SetCharacterMeshCapture(MeshCapture);
+				CharacterMeshCapture->SetSkeletaMesh(MainCharacter->GetMesh()->GetSkeletalMeshAsset());
+				MainGameMode->AddPlayerNum();
+			}
+		}
+		//if (ENetRole::ROLE_Authority == GetLocalRole())
+		//{
 
+			if (IsLocalController())
+			{
+				
+				UE_LOG(LogTemp, Warning, TEXT("Client Call"));
+				ServerSetMeshCapture(InPawn);
+			}
+		//}
+	}
+}
+
+void AMainPlayerController::ServerSetMeshCapture_Implementation(APawn* InPawn)
+{
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (MainGameMode)
+	{
+		if (MainGameMode->CanAddPlayerNum())
+		{
+			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
+			if (MeshCapture)
+			{
+				ClientSetMeshCapture(InPawn, PlayerInherenceNum, MeshCapture);
+			}
+		}
+	}
+}
+
+void AMainPlayerController::ClientSetMeshCapture_Implementation(APawn* InPawn, int32 n, ACharacterMeshCapture* MeshCapture)
+{
+	PlayerInherenceNum = n;
+	if (MeshCapture)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client Set Player Num"));
+		CharacterMeshCapture = MeshCapture;
+		CharacterMeshCapture->SetCaptureTexture(n);
+		AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetPawn());
+		if (MainCharacter)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Client Set Mesh in Client"));
+			MainCharacter->SetCharacterMeshCapture(MeshCapture);
+			CharacterMeshCapture->SetSkeletaMesh(MainCharacter->GetMesh()->GetSkeletalMeshAsset());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Pawn is Null"));
+			
+		}
+		
+		//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : %d"), PlayerInherenceNum);
+	}
+	ServerAddPlayerNum(InPawn);
+}
+
+void AMainPlayerController::ServerAddPlayerNum_Implementation(APawn* InPawn)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ServerAddNum0"));
+	if (ENetRole::ROLE_Authority == GetLocalRole())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ServerAddNum1"));
+		AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+		if (MainGameMode)
+			UE_LOG(LogTemp, Warning, TEXT("ServerAddNum2"));
+		{
+			MainGameMode->AddPlayerNum();
+		}
+	}
 }
 
 void AMainPlayerController::Tick(float DeltaTime)

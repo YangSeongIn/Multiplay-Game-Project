@@ -31,15 +31,6 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastElim();
 
-	UFUNCTION(Server, Reliable)
-		void ServerSetMeshCapture();
-
-	UFUNCTION(Client, Reliable)
-		void ClientSetMeshCapture(int32 n, class ACharacterMeshCapture* MeshCapture);
-
-	UFUNCTION(Server, Reliable)
-		void ServerAddPlayerNum();
-
 protected:
 	virtual void BeginPlay() override;
 
@@ -222,9 +213,6 @@ private:
 	UPROPERTY()
 		class UInventory* InventoryWidget;
 
-	UPROPERTY(VisibleAnywhere)
-	int32 PlayerInherenceNum;
-
 	UPROPERTY(VisibleAnywhere/*, Replicated*/)
 		class ACharacterMeshCapture* CharacterMeshCapture;
 
@@ -248,5 +236,5 @@ public:
 	class AWeapon* GetEquippedWeapon() const;
 	FORCEINLINE UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; };
 	FORCEINLINE void SetInventoryWidgetNull() { InventoryWidget = nullptr; };
-	FORCEINLINE void SetMeshCapture(class ACharacterMeshCapture* NewMeshCapture) { CharacterMeshCapture = NewMeshCapture; };
+	FORCEINLINE void SetCharacterMeshCapture(class ACharacterMeshCapture* MeshCapture) { CharacterMeshCapture = MeshCapture; };
 };

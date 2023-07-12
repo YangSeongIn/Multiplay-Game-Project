@@ -32,6 +32,21 @@ public:
 	void HandleMatchHasStarted();
 	void HandleCooldown();
 
+	UFUNCTION(Server, Reliable)
+		void ServerSetMeshCapture(APawn* InPaw);
+
+	UFUNCTION(Client, Reliable)
+		void ClientSetMeshCapture(APawn* InPaw, int32 n, class ACharacterMeshCapture* MeshCapture);
+
+	UFUNCTION(Server, Reliable)
+		void ServerAddPlayerNum(APawn* InPaw);
+
+	UPROPERTY(VisibleAnywhere)
+		int32 PlayerInherenceNum;
+
+	UPROPERTY(VisibleAnywhere/*, Replicated*/)
+		class ACharacterMeshCapture* CharacterMeshCapture;
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();

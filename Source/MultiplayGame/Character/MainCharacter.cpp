@@ -29,6 +29,7 @@
 #include "../HUD/Inventory.h"
 #include "../HUD/InventoryGrid.h"
 #include "../CharacterMeshCapture/CharacterMeshCapture.h"
+#include "../GameState/MainGameState.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -148,11 +149,70 @@ void AMainCharacter::BeginPlay()
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
-	
-	AMainGameMode* GameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(this));
-	if (GameMode)
+
+	if (IsLocallyControlled())
 	{
-		GameMode->SetMeshCapture(GetWorld(), Controller, GetMesh());
+		if (ENetRole::ROLE_Authority == GetLocalRole())
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Server Call"));
+			AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+			if (MainGameMode)
+			{
+				ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
+				if (MeshCapture)
+				{
+					PlayerInherenceNum = MainGameMode->GetPlayerNum();
+					CharacterMeshCapture = MeshCapture;
+					MainGameMode->AddPlayerNum();
+				}
+			}
+		}
+		else if (ENetRole::ROLE_AutonomousProxy == GetLocalRole())
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Client Call"));
+			ServerSetMeshCapture();
+		}
+	}
+	
+}
+
+void AMainCharacter::ServerSetMeshCapture_Implementation()
+{
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (MainGameMode)
+	{
+		if (MainGameMode->CanAddPlayerNum())
+		{
+			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
+			if (MeshCapture)
+			{
+				ClientSetMeshCapture(PlayerInherenceNum, MeshCapture);
+			}
+		}
+	}
+}
+
+void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
+{
+	PlayerInherenceNum = n;
+	if (MeshCapture)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MeshCapture : Client Set Player Num"));
+		CharacterMeshCapture = MeshCapture;
+		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
+		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+		//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : %d"), PlayerInherenceNum);
+	}
+	ServerAddPlayerNum();
+}
+
+void AMainCharacter::ServerAddPlayerNum_Implementation()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (MainGameMode)
+	{
+		MainGameMode->AddPlayerNum();
 	}
 }
 
@@ -208,6 +268,7 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(AMainCharacter, Health);
+	//DOREPLIFETIME_CONDITION(AMainCharacter, CharacterMeshCapture, COND_OwnerOnly);
 }
 
 void AMainCharacter::PostInitializeComponents()
@@ -462,6 +523,10 @@ void AMainCharacter::InventoryKeyPressed()
 		else
 		{
 			InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
+			if (CharacterMeshCapture)
+			{
+				CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
+			}
 			if (InventoryWidget)
 			{
 				InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);

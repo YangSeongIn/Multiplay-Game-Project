@@ -24,4 +24,10 @@ public:
 	UPROPERTY(meta = (BindWidget))
 		class UInventoryGrid* InventoryGrid;
 
+	UPROPERTY(meta = (BindWidget))
+		class UImage* MeshCaptureImage;
+
+public:
+	void SetMeshCaptureImage(class UMaterialInterface* Image);
+
 };

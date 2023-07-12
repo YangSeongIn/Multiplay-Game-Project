@@ -9,6 +9,7 @@
 #include "../PlayerState/MainPlayerState.h"
 #include "../GameState/MainGameState.h"
 #include "../CharacterMeshCapture/CharacterMeshCapture.h"
+#include "Components/SceneCaptureComponent2D.h"
 
 namespace MatchState
 {
@@ -18,6 +19,8 @@ namespace MatchState
 AMainGameMode::AMainGameMode()
 {
 	bDelayedStart = true;
+
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacterMeshCapture::StaticClass(), MeshCaptures);
 }
 
 void AMainGameMode::BeginPlay()
@@ -63,6 +66,18 @@ void AMainGameMode::OnMatchStateSet()
 	}
 }
 
+AActor* AMainGameMode::GetMeshCapture(int32 n)
+{
+	if (MeshCaptures.Num() <= n) return nullptr;
+	return MeshCaptures[n];
+}
+
+bool AMainGameMode::CanAddPlayerNum()
+{
+	if (PlayerNum + 1 < MeshCaptures.Num()) return true;
+	return false;
+}
+
 void AMainGameMode::PlayerEliminated(AMainCharacter* ElimmedCharacter, AMainPlayerController* VictimController, AMainPlayerController* AttackerController)
 {
 	AMainPlayerState* AttackerPlayerState = AttackerController ? Cast<AMainPlayerState>(AttackerController->PlayerState) : nullptr;
@@ -100,25 +115,5 @@ void AMainGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* El
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
-	}
-}
-
-void AMainGameMode::SetMeshCapture(UWorld* World, AController* Controller, USkeletalMeshComponent* SkeletalMeshComp)
-{
-	TArray<AActor*> MeshCaptureActors;
-	UGameplayStatics::GetAllActorsOfClass(World, ACharacterMeshCapture::StaticClass(), MeshCaptureActors);
-	for (int i = 0; i < MeshCaptureActors.Num(); i++)
-	{
-		GLog->Log("SetMEshCapture");
-		if (!MeshCaptureMapIC.Find(i))
-		{
-			MeshCaptureMapCI.Add({ Controller, i });
-			MeshCaptureMapIC.Add({ i, Controller });
-			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MeshCaptureActors[i]);
-			if (MeshCapture)
-			{
-				MeshCapture->SetSkeletaMesh(SkeletalMeshComp->GetSkeletalMeshAsset());
-			}		
-		}
 	}
 }

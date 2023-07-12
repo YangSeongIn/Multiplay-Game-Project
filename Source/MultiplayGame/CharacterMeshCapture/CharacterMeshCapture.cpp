@@ -4,6 +4,9 @@
 #include "CharacterMeshCapture.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "../HUD/Inventory.h"
+#include "Components/Image.h"
 
 ACharacterMeshCapture::ACharacterMeshCapture()
 {
@@ -29,6 +32,24 @@ void ACharacterMeshCapture::BeginPlay()
 	
 	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshComponent);
 }
+
+void ACharacterMeshCapture::SetCaptureTexture(int32 n)
+{
+	if (ActTextures.Num() > n)
+	{
+		SceneCaptureComponent2D->TextureTarget = ActTextures[n];
+	}
+}
+
+void ACharacterMeshCapture::SetCaptureInventoryImage(UInventory* Inventory, int32 n)
+{
+	if (Inventory && InvTextures.Num() > n)
+	{
+		Inventory->SetMeshCaptureImage(InvTextures[n]);
+	}
+}
+
+
 
 void ACharacterMeshCapture::Tick(float DeltaTime)
 {

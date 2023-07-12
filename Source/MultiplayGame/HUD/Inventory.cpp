@@ -7,6 +7,7 @@
 #include "../Character/MainCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "InventoryGrid.h"
+#include "Components/Image.h"
 
 void UInventory::NativeConstruct()
 {
@@ -49,4 +50,9 @@ FReply UInventory::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent&
 		RemoveFromParent();
 	}
 	return FReply::Handled();
+}
+
+void UInventory::SetMeshCaptureImage(UMaterialInterface* Image)
+{
+	MeshCaptureImage->SetBrushFromMaterial(Image);
 }

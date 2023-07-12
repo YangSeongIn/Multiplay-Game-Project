@@ -27,10 +27,17 @@ private:
 	UPROPERTY(VisibleAnywhere)
 		class USceneCaptureComponent2D* SceneCaptureComponent2D;
 
+	UPROPERTY(EditAnywhere)
+		TArray<TObjectPtr<class UTextureRenderTarget2D>> ActTextures;
+
+	UPROPERTY(EditAnywhere)
+		TArray<class UMaterialInterface*> InvTextures;
+
 	UPROPERTY(VisibleAnywhere)
 		USkeletalMeshComponent* SkeletalMeshComponent;
 
 public:
 	FORCEINLINE void SetSkeletaMesh(USkeletalMesh* NewMesh) { SkeletalMeshComponent->SetSkeletalMesh(NewMesh); };
-
+	void SetCaptureTexture(int32 n);
+	void SetCaptureInventoryImage(class UInventory* Inventory, int32 n);
 };

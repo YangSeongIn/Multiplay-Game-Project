@@ -36,7 +36,7 @@ public:
 
 	float LevelStartingTime = 0.f;
 
-	void SetMeshCapture(UWorld* World, AController* Controller, USkeletalMeshComponent* SkeletalMeshComp);
+	void SetMeshCapture(UWorld* World, AController* Controller, USkeletalMeshComponent* SkeletalMeshComp, int32& PlayerInherenceNum);
 
 protected:
 	virtual void BeginPlay() override;
@@ -46,6 +46,15 @@ private:
 	float CountdownTime = 0.f;
 
 	UPROPERTY(VisibleAnywhere)
-	TMap<AController*, int32> MeshCaptureMapCI;
-	TMap<int32, AController*> MeshCaptureMapIC;
+	TArray<AActor*> MeshCaptures;
+	int32 PlayerNum = 0;
+
+public:
+	FORCEINLINE int32 GetPlayerNum() { return PlayerNum; };
+	AActor* GetMeshCapture(int32 n);
+	FORCEINLINE void AddPlayerNum() { 
+		UE_LOG(LogTemp, Log, TEXT("PlayerNum : %d"), PlayerNum);
+		PlayerNum++; 
+	};
+	bool CanAddPlayerNum();
 };

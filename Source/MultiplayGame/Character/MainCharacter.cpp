@@ -30,6 +30,7 @@
 #include "../HUD/InventoryGrid.h"
 #include "../CharacterMeshCapture/CharacterMeshCapture.h"
 #include "../GameState/MainGameState.h"
+#include "../GameInstance/MainGameInstance.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -150,35 +151,35 @@ void AMainCharacter::BeginPlay()
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
 
-	if (IsLocallyControlled())
+	if (HasAuthority() && IsLocallyControlled())
 	{
-		if (ENetRole::ROLE_Authority == GetLocalRole())
+		UMainGameInstance* MainGameInstance = Cast<UMainGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		if (MainGameInstance)
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Server Call"));
-			AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-			if (MainGameMode)
+			MainGameInstance->SetPlayerNum(MainGameInstance->GetPlayerNum() + 1);
+			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameInstance->GetMeshCapture(MainGameInstance->GetPlayerNum()));
+			if (MeshCapture)
 			{
-				ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
-				if (MeshCapture)
-				{
-					PlayerInherenceNum = MainGameMode->GetPlayerNum();
-					CharacterMeshCapture = MeshCapture;
-					MainGameMode->AddPlayerNum();
-				}
+				UE_LOG(LogTemp, Warning, TEXT("Instance Player Num : %d, Character Name : %d"), MainGameInstance->GetPlayerNum(), *this->GetName());
+				PlayerInherenceNum = MainGameInstance->GetPlayerNum();
+				CharacterMeshCapture = MeshCapture;
+				MeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+				MainGameInstance->SetPlayerNum(PlayerInherenceNum + 1);
 			}
-		}
-		else if (ENetRole::ROLE_AutonomousProxy == GetLocalRole())
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Client Call"));
-			ServerSetMeshCapture();
 		}
 	}
 	
+
+	/*else if (GetLocalRole() == ENetRole::ROLE_AutonomousProxy && IsLocallyControlled())
+	{
+		ServerSetMeshCapture();
+	}*/
+
 }
 
 void AMainCharacter::ServerSetMeshCapture_Implementation()
 {
-	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	/*AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (MainGameMode)
 	{
 		if (MainGameMode->CanAddPlayerNum())
@@ -186,34 +187,36 @@ void AMainCharacter::ServerSetMeshCapture_Implementation()
 			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
 			if (MeshCapture)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("Client Call 2"));
 				ClientSetMeshCapture(PlayerInherenceNum, MeshCapture);
 			}
 		}
-	}
+	}*/
 }
 
 void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
 {
-	PlayerInherenceNum = n;
-	if (MeshCapture)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("MeshCapture : Client Set Player Num"));
-		CharacterMeshCapture = MeshCapture;
-		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-		//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : %d"), PlayerInherenceNum);
-	}
-	ServerAddPlayerNum();
+	//PlayerInherenceNum = n;
+	//if (MeshCapture)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Client Call 3"));
+	//	CharacterMeshCapture = MeshCapture;
+	//	CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
+	//	CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+	//	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : %d"), PlayerInherenceNum);
+	//}
+	//ServerAddPlayerNum();
 }
 
 void AMainCharacter::ServerAddPlayerNum_Implementation()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
-	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (MainGameMode)
-	{
-		MainGameMode->AddPlayerNum();
-	}
+	////UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
+	//UE_LOG(LogTemp, Warning, TEXT("Client Call 4"));
+	//AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	//if (MainGameMode)
+	//{
+	//	MainGameMode->AddPlayerNum();
+	//}
 }
 
 // Called every frame

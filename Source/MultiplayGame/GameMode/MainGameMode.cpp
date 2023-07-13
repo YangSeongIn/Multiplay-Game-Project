@@ -20,7 +20,6 @@ AMainGameMode::AMainGameMode()
 {
 	bDelayedStart = true;
 
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacterMeshCapture::StaticClass(), MeshCaptures);
 }
 
 void AMainGameMode::BeginPlay()
@@ -64,18 +63,6 @@ void AMainGameMode::OnMatchStateSet()
 			MainPlayerController->OnMatchStateSet(MatchState);
 		}
 	}
-}
-
-AActor* AMainGameMode::GetMeshCapture(int32 n)
-{
-	if (MeshCaptures.Num() <= n) return nullptr;
-	return MeshCaptures[n];
-}
-
-bool AMainGameMode::CanAddPlayerNum()
-{
-	if (PlayerNum + 1 < MeshCaptures.Num()) return true;
-	return false;
 }
 
 void AMainGameMode::PlayerEliminated(AMainCharacter* ElimmedCharacter, AMainPlayerController* VictimController, AMainPlayerController* AttackerController)

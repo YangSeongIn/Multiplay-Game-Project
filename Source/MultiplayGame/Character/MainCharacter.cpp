@@ -151,35 +151,34 @@ void AMainCharacter::BeginPlay()
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
 
-	if (HasAuthority() && IsLocallyControlled())
+	if (IsLocallyControlled())
 	{
-		UMainGameInstance* MainGameInstance = Cast<UMainGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		if (MainGameInstance)
+		AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+		if (MainGameMode)
 		{
-			MainGameInstance->SetPlayerNum(MainGameInstance->GetPlayerNum() + 1);
-			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameInstance->GetMeshCapture(MainGameInstance->GetPlayerNum()));
+			MainGameMode->SetPlayerNum(MainGameMode->GetPlayerNum());
+			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
 			if (MeshCapture)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Instance Player Num : %d, Character Name : %d"), MainGameInstance->GetPlayerNum(), *this->GetName());
-				PlayerInherenceNum = MainGameInstance->GetPlayerNum();
+				UE_LOG(LogTemp, Warning, TEXT("Set Mesh Capture On Server"));
+				PlayerInherenceNum = MainGameMode->GetPlayerNum();
 				CharacterMeshCapture = MeshCapture;
-				MeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-				MainGameInstance->SetPlayerNum(PlayerInherenceNum + 1);
+				CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+				CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
+				MainGameMode->SetPlayerNum(PlayerInherenceNum + 1);
 			}
 		}
 	}
-	
-
-	/*else if (GetLocalRole() == ENetRole::ROLE_AutonomousProxy && IsLocallyControlled())
+	else
 	{
 		ServerSetMeshCapture();
-	}*/
+	}
 
 }
 
 void AMainCharacter::ServerSetMeshCapture_Implementation()
 {
-	/*AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (MainGameMode)
 	{
 		if (MainGameMode->CanAddPlayerNum())
@@ -187,37 +186,50 @@ void AMainCharacter::ServerSetMeshCapture_Implementation()
 			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
 			if (MeshCapture)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Client Call 2"));
-				ClientSetMeshCapture(PlayerInherenceNum, MeshCapture);
+				PlayerInherenceNum = MainGameMode->GetPlayerNum();
+				CharacterMeshCapture = MeshCapture;
+				//ClientSetMeshCapture(PlayerInherenceNum, CharacterMeshCapture);
+				MainGameMode->SetPlayerNum(MainGameMode->GetPlayerNum() + 1);
 			}
 		}
-	}*/
+	}
 }
 
-void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
+void AMainCharacter::OnRep_PlayerInherenceNum()
 {
-	//PlayerInherenceNum = n;
-	//if (MeshCapture)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Client Call 3"));
-	//	CharacterMeshCapture = MeshCapture;
-	//	CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-	//	CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-	//	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : %d"), PlayerInherenceNum);
-	//}
-	//ServerAddPlayerNum();
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_PlayerInherenceNum"));
 }
 
-void AMainCharacter::ServerAddPlayerNum_Implementation()
+void AMainCharacter::OnRep_CharacterMeshCapture()
 {
-	////UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
-	//UE_LOG(LogTemp, Warning, TEXT("Client Call 4"));
-	//AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	//if (MainGameMode)
-	//{
-	//	MainGameMode->AddPlayerNum();
-	//}
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_CharacterMeshCapture"));
+	CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
+	CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
 }
+
+//void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
+//{
+//	PlayerInherenceNum = n;
+//	//UE_LOG(LogTemp, Warning, TEXT("PlayerNum : %d, n : %d"), PlayerInherenceNum, n);
+//	if (MeshCapture)
+//	{
+//		//UE_LOG(LogTemp, Warning, TEXT("MeshCapture in Client"));
+//		CharacterMeshCapture = MeshCapture;
+//		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
+//		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+//	}
+//	// ServerAddPlayerNum();
+//}
+//
+//void AMainCharacter::ServerAddPlayerNum_Implementation()
+//{
+//	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
+//	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+//	if (MainGameMode)
+//	{
+//		MainGameMode->SetPlayerNum(MainGameMode->GetPlayerNum() + 1);
+//	}
+//}
 
 // Called every frame
 void AMainCharacter::Tick(float DeltaTime)
@@ -271,7 +283,9 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(AMainCharacter, Health);
-	//DOREPLIFETIME_CONDITION(AMainCharacter, CharacterMeshCapture, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AMainCharacter, PlayerInherenceNum, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AMainCharacter, CharacterMeshCapture, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AMainCharacter, InventoryWidget, COND_OwnerOnly);
 }
 
 void AMainCharacter::PostInitializeComponents()
@@ -280,6 +294,10 @@ void AMainCharacter::PostInitializeComponents()
 	if (CombatComponent)
 	{
 		CombatComponent->Character = this;
+	}
+	if (InventoryComponent)
+	{
+		InventoryComponent->Character = this;
 	}
 }
 
@@ -518,24 +536,62 @@ void AMainCharacter::InventoryKeyPressed()
 {
 	if (InventoryWidgetClass)
 	{
-		if (InventoryWidget)
+		if (IsLocallyControlled())
 		{
-			InventoryWidget->RemoveFromParent();
-			InventoryWidget = nullptr;
+			if (InventoryWidget)
+			{
+				InventoryWidget->RemoveFromParent();
+				InventoryWidget = nullptr;
+			}
+			else
+			{
+				InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
+				if (CharacterMeshCapture)
+				{
+					CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
+				}
+				if (InventoryWidget)
+				{
+					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+					InventoryWidget->AddToViewport();
+				}
+			}
 		}
 		else
 		{
-			InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
-			if (CharacterMeshCapture)
-			{
-				CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
-			}
-			if (InventoryWidget)
-			{
-				InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
-				InventoryWidget->AddToViewport();
-			}
+			ServerInventoryWidget();
 		}
+	}
+}
+
+void AMainCharacter::ServerInventoryWidget_Implementation()
+{
+	if (InventoryWidget)
+	{
+		InventoryWidget->RemoveFromParent();
+		InventoryWidget = nullptr;
+	}
+	else
+	{
+		InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
+	}
+}
+
+void AMainCharacter::OnRep_InventoryWidget(UInventory* PostInventoryWidget)
+{
+	if (PostInventoryWidget)
+	{
+		PostInventoryWidget->RemoveFromParent();
+	}
+
+	if (CharacterMeshCapture && InventoryWidget)
+	{
+		CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
+	}
+	if (InventoryWidget && InventoryWidget->InventoryGrid && InventoryComponent)
+	{
+		InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+		InventoryWidget->AddToViewport();
 	}
 }
 
@@ -685,18 +741,6 @@ void AMainCharacter::PollInit()
 	}
 }
 
-void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
-{
-	if (OverlappingWeapon)
-	{
-		OverlappingWeapon->ShowPickupWidget(true);
-	}
-	if (LastWeapon)
-	{
-		LastWeapon->ShowPickupWidget(false);
-	}
-}
-
 void AMainCharacter::TurnInPlace(float DeltaTime)
 {
 	if (AO_Yaw > 90.f)
@@ -777,6 +821,7 @@ void AMainCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 		OverlappingWeapon->ShowPickupWidget(false);
 	}
 	OverlappingWeapon = Weapon;
+
 	// for server
 	if (IsLocallyControlled())
 	{
@@ -784,6 +829,18 @@ void AMainCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 		{
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
+	}
+}
+
+void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
 	}
 }
 
@@ -819,4 +876,16 @@ AWeapon* AMainCharacter::GetEquippedWeapon() const
 {
 	if (CombatComponent == nullptr) return nullptr;
 	return CombatComponent->EquippedWeapon;
+}
+
+AWeapon* AMainCharacter::GetWeapon1()
+{
+	if (CombatComponent == nullptr) return nullptr;
+	return CombatComponent->Weapon1;
+}
+
+AWeapon* AMainCharacter::GetWeapon2()
+{
+	if (CombatComponent == nullptr) return nullptr;
+	return CombatComponent->Weapon2;
 }

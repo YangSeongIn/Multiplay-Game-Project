@@ -29,4 +29,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FDataTableRowHandle ItemID;
 
+public:
+	FORCEINLINE FDataTableRowHandle GetItemID() { return ItemID; };
+
 };

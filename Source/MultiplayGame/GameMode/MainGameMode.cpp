@@ -10,6 +10,7 @@
 #include "../GameState/MainGameState.h"
 #include "../CharacterMeshCapture/CharacterMeshCapture.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Net/UnrealNetwork.h"
 
 namespace MatchState
 {
@@ -27,7 +28,26 @@ void AMainGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	LevelStartingTime = GetWorld()->GetTimeSeconds();
+
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacterMeshCapture::StaticClass(), MeshCaptures);
 }
+
+
+AActor* AMainGameMode::GetMeshCapture(int32 n)
+{
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Instance MeshCaptures Num 22 : %d"), MeshCaptures.Num());
+	if (MeshCaptures.Num() <= n) return nullptr;
+	return MeshCaptures[n];
+}
+
+bool AMainGameMode::CanAddPlayerNum()
+{
+	if (PlayerNum + 1 < MeshCaptures.Num()) return true;
+	return false;
+}
+
+
 
 void AMainGameMode::Tick(float DeltaTime)
 {
@@ -103,4 +123,11 @@ void AMainGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* El
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
 	}
+}
+
+void AMainGameMode::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AMainGameMode, MeshCaptures);
 }

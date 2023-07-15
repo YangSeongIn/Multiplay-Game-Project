@@ -24,6 +24,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PlayerEliminated(class AMainCharacter* ElimmedCharacter, class AMainPlayerController* VictimController, AMainPlayerController* AttackerController);
 	virtual void RequestRespawn(class ACharacter* ElimmedCharacter, AController* ElimmedController);
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(EditDefaultsOnly)
 		float WarmupTime = 10.f;
@@ -43,4 +44,17 @@ protected:
 private:
 	float CountdownTime = 0.f;
 
+
+public:
+
+	int32 PlayerNum = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)
+		TArray<AActor*> MeshCaptures;
+
+public:
+	AActor* GetMeshCapture(int32 n);
+	bool CanAddPlayerNum();
+	FORCEINLINE int32 GetPlayerNum() { return PlayerNum; };
+	FORCEINLINE void SetPlayerNum(int32 NewNum) { PlayerNum = NewNum; };
 };

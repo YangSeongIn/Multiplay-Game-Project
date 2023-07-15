@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "WeaponTypes.h"
+#include "../Types/EquippedSlotType.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -132,6 +133,8 @@ private:
 	UPROPERTY(EditAnywhere)
 		class UItemDataComponent* ItemDataComponent;
 
+	EEquippedSlotType EquippedSlotType = EEquippedSlotType::EST_Weapon;
+
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; };
@@ -144,4 +147,5 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; };
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; };
 	FORCEINLINE UItemDataComponent* GetItemDataComponent() { return ItemDataComponent; };
+	FORCEINLINE EEquippedSlotType GetEquippedSlotType() { return EquippedSlotType; };
 };

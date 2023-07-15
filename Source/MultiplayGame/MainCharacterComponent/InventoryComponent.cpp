@@ -115,7 +115,6 @@ bool UInventoryComponent::CreateNewStack(FString ItemID, int Quantity)
 
 void UInventoryComponent::DEBUGPrintContents()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("Slots size : %d"), Slots.Num()));
 	for (int i = 0; i < Slots.Num(); i++)
 	{
 		FInventorySlotStruct x = Slots[i];

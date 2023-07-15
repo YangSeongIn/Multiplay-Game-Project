@@ -34,11 +34,14 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerSetMeshCapture();
 
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Server, Reliable)
+		void ServerInventoryWidget();
+
+	/*UFUNCTION(Client, Reliable)
 		void ClientSetMeshCapture(int32 n, class ACharacterMeshCapture* MeshCapture);
 
 	UFUNCTION(Server, Reliable)
-		void ServerAddPlayerNum();
+		void ServerAddPlayerNum();*/
 
 protected:
 	virtual void BeginPlay() override;
@@ -219,14 +222,23 @@ private:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class ACharacterMeshCapture> CharacterMeshCaptureClass;
 
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing = OnRep_InventoryWidget)
 		class UInventory* InventoryWidget;
 
-	UPROPERTY(VisibleAnywhere)
-	int32 PlayerInherenceNum;
+	UFUNCTION()
+		void OnRep_InventoryWidget(class UInventory* PostInventoryWidget);
 
-	UPROPERTY(VisibleAnywhere/*, Replicated*/)
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_PlayerInherenceNum, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		int32 PlayerInherenceNum;
+
+	UFUNCTION()
+		void OnRep_PlayerInherenceNum();
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CharacterMeshCapture, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class ACharacterMeshCapture* CharacterMeshCapture;
+
+	UFUNCTION()
+		void OnRep_CharacterMeshCapture();
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -249,4 +261,6 @@ public:
 	FORCEINLINE UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; };
 	FORCEINLINE void SetInventoryWidgetNull() { InventoryWidget = nullptr; };
 	FORCEINLINE void SetMeshCapture(class ACharacterMeshCapture* NewMeshCapture) { CharacterMeshCapture = NewMeshCapture; };
+	AWeapon* GetWeapon1();
+	AWeapon* GetWeapon2();
 };

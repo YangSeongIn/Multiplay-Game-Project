@@ -53,6 +53,8 @@ private:
 
 	TArray<FInventorySlotStruct> Slots;
 
+	UPROPERTY()
+		AMainCharacter* Character;
 public:
 	FORCEINLINE int32 GetInventorySize() const { return InventorySize; };
 	FORCEINLINE void SetInventorySize(int32 SizeOfInventory) { InventorySize = SizeOfInventory; };

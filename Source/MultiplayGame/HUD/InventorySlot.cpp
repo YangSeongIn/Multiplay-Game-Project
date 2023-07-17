@@ -11,6 +11,8 @@
 #include "../DragDrop/DragDropSlot.h"
 #include "../MainCharacterComponent/InventoryComponent.h"
 #include "Components/Border.h"
+#include "EquippedSlot.h"
+#include "EquippedSlotWidget.h"
 
 void UInventorySlot::NativePreConstruct()
 {
@@ -71,6 +73,7 @@ void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
 				DragDropSlot->SetInventoryComponent(InventoryComponent);
 				DragDropSlot->SetContentIndex(SlotIndex);
 				DragDropSlot->DefaultDragVisual = DragItemVisual;
+				DragDropSlot->SetItemID(ItemID);
 			}
 		}
 	}
@@ -83,11 +86,28 @@ bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
 	if (SlotForDragDrop)
 	{
-		if (SlotForDragDrop->GetContentIndex() != SlotIndex || SlotForDragDrop->GetInventoryComponent() != InventoryComponent)
+		if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Inventory)
 		{
-			InventoryComponent->ServerTransferSlots(SlotForDragDrop->GetContentIndex(), SlotForDragDrop->GetInventoryComponent(), SlotIndex);
+			if (SlotForDragDrop->GetContentIndex() != SlotIndex || SlotForDragDrop->GetInventoryComponent() != InventoryComponent)
+			{
+				InventoryComponent->ServerTransferSlots(SlotForDragDrop->GetContentIndex(), SlotForDragDrop->GetInventoryComponent(), SlotIndex);
+				return true;
+			}
 		}
-		// return true;
+		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon)
+		{
+			/*if (SlotForDragDrop->GetEquippedSlot() && DragDropSlot && SlotForDragDrop->GetEquippedSlot()->GetEquippedSlotWidget())
+			{
+				if (SlotForDragDrop->GetEquippedSlot()->GetWeaponNum() == EWeaponNum::EWN_Weapon1)
+				{
+					SlotForDragDrop->GetEquippedSlot()->GetEquippedSlotWidget()->SetSlotWeapon1(DragDropSlot);
+				}
+				else if (SlotForDragDrop->GetEquippedSlot()->GetWeaponNum() == EWeaponNum::EWN_Weapon2)
+				{
+					SlotForDragDrop->GetEquippedSlot()->GetEquippedSlotWidget()->SetSlotWeapon2(DragDropSlot);
+				}
+			}*/
+		}
 	}
 	return false;
 }

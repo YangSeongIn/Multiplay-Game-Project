@@ -19,3 +19,12 @@ enum class EDragDropInventorySlotType : uint8
 
 	EST_MAX UMETA(DisplayName = "DefaultMax")
 };
+
+UENUM(BlueprintType)
+enum class EWeaponNum : uint8
+{
+	EWN_Weapon1 UMETA(DisplayName = "Weapon1"),
+	EWN_Weapon2 UMETA(DisplayName = "Weapon2"),
+
+	EST_MAX UMETA(DisplayName = "DefaultMax")
+};

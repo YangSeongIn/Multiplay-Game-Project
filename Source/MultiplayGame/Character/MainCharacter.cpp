@@ -31,6 +31,7 @@
 #include "../CharacterMeshCapture/CharacterMeshCapture.h"
 #include "../GameState/MainGameState.h"
 #include "../GameInstance/MainGameInstance.h"
+#include "../HUD/InventoryWeaponInfo.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -553,6 +554,7 @@ void AMainCharacter::InventoryKeyPressed()
 				if (InventoryWidget)
 				{
 					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+					InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
 					InventoryWidget->AddToViewport();
 				}
 			}
@@ -888,4 +890,13 @@ AWeapon* AMainCharacter::GetWeapon2()
 {
 	if (CombatComponent == nullptr) return nullptr;
 	return CombatComponent->Weapon2;
+}
+
+int32 AMainCharacter::GetCarriedAmmo(AWeapon* Weapon)
+{
+	if (CombatComponent->CarriedAmmoMap.Contains(Weapon->GetWeaponType()))
+	{
+		return CombatComponent->CarriedAmmoMap[Weapon->GetWeaponType()];
+	}
+	return -1;
 }

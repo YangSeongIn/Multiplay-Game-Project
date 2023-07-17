@@ -14,6 +14,13 @@ class MULTIPLAYGAME_API UEquippedSlotWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+public:
+	void SwapEquippedWeaponSlot();
+	/*UFUNCTION(Server, Reliable)
+		void ServerSwapTwoWeapons(class AMainCharacter* Character);*/
+	//void SetSlotWeapon1(class UDragDropSlot* NewSlot);
+	//void SetSlotWeapon2(class UDragDropSlot* NewSlot);
+
 protected:
 	virtual void NativePreConstruct() override;
 
@@ -24,13 +31,8 @@ private:
 		class UEquippedSlot* EquippedSlot_Head;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
 		class UEquippedSlot* EquippedSlot_Body;
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
+	/*UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
 		class UEquippedSlot* EquippedSlot_Weapon1;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
-		class UEquippedSlot* EquippedSlot_Weapon2;
-
-
-public:
-	void SwapEquippedWeaponSlot();
-
+		class UEquippedSlot* EquippedSlot_Weapon2;*/
 };

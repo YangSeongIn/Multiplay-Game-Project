@@ -15,6 +15,7 @@ class MULTIPLAYGAME_API UItemDataComponent : public UActorComponent
 
 public:	
 	UItemDataComponent();
+	friend class AWeapon;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void Interact(class AMainCharacter* MainCharacter);
@@ -28,6 +29,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FDataTableRowHandle ItemID;
+
+	UPROPERTY()
+		class AWeapon* Weapon;
 
 public:
 	FORCEINLINE FDataTableRowHandle GetItemID() { return ItemID; };

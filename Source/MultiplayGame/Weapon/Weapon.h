@@ -28,6 +28,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override;
+	virtual void PostInitializeComponents() override;
 	void SetHUDAmmo();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
@@ -74,6 +75,8 @@ public:
 		class USoundCue* EquipSound;
 
 	void EnableCustomDepth(bool bEnable);
+
+	int32 GetCarriedAmmo();
 
 protected:
 	virtual void BeginPlay() override;

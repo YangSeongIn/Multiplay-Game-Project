@@ -64,6 +64,8 @@ void AWeapon::BeginPlay()
 	{
 		PickupWidget->SetVisibility(false);
 	}
+
+	OwnerCharacter = Cast<AMainCharacter>(GetOwner());
 }
 
 void AWeapon::Tick(float DeltaTime)
@@ -138,6 +140,16 @@ void AWeapon::OnRep_Owner()
 		{
 			SetHUDAmmo();
 		}
+	}
+}
+
+void AWeapon::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
+	if (ItemDataComponent)
+	{
+		ItemDataComponent->Weapon = this;
 	}
 }
 
@@ -278,4 +290,13 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 	{
 		WeaponMesh->SetRenderCustomDepth(bEnable);
 	}
+}
+
+int32 AWeapon::GetCarriedAmmo()
+{
+	if (OwnerCharacter)
+	{
+		return OwnerCharacter->GetCarriedAmmo(this);
+	}
+	return -1;
 }

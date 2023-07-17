@@ -4,6 +4,7 @@
 #include "ItemDataComponent.h"
 #include "../Character/MainCharacter.h"
 #include "../MainCharacterComponent/InventoryComponent.h"
+#include "../Weapon/Weapon.h"
 
 UItemDataComponent::UItemDataComponent()
 {
@@ -32,4 +33,9 @@ void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 {
 	if (MainCharacter == nullptr || MainCharacter->GetInventoryComponent() == nullptr) return;
 	TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(ItemID.RowName.ToString(), Quantity);
+	if (Weapon && Weapon->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("1")));
+		MainCharacter->GetInventoryComponent()->AddToWeaponSlot(Weapon, ItemID.RowName.ToString(), Weapon->GetAmmo(), Weapon->GetCarriedAmmo());
+	}
 }

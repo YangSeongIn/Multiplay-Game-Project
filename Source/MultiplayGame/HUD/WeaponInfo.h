@@ -5,27 +5,34 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "../Types/EquippedSlotType.h"
-#include "EquippedSlot.generated.h"
+#include "WeaponInfo.generated.h"
 
+/**
+ * 
+ */
 UCLASS()
-class MULTIPLAYGAME_API UEquippedSlot : public UUserWidget
+class MULTIPLAYGAME_API UWeaponInfo : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 	void UpdateSlot();
 
+	UFUNCTION()
+		void UpdateWeaponInfo();
+
 protected:
-		virtual void NativePreConstruct() override;
-		virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-		virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
-		virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
-		virtual void NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation);
-		virtual void NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation);
+	virtual void NativePreConstruct() override;
+	virtual void NativeConstruct() override;
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+	virtual void NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation);
+	virtual void NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation);
 
 private:
-	UPROPERTY(BlueprintReadOnly, Category = "Drag Item Visual", meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
-		class UBorder* InBorder;
+	UPROPERTY(meta = (BindWidget))
+		class UBorder* OutBorder;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Drag Item Visual", meta = (ExposeOnSpawn = "true"), meta = (AllowPrivateAccess = "true"))
 		FString ItemID;
@@ -45,6 +52,9 @@ private:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
 		class UImage* IconImage;
 
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* AmmoText;
+
 	UPROPERTY(EditAnywhere, Category = "Drag Item Visual")
 		TSubclassOf<UUserWidget> DragItemVisualClass;
 	UPROPERTY()
@@ -58,10 +68,13 @@ private:
 	UPROPERTY()
 		class UEquippedSlotWidget* EquippedSlotWidget;
 
-	/*UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"), meta = (AllowPrivateAccess = "true"))
-		FString ItemID;*/
-
 	void SetSlot(class UItemDataComponent* ItemDataComponent);
+
+	UPROPERTY()
+		class UInventoryComponent* InventoryComponent;
+
+	int32 AmmoQuantity;
+	int32 CarriedAmmoQuantity;
 
 public:
 	FORCEINLINE class UEquippedSlotWidget* GetEquippedSlotWidget() { return EquippedSlotWidget; };
@@ -71,5 +84,7 @@ public:
 	FORCEINLINE void SetItemID(FString NewString) { ItemID = NewString; };
 	FORCEINLINE FString GetItemID() { return ItemID; };
 	FORCEINLINE EWeaponNum GetWeaponNum() { return WeaponNum; };
-
+	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* InventoryComp) { InventoryComponent = InventoryComp; };
+	FORCEINLINE void SetAmmoQuantity(int32 Quantity) { AmmoQuantity = Quantity; };
+	FORCEINLINE void SetCarriedAmmoQuantity(int32 Quantity) { CarriedAmmoQuantity = Quantity; };
 };

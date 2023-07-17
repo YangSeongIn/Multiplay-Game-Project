@@ -12,6 +12,7 @@
 #define TRACE_LENGHT 80000.f
 
 class AWeapon;
+class UItemDataComponent;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MULTIPLAYGAME_API UCombatComponent : public UActorComponent
@@ -33,6 +34,7 @@ public:
 
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	void SwapWeapon(int32 WeaponNum);
+	void SwapTwoWeapons();
 
 protected:
 	virtual void BeginPlay() override;
@@ -188,7 +190,5 @@ private:
 	void EquipOnHand(AWeapon* WeaponToEquip);
 	void EquipOnBack(AWeapon* WeaponToEquip);
 	void AttachActorToBack(AActor* ActorToAttach);
-
-public:
 
 };

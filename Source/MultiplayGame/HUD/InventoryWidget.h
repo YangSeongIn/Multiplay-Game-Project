@@ -23,4 +23,5 @@ protected:
 public:
 	UPROPERTY(meta = (BindWidget))
 		class UInventoryGrid* InventoryGrid;
+	
 };

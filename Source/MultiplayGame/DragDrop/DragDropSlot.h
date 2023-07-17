@@ -14,17 +14,25 @@ class MULTIPLAYGAME_API UDragDropSlot : public UDragDropOperation
 
 private:
 	int32 ContentIndex;
+	FString ItemID;
 	UPROPERTY()
 		class UInventoryComponent* InventoryComponent;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
-		EEquippedSlotType DragDropInventorySlotType;
+		EEquippedSlotType EquippedSlotType;
+
+	UPROPERTY()
+		class UWeaponInfo* WeaponInfoSlot;
 
 public:
 	FORCEINLINE UInventoryComponent* GetInventoryComponent() { return InventoryComponent; };
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* Inventory) { InventoryComponent = Inventory; };
 	FORCEINLINE int32 GetContentIndex() { return ContentIndex; };
 	FORCEINLINE void SetContentIndex(int32 Index) { ContentIndex = Index; };
-	FORCEINLINE EEquippedSlotType GetDragDropInventorySlotType() { return DragDropInventorySlotType; };
-	FORCEINLINE void SetDragDropInventorySlotType(EEquippedSlotType Type) { DragDropInventorySlotType = Type; };
+	FORCEINLINE EEquippedSlotType GetEquippedSlotType() { return EquippedSlotType; };
+	FORCEINLINE void SetEquippedSlotType(EEquippedSlotType Type) { EquippedSlotType = Type; };
+	FORCEINLINE FString GetItemID() { return ItemID; };
+	FORCEINLINE void SetItemID(FString NewID) { ItemID = NewID; };
+	FORCEINLINE class UWeaponInfo* GetEquippedSlot() { return WeaponInfoSlot; };
+	FORCEINLINE void SetWeaponInfoSlot(class UWeaponInfo* NewSlot) { WeaponInfoSlot = NewSlot; };
 };

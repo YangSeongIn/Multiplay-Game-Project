@@ -263,4 +263,5 @@ public:
 	FORCEINLINE void SetMeshCapture(class ACharacterMeshCapture* NewMeshCapture) { CharacterMeshCapture = NewMeshCapture; };
 	AWeapon* GetWeapon1();
 	AWeapon* GetWeapon2();
+	int32 GetCarriedAmmo(class AWeapon* Weapon);
 };

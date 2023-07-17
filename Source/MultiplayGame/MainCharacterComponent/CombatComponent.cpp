@@ -160,7 +160,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	else if (Weapon1 == nullptr && Weapon2 == nullptr)
 	{
 		Weapon1 = WeaponToEquip;
-		Weapons[0] = WeaponToEquip;
+		//Weapons[0] = WeaponToEquip;
 		EquipOnHand(Weapon1);
 	}
 	// Empty weapon slot exist
@@ -169,12 +169,12 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		if (Weapon1 == nullptr) 
 		{
 			Weapon1 = WeaponToEquip;
-			Weapons[0] = WeaponToEquip;
+			//Weapons[0] = WeaponToEquip;
 		}
 		else if (Weapon2 == nullptr)
 		{
 			Weapon2 = WeaponToEquip;
-			Weapons[1] = WeaponToEquip;
+			//Weapons[1] = WeaponToEquip;
 		}
 
 		if (EquippedWeapon == nullptr)
@@ -279,6 +279,32 @@ void UCombatComponent::MulticastSwapWeapon_Implementation(AWeapon* WeaponToHand,
 
 }
 
+void UCombatComponent::SwapTwoWeapons()
+{
+	AWeapon* EquippedWeaponTemp = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = EquippedWeaponTemp;
+
+	AWeapon* WeaponTemp = Weapon1;
+	Weapon1 = Weapon2;
+	Weapon2 = WeaponTemp;
+
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		PlayEquipWeaponSound(EquippedWeapon);
+		EquippedWeapon->SetHUDAmmo();
+		UpdateCarriedAmmo();
+		AttachActorToRightHand(EquippedWeapon);
+	}
+	CombatState = ECombatState::ECS_Unoccupied;
+	if (SecondaryWeapon)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+		AttachActorToBack(SecondaryWeapon);
+	}
+}
+
 void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
 {
 	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
@@ -296,12 +322,12 @@ void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 		if (WeaponToDrop == Weapon1) 
 		{
 			Weapon1 = nullptr;
-			Weapons[0] = nullptr;
+			//Weapons[0] = nullptr;
 		}
 		else if (WeaponToDrop == Weapon2) 
 		{
 			Weapon2 = nullptr;
-			Weapons[1] = nullptr;
+			//Weapons[1] = nullptr;
 		}
 		EquippedWeapon->Dropped();
 	}

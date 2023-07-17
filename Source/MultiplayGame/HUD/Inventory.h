@@ -27,6 +27,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 		class UImage* MeshCaptureImage;
 
+	UPROPERTY(meta = (BindWidget))
+		class UInventoryWeaponInfo* InventoryWeaponInfo;
+
 public:
 	void SetMeshCaptureImage(class UMaterialInterface* Image);
 

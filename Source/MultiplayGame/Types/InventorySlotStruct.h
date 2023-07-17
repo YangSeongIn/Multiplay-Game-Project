@@ -17,6 +17,20 @@ public:
 };
 
 USTRUCT(BlueprintType)
+struct FEquippedWeaponSlotStruct
+{
+public:
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+		FString ItemID;
+	UPROPERTY(BlueprintReadWrite)
+		int32 AmmoQuantity;
+	UPROPERTY(BlueprintReadWrite)
+		int32 CarriedAmmoQuantity;
+};
+
+USTRUCT(BlueprintType)
 struct FItemStruct : public FTableRowBase
 {
 public:

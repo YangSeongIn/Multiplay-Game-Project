@@ -2,6 +2,7 @@
 
 
 #include "InventoryComponent.h"
+#include "../Weapon/Weapon.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -23,7 +24,11 @@ void UInventoryComponent::BeginPlay()
 		FInventorySlotStruct s{ "", 0 };
 		Slots.Add(s);
 	}
-	
+
+	for (int i = 0; i < 2; i++) {
+		FEquippedWeaponSlotStruct EWSlot({ "", -1, -1 });
+		WeaponInfos.Add(EWSlot);
+	}
 }
 
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -31,6 +36,23 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
+}
+
+void UInventoryComponent::AddToWeaponSlot(AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("2, %d"), WeaponInfos.Num()));
+	if (WeaponInfos[0].ItemID == "")
+	{
+		WeaponInfos[0].ItemID = ItemID;
+		WeaponInfos[0].AmmoQuantity = AmmoQuantity;
+		WeaponInfos[0].CarriedAmmoQuantity = CarriedAmmoQuantity;
+	}
+	else if (WeaponInfos[1].ItemID == "")
+	{
+		WeaponInfos[1].ItemID = ItemID;
+		WeaponInfos[1].AmmoQuantity = AmmoQuantity;
+		WeaponInfos[1].CarriedAmmoQuantity = CarriedAmmoQuantity;
+	}
 }
 
 TTuple<bool, int> UInventoryComponent::AddToInventory(FString ItemID, int Quantity)

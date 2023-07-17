@@ -8,6 +8,7 @@
 #include "InventoryComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnInventoryUpdate);
+DECLARE_MULTICAST_DELEGATE(FOnWeaponInfoUpdate);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MULTIPLAYGAME_API UInventoryComponent : public UActorComponent
@@ -21,6 +22,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	FOnInventoryUpdate OnInventoryUpdate;
+	FOnWeaponInfoUpdate OnWeaponInfoUpdate;
 
 	TTuple<bool, int> AddToInventory(FString ItemID, int Quantity);
 	void RemoveFromInventory(FString ItemID, int Quantity);
@@ -40,6 +42,8 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerTransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
 
+	void AddToWeaponSlot(class AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -53,6 +57,8 @@ private:
 
 	TArray<FInventorySlotStruct> Slots;
 
+	TArray<FEquippedWeaponSlotStruct> WeaponInfos;
+
 	UPROPERTY()
 		AMainCharacter* Character;
 public:
@@ -60,4 +66,5 @@ public:
 	FORCEINLINE void SetInventorySize(int32 SizeOfInventory) { InventorySize = SizeOfInventory; };
 	UFUNCTION(BlueprintCallable)
 		TArray<FInventorySlotStruct> GetContents() { return Slots; };
+	TArray<FEquippedWeaponSlotStruct> GetWeaponInfos() { return WeaponInfos; };
 };

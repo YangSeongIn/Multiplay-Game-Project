@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "EquippedSlot.h"
+#include "WeaponInfo.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
@@ -18,51 +18,26 @@
 #include "EquippedSlotWidget.h"
 #include "../MainCharacterComponent/CombatComponent.h"
 
-void UEquippedSlot::NativePreConstruct()
+void UWeaponInfo::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 	DragDropSlot = Cast<UDragDropSlot>(UWidgetBlueprintLibrary::CreateDragDropOperation(UDragDropSlot::StaticClass()));
 
-	/*if (DragDropSlot)
+	if (DragDropSlot)
 	{
-		DragDropSlot->SetEquippedSlot(this);
-	}*/
-
-	UpdateSlot();
-}
-
-void UEquippedSlot::UpdateSlot()
-{
-	if (InventoryDataTable)
-	{
-
-		Character = Cast<AMainCharacter>(GetOwningPlayerPawn());
-		if (Character)
-		{
-			if (EquippedSlotType == EEquippedSlotType::EST_Weapon)
-			{
-				if (WeaponNum == EWeaponNum::EWN_Weapon1 && Character->GetWeapon1())
-				{
-					SetSlot(Character->GetWeapon1()->GetItemDataComponent());
-				}
-				else if (WeaponNum == EWeaponNum::EWN_Weapon2 && Character->GetWeapon2())
-				{
-					SetSlot(Character->GetWeapon2()->GetItemDataComponent());
-				}
-				else
-				{
-					SetSlot(nullptr);
-				}
-			}
-			else
-			{
-				SetSlot(nullptr);
-			}
-		}
+		DragDropSlot->SetWeaponInfoSlot(this);
 	}
+
+	UpdateWeaponInfo();
 }
 
-FReply UEquippedSlot::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+void UWeaponInfo::NativeConstruct()
+{
+	Super::NativeConstruct();
+	UpdateWeaponInfo();
+}
+
+FReply UWeaponInfo::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FReply Reply = Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 	if (ItemID == "") return FReply::Unhandled();
@@ -73,7 +48,7 @@ FReply UEquippedSlot::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry
 	return Reply;
 }
 
-void UEquippedSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
+void UWeaponInfo::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
 	if (DragItemVisualClass)
@@ -93,7 +68,7 @@ void UEquippedSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPoi
 	OutOperation = DragDropSlot;
 }
 
-bool UEquippedSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+bool UWeaponInfo::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
 	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
@@ -111,33 +86,33 @@ bool UEquippedSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEve
 	return false;
 }
 
-void UEquippedSlot::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+void UWeaponInfo::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDragEnter(InGeometry, InDragDropEvent, InOperation);
 	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
 	if (SlotForDragDrop)
 	{
-		if (InBorder)
+		if (OutBorder)
 		{
-			InBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f));
+			OutBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f));
 		}
 	}
 }
 
-void UEquippedSlot::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+void UWeaponInfo::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDragLeave(InDragDropEvent, InOperation);
 	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
 	if (SlotForDragDrop)
 	{
-		if (InBorder)
+		if (OutBorder)
 		{
-			InBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
+			OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
 		}
 	}
 }
 
-void UEquippedSlot::SetSlot(UItemDataComponent* ItemDataComponent)
+void UWeaponInfo::SetSlot(UItemDataComponent* ItemDataComponent)
 {
 	if (ItemDataComponent)
 	{
@@ -164,6 +139,66 @@ void UEquippedSlot::SetSlot(UItemDataComponent* ItemDataComponent)
 		if (IconImage)
 		{
 			IconImage->SetVisibility(ESlateVisibility::Hidden);
+			AmmoText->SetText(FText::FromString(FString("- / -")));
 		}
 	}
 }
+
+void UWeaponInfo::UpdateSlot()
+{
+	//if (InventoryDataTable)
+	//{
+
+	//	//Character = Cast<AMainCharacter>(GetOwningPlayerPawn());
+	//	if (Character)
+	//	{
+	//		if (EquippedSlotType == EEquippedSlotType::EST_Weapon)
+	//		{
+	//			if (WeaponNum == EWeaponNum::EWN_Weapon1 && Character->GetWeapon1())
+	//			{
+	//				SetSlot(Character->GetWeapon1()->GetItemDataComponent());
+	//			}
+	//			else if (WeaponNum == EWeaponNum::EWN_Weapon2 && Character->GetWeapon2())
+	//			{
+	//				SetSlot(Character->GetWeapon2()->GetItemDataComponent());
+	//			}
+	//			else
+	//			{
+	//				SetSlot(nullptr);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			SetSlot(nullptr);
+	//		}
+	//	}
+	//}
+}
+
+void UWeaponInfo::UpdateWeaponInfo()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("11asdasdsdsa")));
+	if (InventoryDataTable)
+	{
+		FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemID), "");
+		if (ItemStruct)
+		{
+			if (IconImage)
+			{
+				IconImage->SetBrushFromTexture(ItemStruct->Thumbnail);
+				IconImage->SetVisibility(ESlateVisibility::Visible);
+				AmmoText->SetText(FText::FromString(FString::FromInt(AmmoQuantity) + FString(" / ") + FString::FromInt(CarriedAmmoQuantity)));
+				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("asdasdsdsa")));
+			}
+		}
+		else
+		{
+			if (IconImage)
+			{
+				IconImage->SetVisibility(ESlateVisibility::Hidden);
+				AmmoText->SetText(FText::FromString(FString("- / -")));
+			}
+		}
+	}
+}
+

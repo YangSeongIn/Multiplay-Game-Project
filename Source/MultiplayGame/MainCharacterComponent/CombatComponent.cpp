@@ -297,6 +297,7 @@ void UCombatComponent::SwapTwoWeapons()
 		UpdateCarriedAmmo();
 		AttachActorToRightHand(EquippedWeapon);
 	}
+
 	CombatState = ECombatState::ECS_Unoccupied;
 	if (SecondaryWeapon)
 	{
@@ -312,6 +313,18 @@ void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
 	if (WeaponSocket)
 	{
 		WeaponSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::SwapWeaponByInventory(AWeapon* CurrentWeapon, AWeapon* TargetWeapon)
+{
+	if (TargetWeapon == Weapon1)
+	{
+		//if ()
+	}
+	else if (TargetWeapon == Weapon2)
+	{
+
 	}
 }
 
@@ -345,7 +358,11 @@ void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
 
 void UCombatComponent::UpdateCarriedAmmo()
 {
-	if (EquippedWeapon == nullptr) return;
+	if (EquippedWeapon == nullptr)
+	{
+		Controller->SetHUDCarriedAmmo(-1);
+		return;
+	}
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
 		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];

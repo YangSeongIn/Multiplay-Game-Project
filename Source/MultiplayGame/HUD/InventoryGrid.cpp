@@ -40,6 +40,7 @@ void UInventoryGrid::UpdateInventory()
 					ItemSlot->SetQuantity(Arr[i].Quantity);
 					ItemSlot->SetInventoryComponent(InventoryComponent);
 					ItemSlot->SetSlotIndex(i);
+					ItemSlot->SetItemType(Arr[i].ItemType);
 					ItemGrid->AddChildToWrapBox(ItemSlot);
 				}
 				InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));

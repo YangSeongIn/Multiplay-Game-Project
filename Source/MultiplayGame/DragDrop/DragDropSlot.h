@@ -21,6 +21,9 @@ private:
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
 		EEquippedSlotType EquippedSlotType;
 
+	EItemType ItemType;
+
+
 	UPROPERTY()
 		class UWeaponInfo* WeaponInfoSlot;
 
@@ -35,4 +38,6 @@ public:
 	FORCEINLINE void SetItemID(FString NewID) { ItemID = NewID; };
 	FORCEINLINE class UWeaponInfo* GetEquippedSlot() { return WeaponInfoSlot; };
 	FORCEINLINE void SetWeaponInfoSlot(class UWeaponInfo* NewSlot) { WeaponInfoSlot = NewSlot; };
+	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
+	FORCEINLINE EItemType GetItemType() { return ItemType; };
 };

@@ -13,6 +13,7 @@
 #include "../Character/MainCharacter.h"
 #include "../PlayerController/MainPlayerController.h"
 #include "../MainCharacterComponent/ItemDataComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AWeapon::AWeapon()
 {
@@ -225,15 +226,6 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 
 void AWeapon::Fire(const FVector& HitTarget)
 {
-	if (OwnerCharacter && OwnerCharacter->GetLocalRole() == ENetRole::ROLE_AutonomousProxy)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			3,
-			FColor::Blue,
-			FString::Printf(TEXT("current weapon : %s"), *GetName())
-		);
-	}
 	if (FireAnimation)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
@@ -294,9 +286,10 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 
 int32 AWeapon::GetCarriedAmmo()
 {
-	if (OwnerCharacter)
+	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (Character)
 	{
-		return OwnerCharacter->GetCarriedAmmo(this);
+		return Character->GetCarriedAmmo(this);
 	}
 	return -1;
 }

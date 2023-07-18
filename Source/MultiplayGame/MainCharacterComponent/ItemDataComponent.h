@@ -30,6 +30,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		FDataTableRowHandle ItemID;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		EItemType ItemType;
+
 	UPROPERTY()
 		class AWeapon* Weapon;
 

@@ -24,7 +24,7 @@ public:
 	FOnInventoryUpdate OnInventoryUpdate;
 	FOnWeaponInfoUpdate OnWeaponInfoUpdate;
 
-	TTuple<bool, int> AddToInventory(FString ItemID, int Quantity);
+	TTuple<bool, int> AddToInventory(FString ItemID, int Quantity, EItemType ItemType);
 	void RemoveFromInventory(FString ItemID, int Quantity);
 	TTuple<int, bool> FindSlot(FString ItemID);
 	int32 GetMaxStackSize(FString ItemID);
@@ -35,6 +35,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void DEBUGPrintContents();
 	void TransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
+	void TransferWeaponInfos(UInventoryComponent* SourceInventory);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastUpdate();
@@ -42,7 +43,10 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerTransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
 
-	void AddToWeaponSlot(class AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity);
+	void AddToWeaponSlot(class AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType);
+
+	UFUNCTION(Server, Reliable)
+		void ServerSwapTwoWeapons();
 
 protected:
 	virtual void BeginPlay() override;

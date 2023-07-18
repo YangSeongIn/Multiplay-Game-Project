@@ -66,7 +66,7 @@ private:
 		class UDragDropSlot* DragDropSlot;
 
 	UPROPERTY()
-		class UEquippedSlotWidget* EquippedSlotWidget;
+		class UInventoryWeaponInfo* InventoryWeaponInfo;
 
 	void SetSlot(class UItemDataComponent* ItemDataComponent);
 
@@ -76,9 +76,11 @@ private:
 	int32 AmmoQuantity;
 	int32 CarriedAmmoQuantity;
 
+	EItemType ItemType;
+
 public:
-	FORCEINLINE class UEquippedSlotWidget* GetEquippedSlotWidget() { return EquippedSlotWidget; };
-	FORCEINLINE void SetEquippedSlotWidget(class UEquippedSlotWidget* SlotWidget) { EquippedSlotWidget = SlotWidget; };
+	FORCEINLINE class UInventoryWeaponInfo* GetInventoryWeaponInfo() { return InventoryWeaponInfo; };
+	FORCEINLINE void SetInventoryWeaponInfo(class UInventoryWeaponInfo* WeaponInfo) { InventoryWeaponInfo = WeaponInfo; };
 	FORCEINLINE void SetIconImage(class UImage* NewImage) { IconImage = NewImage; };
 	FORCEINLINE class UImage* GetIconImage() { return IconImage; };
 	FORCEINLINE void SetItemID(FString NewString) { ItemID = NewString; };
@@ -87,4 +89,5 @@ public:
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* InventoryComp) { InventoryComponent = InventoryComp; };
 	FORCEINLINE void SetAmmoQuantity(int32 Quantity) { AmmoQuantity = Quantity; };
 	FORCEINLINE void SetCarriedAmmoQuantity(int32 Quantity) { CarriedAmmoQuantity = Quantity; };
+	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
 };

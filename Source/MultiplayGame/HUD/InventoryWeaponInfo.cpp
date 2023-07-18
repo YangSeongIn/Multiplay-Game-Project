@@ -18,7 +18,6 @@ void UInventoryWeaponInfo::NativePreConstruct()
 
 void UInventoryWeaponInfo::DisplayWeaponInfo(UInventoryComponent* InventoryComp)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("3")));
 	this->InventoryComponent = InventoryComp;
 	WeaponInfoGrid->ClearChildren();
 	UpdateWeaponInfo();
@@ -26,7 +25,6 @@ void UInventoryWeaponInfo::DisplayWeaponInfo(UInventoryComponent* InventoryComp)
 
 void UInventoryWeaponInfo::UpdateWeaponInfo()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("4")));
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (Character)
 	{
@@ -36,7 +34,6 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 			if (WeaponInfoClass)
 			{
 				TArray<FEquippedWeaponSlotStruct> Arr = InventoryComponent->GetWeaponInfos();
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("5")));
 				for (int i = 0; i < Arr.Num(); i++)
 				{
 					UWeaponInfo* WeaponInfo = Cast<UWeaponInfo>(CreateWidget(this, WeaponInfoClass));
@@ -44,8 +41,9 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 					WeaponInfo->SetInventoryComponent(InventoryComponent);
 					WeaponInfo->SetAmmoQuantity(Arr[i].AmmoQuantity);
 					WeaponInfo->SetCarriedAmmoQuantity(Arr[i].CarriedAmmoQuantity);
+					WeaponInfo->SetItemType(Arr[i].ItemType);
+					WeaponInfo->SetPadding(5.f);
 					WeaponInfoGrid->AddChildToVerticalBox(WeaponInfo);
-					GEngine->AddOnScreenDebugMessage(-1,5,FColor::Blue,FString::Printf(TEXT("ItemID : %s"), *Arr[i].ItemID));
 				}
 				InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));
 			}

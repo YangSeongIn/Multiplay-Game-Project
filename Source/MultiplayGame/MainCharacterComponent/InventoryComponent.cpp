@@ -3,6 +3,8 @@
 
 #include "InventoryComponent.h"
 #include "../Weapon/Weapon.h"
+#include "../Character/MainCharacter.h"
+#include "../MainCharacterComponent/CombatComponent.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -20,12 +22,14 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (int i = 0; i < InventorySize; i++) {
+	for (int i = 0; i < InventorySize; i++) 
+	{
 		FInventorySlotStruct s{ "", 0 };
 		Slots.Add(s);
 	}
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++) 
+	{
 		FEquippedWeaponSlotStruct EWSlot({ "", -1, -1 });
 		WeaponInfos.Add(EWSlot);
 	}
@@ -38,24 +42,25 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 }
 
-void UInventoryComponent::AddToWeaponSlot(AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity)
+void UInventoryComponent::AddToWeaponSlot(AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("2, %d"), WeaponInfos.Num()));
 	if (WeaponInfos[0].ItemID == "")
 	{
 		WeaponInfos[0].ItemID = ItemID;
 		WeaponInfos[0].AmmoQuantity = AmmoQuantity;
 		WeaponInfos[0].CarriedAmmoQuantity = CarriedAmmoQuantity;
+		WeaponInfos[0].ItemType = ItemType;
 	}
 	else if (WeaponInfos[1].ItemID == "")
 	{
 		WeaponInfos[1].ItemID = ItemID;
 		WeaponInfos[1].AmmoQuantity = AmmoQuantity;
 		WeaponInfos[1].CarriedAmmoQuantity = CarriedAmmoQuantity;
+		WeaponInfos[1].ItemType = ItemType;
 	}
 }
 
-TTuple<bool, int> UInventoryComponent::AddToInventory(FString ItemID, int Quantity)
+TTuple<bool, int> UInventoryComponent::AddToInventory(FString ItemID, int Quantity, EItemType ItemType)
 {
 	int QuantityRemaining = Quantity;
 	bool bHasFailed = false;
@@ -162,6 +167,41 @@ void UInventoryComponent::TransferSlots(int SourceIndex, UInventoryComponent* So
 			MulticastUpdate();
 			SourceInventory->MulticastUpdate();
 		}
+	}
+}
+
+void UInventoryComponent::TransferWeaponInfos(UInventoryComponent* SourceInventory)
+{
+	FEquippedWeaponSlotStruct WeaponSlotStruct1 = SourceInventory->WeaponInfos[0];
+	FEquippedWeaponSlotStruct WeaponSlotStruct2 = SourceInventory->WeaponInfos[1];
+	if (WeaponSlotStruct1.ItemID != "" || WeaponSlotStruct2.ItemID != "")
+	{
+		FEquippedWeaponSlotStruct WeaponSlotStructTemp = SourceInventory->WeaponInfos[0];
+		SourceInventory->WeaponInfos[0] = SourceInventory->WeaponInfos[1];
+		SourceInventory->WeaponInfos[1] = WeaponSlotStructTemp;
+		if (OnWeaponInfoUpdate.IsBound())
+		{
+			OnWeaponInfoUpdate.Broadcast();
+		}
+		if (Character && Character->GetCombatComponent())
+		{
+			if (Character->HasAuthority())
+			{
+				Character->GetCombatComponent()->SwapTwoWeapons();
+			}
+			else
+			{
+				ServerSwapTwoWeapons();
+			}
+		}
+	}
+}
+
+void UInventoryComponent::ServerSwapTwoWeapons_Implementation()
+{
+	if (Character && Character->GetCombatComponent())
+	{
+		Character->GetCombatComponent()->SwapTwoWeapons();
 	}
 }
 

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "EquippedSlotType.h"
 #include "InventorySlotStruct.generated.h"
 
 USTRUCT(BlueprintType)
@@ -14,6 +15,8 @@ public:
 		FString ItemID;
 	UPROPERTY(BlueprintReadWrite)
 		int32 Quantity;
+	UPROPERTY(BlueprintReadWrite)
+		EItemType ItemType;
 };
 
 USTRUCT(BlueprintType)
@@ -28,6 +31,8 @@ public:
 		int32 AmmoQuantity;
 	UPROPERTY(BlueprintReadWrite)
 		int32 CarriedAmmoQuantity;
+	UPROPERTY(BlueprintReadWrite)
+		EItemType ItemType;
 };
 
 USTRUCT(BlueprintType)

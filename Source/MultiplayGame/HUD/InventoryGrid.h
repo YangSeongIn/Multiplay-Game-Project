@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "../Types/EquippedSlotType.h"
 #include "InventoryGrid.generated.h"
 
 /**
@@ -32,4 +33,6 @@ public:
 		void UpdateInventory();
 	UFUNCTION()
 		void UpdatedInventory();
+
+	EItemType ItemType;
 };

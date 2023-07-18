@@ -208,22 +208,35 @@ void AMainPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		PlayerHUD->CharacterOverlay->AmmoAmount;
 	if (bHUDValid)
 	{
-		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
-		PlayerHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString(AmmoText));
+		if (Ammo == -1)
+		{
+			PlayerHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString("- / -"));
+		}
+		else
+		{
+			FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+			PlayerHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString(AmmoText));
+		}
 	}
 }
 
 void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 {
-	GLog->Log("SetHUDCarriedAmmo");
 	PlayerHUD = PlayerHUD == nullptr ? Cast<APlayerHUD>(GetHUD()) : PlayerHUD;
 	bool bHUDValid = PlayerHUD &&
 		PlayerHUD->CharacterOverlay &&
 		PlayerHUD->CharacterOverlay->CarriedAmmoAmount;
 	if (bHUDValid)
 	{
-		FString CarriedAmmoText = FString::Printf(TEXT("%d"), Ammo);
-		PlayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+		if (Ammo == -1)
+		{
+			PlayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString("- / -"));
+		}
+		else
+		{
+			FString CarriedAmmoText = FString::Printf(TEXT("%d"), Ammo);
+			PlayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+		}
 	}
 }
 

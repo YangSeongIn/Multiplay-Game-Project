@@ -74,6 +74,8 @@ void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
 				DragDropSlot->SetContentIndex(SlotIndex);
 				DragDropSlot->DefaultDragVisual = DragItemVisual;
 				DragDropSlot->SetItemID(ItemID);
+				DragDropSlot->SetEquippedSlotType(EEquippedSlotType::EST_Inventory);
+				DragDropSlot->SetItemType(ItemType);
 			}
 		}
 	}
@@ -107,6 +109,10 @@ bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 					SlotForDragDrop->GetEquippedSlot()->GetEquippedSlotWidget()->SetSlotWeapon2(DragDropSlot);
 				}
 			}*/
+		}
+		else
+		{
+			// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("????"));
 		}
 	}
 	return false;

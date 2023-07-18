@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "../Types/EquippedSlotType.h"
 #include "InventorySlot.generated.h"
 
 /**
@@ -44,6 +45,8 @@ private:
 	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = "true"), meta = (AllowPrivateAccess = "true"))
 		class UInventoryComponent* InventoryComponent;
 
+	EItemType ItemType;
+
 	UPROPERTY(EditAnywhere, Category = "Drag Item Visual")
 		TSubclassOf<UUserWidget> DragItemVisualClass;
 	UPROPERTY()
@@ -62,4 +65,5 @@ public:
 	FORCEINLINE void SetSlotIndex(int32 TargetIndex) { SlotIndex = TargetIndex; };
 	FORCEINLINE void SetItemID(FString TargetID) { ItemID = TargetID; };
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* TargetComponent) { InventoryComponent = TargetComponent; };
+	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
 };

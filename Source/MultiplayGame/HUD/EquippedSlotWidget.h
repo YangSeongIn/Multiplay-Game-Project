@@ -31,8 +31,8 @@ private:
 		class UEquippedSlot* EquippedSlot_Head;
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
 		class UEquippedSlot* EquippedSlot_Body;
-	/*UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
-		class UEquippedSlot* EquippedSlot_Weapon1;
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
-		class UEquippedSlot* EquippedSlot_Weapon2;*/
+	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
+	//	class UEquippedSlot* EquippedSlot_Weapon1;
+	//UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
+	//	class UEquippedSlot* EquippedSlot_Weapon2;
 };

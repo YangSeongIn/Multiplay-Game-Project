@@ -12,6 +12,16 @@ enum class EEquippedSlotType : uint8
 };
 
 UENUM(BlueprintType)
+enum class EItemType : uint8
+{
+	EIT_Head UMETA(DisplayName = "Head"),
+	EIT_Body UMETA(DisplayName = "Body"),
+	EIT_Weapon UMETA(DisplayName = "Weapon"),
+
+	EIT_MAX UMETA(DisplayName = "DefaultMax")
+};
+
+UENUM(BlueprintType)
 enum class EDragDropInventorySlotType : uint8
 {
 	EDD_InventorySlot UMETA(DisplayName = "Head"),

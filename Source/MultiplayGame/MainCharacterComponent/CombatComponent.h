@@ -191,4 +191,5 @@ private:
 	void EquipOnBack(AWeapon* WeaponToEquip);
 	void AttachActorToBack(AActor* ActorToAttach);
 
+	void SwapWeaponByInventory(AWeapon* CurrentWeapon, AWeapon* TargetWeapon);
 };

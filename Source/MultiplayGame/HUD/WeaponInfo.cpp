@@ -17,6 +17,7 @@
 #include "../HUD/InventoryEquippedVerticalBox.h"
 #include "EquippedSlotWidget.h"
 #include "../MainCharacterComponent/CombatComponent.h"
+#include "../HUD/InventoryWeaponInfo.h"
 
 void UWeaponInfo::NativePreConstruct()
 {
@@ -57,11 +58,12 @@ void UWeaponInfo::NativeOnDragDetected(const FGeometry& InGeometry, const FPoint
 		if (DragItemVisual)
 		{
 			DragItemVisual->SetItemID(ItemID);
-			UE_LOG(LogTemp, Log, TEXT("ItemID : %s"), *ItemID);
 			if (DragDropSlot)
 			{
 				DragDropSlot->SetEquippedSlotType(EquippedSlotType);
 				DragDropSlot->DefaultDragVisual = DragItemVisual;
+				DragDropSlot->SetEquippedSlotType(EEquippedSlotType::EST_Weapon);
+				DragDropSlot->SetItemType(ItemType);
 			}
 		}
 	}
@@ -76,11 +78,15 @@ bool UWeaponInfo::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 	{
 		if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon && SlotForDragDrop != DragDropSlot)
 		{
-			if (EquippedSlotWidget)
+			if (InventoryComponent)
 			{
-				EquippedSlotWidget->SwapEquippedWeaponSlot();
+				InventoryComponent->TransferWeaponInfos(InventoryComponent);
 				return true;
 			}
+		}
+		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Inventory && SlotForDragDrop->GetItemType() == EItemType::EIT_Weapon)
+		{
+			// SlotForDragDrop
 		}
 	}
 	return false;
@@ -177,7 +183,6 @@ void UWeaponInfo::UpdateSlot()
 
 void UWeaponInfo::UpdateWeaponInfo()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("11asdasdsdsa")));
 	if (InventoryDataTable)
 	{
 		FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemID), "");
@@ -188,7 +193,6 @@ void UWeaponInfo::UpdateWeaponInfo()
 				IconImage->SetBrushFromTexture(ItemStruct->Thumbnail);
 				IconImage->SetVisibility(ESlateVisibility::Visible);
 				AmmoText->SetText(FText::FromString(FString::FromInt(AmmoQuantity) + FString(" / ") + FString::FromInt(CarriedAmmoQuantity)));
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("asdasdsdsa")));
 			}
 		}
 		else

@@ -9,6 +9,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FOnInventoryUpdate);
 DECLARE_MULTICAST_DELEGATE(FOnWeaponInfoUpdate);
+DECLARE_MULTICAST_DELEGATE(FOnOverlappedItemUpdate);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MULTIPLAYGAME_API UInventoryComponent : public UActorComponent
@@ -23,14 +24,15 @@ public:
 
 	FOnInventoryUpdate OnInventoryUpdate;
 	FOnWeaponInfoUpdate OnWeaponInfoUpdate;
+	FOnOverlappedItemUpdate OnOverlappedItemUpdate;
 
-	TTuple<bool, int> AddToInventory(FString ItemID, int Quantity, EItemType ItemType);
+	TTuple<bool, int> AddToInventory(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName);
 	void RemoveFromInventory(FString ItemID, int Quantity);
 	TTuple<int, bool> FindSlot(FString ItemID);
 	int32 GetMaxStackSize(FString ItemID);
 	void AddToStack(int Idx, int Quantity);
 	TTuple<bool, int> AnyEmptySlotAvailable();
-	bool CreateNewStack(FString ItemID, int Quantity);
+	bool CreateNewStack(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName);
 
 	UFUNCTION(BlueprintCallable)
 		void DEBUGPrintContents();
@@ -43,10 +45,17 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerTransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
 
-	void AddToWeaponSlot(class AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType);
+	void AddToWeaponSlot(FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType);
 
 	UFUNCTION(Server, Reliable)
 		void ServerSwapTwoWeapons();
+
+	void AddOverlappedItem(FString ItemID, int32 Quantity, EItemType ItemType, FString InherenceName, class AItem* Item);
+	void RemoveOverlappedItem(FString InherenceName);
+
+	void UpdateWeaponInfoSlot(class UCombatComponent* InventoryComp, class AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo);
+
+	void AddToSelectedWeaponSlot(class AItem* Item, EWeaponNum WeaponNum);
 
 protected:
 	virtual void BeginPlay() override;
@@ -65,10 +74,18 @@ private:
 
 	UPROPERTY()
 		AMainCharacter* Character;
+
+	TArray<FInventorySlotStruct> OverlappedItems;
+
+	UPROPERTY()
+		class UCombatComponent* CombatComponent;
+
 public:
 	FORCEINLINE int32 GetInventorySize() const { return InventorySize; };
 	FORCEINLINE void SetInventorySize(int32 SizeOfInventory) { InventorySize = SizeOfInventory; };
 	UFUNCTION(BlueprintCallable)
 		TArray<FInventorySlotStruct> GetContents() { return Slots; };
-	TArray<FEquippedWeaponSlotStruct> GetWeaponInfos() { return WeaponInfos; };
+	FORCEINLINE TArray<FEquippedWeaponSlotStruct> GetWeaponInfos() { return WeaponInfos; };
+	FORCEINLINE TArray<FInventorySlotStruct> GetOverlappedItems() { return OverlappedItems; };
+	FORCEINLINE void SetCombatComponent(class UCombatComponent* CombatComp) { CombatComponent = CombatComp; }
 };

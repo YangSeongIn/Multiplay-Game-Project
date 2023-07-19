@@ -1,28 +1,28 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "InventoryGrid.h"
-#include "../MainCharacterComponent/InventoryComponent.h"
-#include "Components/WrapBox.h"
+#include "AroundItemGrid.h"
 #include "../Character/MainCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "../MainCharacterComponent/InventoryComponent.h"
+#include "../Types/InventorySlotStruct.h"
 #include "../HUD/InventorySlot.h"
+#include "Components/WrapBox.h"
 
-void UInventoryGrid::NativePreConstruct()
+void UAroundItemGrid::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 
-	// UpdateInventory();
 }
 
-void UInventoryGrid::DisplayInventory(UInventoryComponent* InventoryComp)
+void UAroundItemGrid::DisplayOverlappedItems(UInventoryComponent* InventoryComp)
 {
 	this->InventoryComponent = InventoryComponent;
 	ItemGrid->ClearChildren();
 	UpdateInventory();
 }
 
-void UInventoryGrid::UpdateInventory()
+void UAroundItemGrid::UpdateInventory()
 {
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (Character)
@@ -32,7 +32,7 @@ void UInventoryGrid::UpdateInventory()
 		{
 			if (InventorySlotWidgetClass != nullptr)
 			{
-				TArray<FInventorySlotStruct> Arr = InventoryComponent->GetContents();
+				TArray<FInventorySlotStruct> Arr = InventoryComponent->GetOverlappedItems();
 				for (int i = 0; i < Arr.Num(); i++)
 				{
 					UInventorySlot* ItemSlot = Cast<UInventorySlot>(CreateWidget(this, InventorySlotWidgetClass));
@@ -40,19 +40,22 @@ void UInventoryGrid::UpdateInventory()
 					ItemSlot->SetQuantity(Arr[i].Quantity);
 					ItemSlot->SetInventoryComponent(InventoryComponent);
 					ItemSlot->SetSlotIndex(i);
+					ItemSlot->SetInherenceName(Arr[i].InherenceName);
 					ItemSlot->SetItemType(Arr[i].ItemType);
+					ItemSlot->SetEquippedSlotType(EEquippedSlotType::EST_AroundItem);
+					ItemSlot->SetItem(Arr[i].Item);
 					ItemGrid->AddChildToWrapBox(ItemSlot);
 				}
-				if (!InventoryComponent->OnInventoryUpdate.IsBound())
+				if (!InventoryComponent->OnOverlappedItemUpdate.IsBound())
 				{
-					InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
+					InventoryComponent->OnOverlappedItemUpdate.AddUFunction(this, FName("UpdatedInventory"));
 				}
 			}
 		}
 	}
 }
 
-void UInventoryGrid::UpdatedInventory()
+void UAroundItemGrid::UpdatedInventory()
 {
 	ItemGrid->ClearChildren();
 	UpdateInventory();

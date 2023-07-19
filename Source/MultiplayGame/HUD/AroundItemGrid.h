@@ -4,31 +4,32 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "../Types/EquippedSlotType.h"
-#include "InventoryGrid.generated.h"
+#include "AroundItemGrid.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class MULTIPLAYGAME_API UInventoryGrid : public UUserWidget
+class MULTIPLAYGAME_API UAroundItemGrid : public UUserWidget
 {
 	GENERATED_BODY()
 
 protected:
 	virtual void NativePreConstruct() override;
 
-public:
-	UPROPERTY(BlueprintReadWrite)
+private:
+	UPROPERTY()
 		class UInventoryComponent* InventoryComponent;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
 		class UWrapBox* ItemGrid;
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<UUserWidget> InventorySlotWidgetClass;
 
+public:
 	UFUNCTION()
-		void DisplayInventory(class UInventoryComponent* InventoryComp);
+		void DisplayOverlappedItems(class UInventoryComponent* InventoryComp);
 	UFUNCTION()
 		void UpdateInventory();
 	UFUNCTION()

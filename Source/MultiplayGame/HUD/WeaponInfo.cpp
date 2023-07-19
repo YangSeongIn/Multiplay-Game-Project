@@ -29,7 +29,7 @@ void UWeaponInfo::NativePreConstruct()
 		DragDropSlot->SetWeaponInfoSlot(this);
 	}
 
-	UpdateWeaponInfo();
+	//UpdateWeaponInfo();
 }
 
 void UWeaponInfo::NativeConstruct()
@@ -84,12 +84,33 @@ bool UWeaponInfo::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 				return true;
 			}
 		}
-		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Inventory && SlotForDragDrop->GetItemType() == EItemType::EIT_Weapon)
+		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_AroundItem && SlotForDragDrop->GetItemType() == EItemType::EIT_Weapon)
 		{
-			// SlotForDragDrop
+			if (CombatComponent && InventoryComponent)
+			{
+				if (GetOwningPlayerPawn()->HasAuthority())
+				{
+					CombatComponent->EquipWeaponByAroundItem(WeaponNum, SlotForDragDrop->GetInherenceName(), SlotForDragDrop->GetItem());
+				}
+				else
+				{
+					ServerEquipWeaponByAroundItem(SlotForDragDrop);
+				}
+				
+				InventoryComponent->AddToSelectedWeaponSlot(SlotForDragDrop->GetItem(), WeaponNum);
+			}
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("%d, %d"), SlotForDragDrop->GetEquippedSlotType(), SlotForDragDrop->GetItemType()));
 		}
 	}
 	return false;
+}
+
+void UWeaponInfo::ServerEquipWeaponByAroundItem_Implementation(UDragDropSlot* SlotForDragDrop)
+{
+	CombatComponent->EquipWeaponByAroundItem(WeaponNum, SlotForDragDrop->GetInherenceName(), SlotForDragDrop->GetItem());
 }
 
 void UWeaponInfo::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
@@ -183,6 +204,8 @@ void UWeaponInfo::UpdateSlot()
 
 void UWeaponInfo::UpdateWeaponInfo()
 {
+	
+
 	if (InventoryDataTable)
 	{
 		FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemID), "");

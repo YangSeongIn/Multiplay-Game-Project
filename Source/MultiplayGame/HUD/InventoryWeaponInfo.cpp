@@ -8,6 +8,7 @@
 #include "../HUD/InventorySlot.h"
 #include "../HUD/WeaponInfo.h"
 #include "../MainCharacterComponent/InventoryComponent.h"
+#include "../MainCharacterComponent/CombatComponent.h"
 
 void UInventoryWeaponInfo::NativePreConstruct()
 {
@@ -29,23 +30,29 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 	if (Character)
 	{
 		InventoryComponent = Character->GetInventoryComponent();
+		CombatComponent = Character->GetCombatComponent();
 		if (InventoryComponent)
 		{
 			if (WeaponInfoClass)
 			{
 				TArray<FEquippedWeaponSlotStruct> Arr = InventoryComponent->GetWeaponInfos();
-				for (int i = 0; i < Arr.Num(); i++)
+				for (int i = 0; i < 2; i++)
 				{
 					UWeaponInfo* WeaponInfo = Cast<UWeaponInfo>(CreateWidget(this, WeaponInfoClass));
 					WeaponInfo->SetItemID(Arr[i].ItemID);
 					WeaponInfo->SetInventoryComponent(InventoryComponent);
+					WeaponInfo->SetCombatComponent(CombatComponent);
 					WeaponInfo->SetAmmoQuantity(Arr[i].AmmoQuantity);
 					WeaponInfo->SetCarriedAmmoQuantity(Arr[i].CarriedAmmoQuantity);
 					WeaponInfo->SetItemType(Arr[i].ItemType);
 					WeaponInfo->SetPadding(5.f);
+					
 					WeaponInfoGrid->AddChildToVerticalBox(WeaponInfo);
 				}
-				InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));
+				if (!InventoryComponent->OnWeaponInfoUpdate.IsBound())
+				{
+					InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));
+				}
 			}
 		}
 	}

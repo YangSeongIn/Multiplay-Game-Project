@@ -32,6 +32,7 @@
 #include "../GameState/MainGameState.h"
 #include "../GameInstance/MainGameInstance.h"
 #include "../HUD/InventoryWeaponInfo.h"
+#include "../HUD/AroundItemGrid.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -292,13 +293,12 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 void AMainCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (CombatComponent)
+	if (CombatComponent && InventoryComponent)
 	{
 		CombatComponent->Character = this;
-	}
-	if (InventoryComponent)
-	{
+		CombatComponent->SetInventoryComponent(InventoryComponent);
 		InventoryComponent->Character = this;
+		InventoryComponent->SetCombatComponent(CombatComponent);
 	}
 }
 
@@ -555,6 +555,7 @@ void AMainCharacter::InventoryKeyPressed()
 				{
 					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
 					InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
+					InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
 					InventoryWidget->AddToViewport();
 				}
 			}

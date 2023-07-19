@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "WeaponTypes.h"
 #include "../Types/EquippedSlotType.h"
+#include "../Pickups/Item.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -19,7 +19,7 @@ enum class EWeaponState : uint8
 };
 
 UCLASS()
-class MULTIPLAYGAME_API AWeapon : public AActor
+class MULTIPLAYGAME_API AWeapon : public AItem
 {
 	GENERATED_BODY()
 	
@@ -28,7 +28,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override;
-	virtual void PostInitializeComponents() override;
 	void SetHUDAmmo();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
@@ -85,18 +84,15 @@ protected:
 	virtual void OnDropped();
 	virtual void OnEquippedSecondary();
 
-	UFUNCTION()
-		void OnSphereOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-		void OnSphereOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	virtual void OnSphereOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+	virtual void OnSphereOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 		USkeletalMeshComponent* WeaponMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-		class USphereComponent* AreaSphere;
+	/*UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+		class USphereComponent* AreaSphere;*/
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 		EWeaponState WeaponState;
@@ -133,9 +129,6 @@ private:
 	UPROPERTY(EditAnywhere)
 		EWeaponType WeaponType;
 
-	UPROPERTY(EditAnywhere)
-		class UItemDataComponent* ItemDataComponent;
-
 	EEquippedSlotType EquippedSlotType = EEquippedSlotType::EST_Weapon;
 
 public:
@@ -149,6 +142,5 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; };
 	FORCEINLINE int32 GetAmmo() const { return Ammo; };
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; };
-	FORCEINLINE UItemDataComponent* GetItemDataComponent() { return ItemDataComponent; };
 	FORCEINLINE EEquippedSlotType GetEquippedSlotType() { return EquippedSlotType; };
 };

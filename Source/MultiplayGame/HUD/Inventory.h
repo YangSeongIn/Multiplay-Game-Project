@@ -30,6 +30,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 		class UInventoryWeaponInfo* InventoryWeaponInfo;
 
+	UPROPERTY(meta = (BindWidget))
+		class UAroundItemGrid* AroundItemGrid;
+
 public:
 	void SetMeshCaptureImage(class UMaterialInterface* Image);
 

@@ -15,6 +15,8 @@
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 #include "ItemDataComponent.h"
+#include "InventoryComponent.h"
+#include "../Pickups/Item.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -97,6 +99,10 @@ void UCombatComponent::Fire()
 			CrosshairShootingFactor += 0.75f;
 		}
 		StartFireTimer();
+
+		// Fix Text
+
+		InventoryComponent->UpdateWeaponInfoSlot(this, EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
 	}
 }
 
@@ -316,15 +322,51 @@ void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
 	}
 }
 
-void UCombatComponent::SwapWeaponByInventory(AWeapon* CurrentWeapon, AWeapon* TargetWeapon)
+void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString InherenceName, AItem* DraggedItem)
 {
-	if (TargetWeapon == Weapon1)
+	AWeapon* DraggedWeapon = Cast<AWeapon>(DraggedItem);
+	AWeapon*& TargetWeapon = NumOfWeapon == EWeaponNum::EWN_Weapon1 ? Weapon1 : Weapon2;
+	if (DraggedWeapon)
 	{
-		//if ()
+		if (TargetWeapon)
+		{
+			DropWeapon(TargetWeapon);
+		}
+		TargetWeapon = DraggedWeapon;
+		if (EquippedWeapon)
+		{
+			EquipOnBack(DraggedWeapon);
+		}
+		else
+		{
+			EquipOnHand(DraggedWeapon);
+		}
+		// EquipBackOrHand(DraggedWeapon);
+		/*if (Character && Character->HasAuthority())
+		{
+			EquipBackOrHand(DraggedWeapon);
+		}
+		else
+		{
+			ServerEquipWeaponByAroundItem(DraggedWeapon);
+		}*/
 	}
-	else if (TargetWeapon == Weapon2)
-	{
+}
 
+void UCombatComponent::ServerEquipWeaponByAroundItem_Implementation(AWeapon* WeaponToDrag)
+{
+	EquipBackOrHand(WeaponToDrag);
+}
+
+void UCombatComponent::EquipBackOrHand(AWeapon* WeaponToDrag)
+{
+	if (EquippedWeapon)
+	{
+		EquipOnBack(WeaponToDrag);
+	}
+	else
+	{
+		EquipOnHand(WeaponToDrag);
 	}
 }
 
@@ -335,14 +377,14 @@ void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 		if (WeaponToDrop == Weapon1) 
 		{
 			Weapon1 = nullptr;
-			//Weapons[0] = nullptr;
+			Weapon1->Dropped();
 		}
 		else if (WeaponToDrop == Weapon2) 
 		{
 			Weapon2 = nullptr;
-			//Weapons[1] = nullptr;
+			Weapon2->Dropped();
 		}
-		EquippedWeapon->Dropped();
+		
 	}
 }
 
@@ -422,6 +464,11 @@ void UCombatComponent::FinishReloading()
 	if (bFireButtonPressed)
 	{
 		Fire();
+	}
+
+	if (InventoryComponent)
+	{
+		InventoryComponent->UpdateWeaponInfoSlot(this, EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
 	}
 }
 

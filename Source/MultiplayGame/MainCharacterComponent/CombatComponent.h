@@ -7,6 +7,7 @@
 #include "../HUD/PlayerHUD.h"
 #include "../Weapon//WeaponTypes.h"
 #include "../Types/CombatState.h"
+#include "../Types/EquippedSlotType.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGHT 80000.f
@@ -35,6 +36,7 @@ public:
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	void SwapWeapon(int32 WeaponNum);
 	void SwapTwoWeapons();
+	void EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString InherenceName, class AItem* DraggedItem);
 
 protected:
 	virtual void BeginPlay() override;
@@ -72,6 +74,11 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastSwapWeapon(AWeapon* WeaponToHand, AWeapon* WeaponToBack);
+
+	UFUNCTION(Server, Reliable)
+		void ServerEquipWeaponByAroundItem(class AWeapon* WeaponToDrag);
+
+	void EquipBackOrHand(class AWeapon* WeaponToDrag);
 
 private:
 	UPROPERTY()
@@ -190,6 +197,12 @@ private:
 	void EquipOnHand(AWeapon* WeaponToEquip);
 	void EquipOnBack(AWeapon* WeaponToEquip);
 	void AttachActorToBack(AActor* ActorToAttach);
+	UPROPERTY()
+		class UInventoryComponent* InventoryComponent;
 
-	void SwapWeaponByInventory(AWeapon* CurrentWeapon, AWeapon* TargetWeapon);
+public:
+	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* InventoryComp) { InventoryComponent = InventoryComp; };
+	FORCEINLINE int32 GetCarriedAmmo(EWeaponType TypeOfWeapon) { return CarriedAmmoMap.Contains(TypeOfWeapon) ? CarriedAmmoMap[TypeOfWeapon] : -1; };
+	FORCEINLINE class AWeapon* GetWeapon1() { return Weapon1; };
+	FORCEINLINE class AWeapon* GetWeapon2() { return Weapon2; };
 };

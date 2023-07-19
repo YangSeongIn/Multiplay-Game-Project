@@ -59,6 +59,13 @@ private:
 	UPROPERTY()
 		class UDragDropSlot* DragDropSlot;
 
+	FString InherenceName;
+
+	UPROPERTY()
+		class AItem* Item;
+
+	EEquippedSlotType EquippedSlotType = EEquippedSlotType::EST_Inventory;
+
 public:
 	FORCEINLINE void SetIcon(class UImage* TargetImage) { IconImage = TargetImage; };
 	void SetQuantity(int32 TargetQuantity);
@@ -66,4 +73,8 @@ public:
 	FORCEINLINE void SetItemID(FString TargetID) { ItemID = TargetID; };
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* TargetComponent) { InventoryComponent = TargetComponent; };
 	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
+	FORCEINLINE void SetInherenceName(FString NewName) { InherenceName = NewName; };
+	FORCEINLINE void SetEquippedSlotType(EEquippedSlotType SlotTypeToEquip) { EquippedSlotType = SlotTypeToEquip; };
+	FORCEINLINE FString GetInherenceName() { return InherenceName; };
+	FORCEINLINE void SetItem(class AItem* ItemToSet) { Item = ItemToSet; };
 };

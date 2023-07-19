@@ -76,6 +76,9 @@ void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
 				DragDropSlot->SetItemID(ItemID);
 				DragDropSlot->SetEquippedSlotType(EEquippedSlotType::EST_Inventory);
 				DragDropSlot->SetItemType(ItemType);
+				DragDropSlot->SetInherenceName(InherenceName);
+				DragDropSlot->SetItem(Item);
+				DragDropSlot->SetEquippedSlotType(EquippedSlotType);
 			}
 		}
 	}

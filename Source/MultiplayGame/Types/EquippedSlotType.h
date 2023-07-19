@@ -7,6 +7,7 @@ enum class EEquippedSlotType : uint8
 	EST_Body UMETA(DisplayName = "Body"),
 	EST_Weapon UMETA(DisplayName = "Weapon"),
 	EST_Inventory UMETA(DisplayName = "Inventory"),
+	EST_AroundItem UMETA(DisplayName = "AroundItem"),
 
 	EST_MAX UMETA(DisplayName = "DefaultMax")
 };
@@ -17,6 +18,8 @@ enum class EItemType : uint8
 	EIT_Head UMETA(DisplayName = "Head"),
 	EIT_Body UMETA(DisplayName = "Body"),
 	EIT_Weapon UMETA(DisplayName = "Weapon"),
+	EIT_Consumable UMETA(DisplayName = "Consumable"),
+	EIT_Ammo UMETA(DisplayName = "Ammo"),
 
 	EIT_MAX UMETA(DisplayName = "DefaultMax")
 };

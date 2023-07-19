@@ -32,9 +32,18 @@ void UItemDataComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 {
 	if (MainCharacter == nullptr || MainCharacter->GetInventoryComponent() == nullptr) return;
-	TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(ItemID.RowName.ToString(), Quantity, ItemType);
-	if (Weapon/* && Weapon->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon*/)
+
+
+	if (OwningActor)
 	{
-		MainCharacter->GetInventoryComponent()->AddToWeaponSlot(Weapon, ItemID.RowName.ToString(), Weapon->GetAmmo(), Weapon->GetCarriedAmmo(), ItemType);
+		if (ItemType != EItemType::EIT_Weapon)
+		{
+			TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName());
+		}
+		AWeapon* Weapon = Cast<AWeapon>(OwningActor);
+		if (Weapon)
+		{
+			MainCharacter->GetInventoryComponent()->AddToWeaponSlot(ItemID.RowName.ToString(), Weapon->GetAmmo(), Weapon->GetCarriedAmmo(), ItemType);
+		}
 	}
 }

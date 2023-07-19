@@ -27,6 +27,11 @@ private:
 	UPROPERTY()
 		class UWeaponInfo* WeaponInfoSlot;
 
+	FString InherenceName;
+
+	UPROPERTY()
+		class AItem* Item;
+
 public:
 	FORCEINLINE UInventoryComponent* GetInventoryComponent() { return InventoryComponent; };
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* Inventory) { InventoryComponent = Inventory; };
@@ -40,4 +45,8 @@ public:
 	FORCEINLINE void SetWeaponInfoSlot(class UWeaponInfo* NewSlot) { WeaponInfoSlot = NewSlot; };
 	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
 	FORCEINLINE EItemType GetItemType() { return ItemType; };
+	FORCEINLINE void SetInherenceName(FString NewName) { InherenceName = NewName; };
+	FORCEINLINE FString GetInherenceName() { return InherenceName; };
+	FORCEINLINE void SetItem(class AItem* ItemToDrag) { Item = ItemToDrag; };
+	FORCEINLINE class AItem* GetItem() { return Item; };
 };

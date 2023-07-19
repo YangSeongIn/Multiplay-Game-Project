@@ -12,11 +12,15 @@ public:
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadWrite)
-		FString ItemID;
-	UPROPERTY(BlueprintReadWrite)
 		int32 Quantity;
 	UPROPERTY(BlueprintReadWrite)
 		EItemType ItemType;
+	UPROPERTY(BlueprintReadWrite)
+		FString ItemID;
+	UPROPERTY(BlueprintReadWrite)
+		FString InherenceName;
+	UPROPERTY(BlueprintReadWrite)
+		class AItem* Item;
 };
 
 USTRUCT(BlueprintType)
@@ -26,13 +30,13 @@ public:
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadWrite)
-		FString ItemID;
-	UPROPERTY(BlueprintReadWrite)
 		int32 AmmoQuantity;
 	UPROPERTY(BlueprintReadWrite)
 		int32 CarriedAmmoQuantity;
 	UPROPERTY(BlueprintReadWrite)
 		EItemType ItemType;
+	UPROPERTY(BlueprintReadWrite)
+		FString ItemID;
 };
 
 USTRUCT(BlueprintType)
@@ -42,6 +46,8 @@ public:
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 StackSize;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FString ItemName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FString ItemDescription;
@@ -49,6 +55,5 @@ public:
 		UTexture2D* Thumbnail;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		AActor* ItemClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int32 StackSize;
+	
 };

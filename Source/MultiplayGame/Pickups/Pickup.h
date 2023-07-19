@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Item.h"
 #include "Pickup.generated.h"
 
 UCLASS()
-class MULTIPLAYGAME_API APickup : public AActor
+class MULTIPLAYGAME_API APickup : public AItem
 {
 	GENERATED_BODY()
 	
@@ -19,14 +19,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-		virtual void OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+	virtual void OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
-	UFUNCTION()
-		virtual void OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	UPROPERTY(EditAnywhere)
-		class USphereComponent* OverlapSphere;
+	/*UPROPERTY(EditAnywhere)
+		class USphereComponent* OverlapSphere;*/
 private:
 	UPROPERTY(EditAnywhere)
 		class USoundCue* PickupSound;

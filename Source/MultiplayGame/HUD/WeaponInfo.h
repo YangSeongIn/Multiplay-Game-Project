@@ -20,6 +20,9 @@ public:
 
 	UFUNCTION()
 		void UpdateWeaponInfo();
+	
+	UFUNCTION(Server, Reliable)
+		void ServerEquipWeaponByAroundItem(class UDragDropSlot* SlotForDragDrop);
 
 protected:
 	virtual void NativePreConstruct() override;
@@ -78,6 +81,9 @@ private:
 
 	EItemType ItemType;
 
+	UPROPERTY()
+		class UCombatComponent* CombatComponent;
+
 public:
 	FORCEINLINE class UInventoryWeaponInfo* GetInventoryWeaponInfo() { return InventoryWeaponInfo; };
 	FORCEINLINE void SetInventoryWeaponInfo(class UInventoryWeaponInfo* WeaponInfo) { InventoryWeaponInfo = WeaponInfo; };
@@ -90,4 +96,5 @@ public:
 	FORCEINLINE void SetAmmoQuantity(int32 Quantity) { AmmoQuantity = Quantity; };
 	FORCEINLINE void SetCarriedAmmoQuantity(int32 Quantity) { CarriedAmmoQuantity = Quantity; };
 	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
+	FORCEINLINE void SetCombatComponent(class UCombatComponent* CombatComp) { CombatComponent = CombatComp; };
 };

@@ -23,6 +23,8 @@ public:
 
 	UPROPERTY()
 		class UInventoryComponent* InventoryComponent;
+	UPROPERTY()
+		class UCombatComponent* CombatComponent;
 
 	/*UPROPERTY(meta = (BindWidget))
 		class UWeaponInfo* WeaponInfo1;

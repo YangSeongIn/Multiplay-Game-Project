@@ -45,8 +45,9 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 					WeaponInfo->SetAmmoQuantity(Arr[i].AmmoQuantity);
 					WeaponInfo->SetCarriedAmmoQuantity(Arr[i].CarriedAmmoQuantity);
 					WeaponInfo->SetItemType(Arr[i].ItemType);
+					WeaponInfo->SetWeaponNum(Arr[i].WeaponNum);
 					WeaponInfo->SetPadding(5.f);
-					
+					UE_LOG(LogTemp, Log, TEXT("Weapon num %d : %d vs %d"), i + 1, WeaponInfo->GetWeaponNum(), Arr[i].WeaponNum);
 					WeaponInfoGrid->AddChildToVerticalBox(WeaponInfo);
 				}
 				if (!InventoryComponent->OnWeaponInfoUpdate.IsBound())

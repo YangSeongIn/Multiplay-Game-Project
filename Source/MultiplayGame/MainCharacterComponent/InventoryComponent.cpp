@@ -32,7 +32,8 @@ void UInventoryComponent::BeginPlay()
 
 	for (int i = 0; i < 2; i++) 
 	{
-		FEquippedWeaponSlotStruct EWSlot({ -1, -1, EItemType::EIT_MAX, "" });
+		FEquippedWeaponSlotStruct EWSlot({ -1, -1, EItemType::EIT_MAX, EWeaponNum(i), "", nullptr});
+		UE_LOG(LogTemp, Log, TEXT("Weapon num %d in begin play : %d"), i + 1, EWSlot.WeaponNum);
 		WeaponInfos.Add(EWSlot);
 	}
 }
@@ -275,7 +276,7 @@ void UInventoryComponent::UpdateWeaponInfoSlot(UCombatComponent* CombatComp, AWe
 	{
 		for (FEquippedWeaponSlotStruct& Slot : WeaponInfos)
 		{
-			if (Slot.ItemID == EquippedWeapon->GetItemDataComponent()->GetItemID().RowName.ToString())
+			if (Slot.Weapon == EquippedWeapon)
 			{
 				Slot.AmmoQuantity = Ammo;
 				Slot.CarriedAmmoQuantity = CarriedAmmo;

@@ -36,7 +36,11 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 		EItemType ItemType;
 	UPROPERTY(BlueprintReadWrite)
+		EWeaponNum WeaponNum;
+	UPROPERTY(BlueprintReadWrite)
 		FString ItemID;
+	UPROPERTY(BlueprintReadWrite)
+		class AWeapon* Weapon;
 };
 
 USTRUCT(BlueprintType)

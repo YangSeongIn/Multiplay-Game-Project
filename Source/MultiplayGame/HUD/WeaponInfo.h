@@ -46,7 +46,7 @@ private:
 	UPROPERTY(EditAnywhere)
 		EEquippedSlotType EquippedSlotType;
 
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "EquippedSlotType == EST_Weapon", EditConditionHides))
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"), EditAnywhere, meta = (EditCondition = "EquippedSlotType == EST_Weapon", EditConditionHides))
 		EWeaponNum WeaponNum;
 
 	UPROPERTY(EditAnywhere)
@@ -92,6 +92,7 @@ public:
 	FORCEINLINE void SetItemID(FString NewString) { ItemID = NewString; };
 	FORCEINLINE FString GetItemID() { return ItemID; };
 	FORCEINLINE EWeaponNum GetWeaponNum() { return WeaponNum; };
+	FORCEINLINE void SetWeaponNum(EWeaponNum NumOfWeapon) { WeaponNum = NumOfWeapon; };
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* InventoryComp) { InventoryComponent = InventoryComp; };
 	FORCEINLINE void SetAmmoQuantity(int32 Quantity) { AmmoQuantity = Quantity; };
 	FORCEINLINE void SetCarriedAmmoQuantity(int32 Quantity) { CarriedAmmoQuantity = Quantity; };

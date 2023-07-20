@@ -70,6 +70,7 @@ private:
 
 	TArray<FInventorySlotStruct> Slots;
 
+	UPROPERTY(VisibleAnywhere)
 	TArray<FEquippedWeaponSlotStruct> WeaponInfos;
 
 	UPROPERTY()

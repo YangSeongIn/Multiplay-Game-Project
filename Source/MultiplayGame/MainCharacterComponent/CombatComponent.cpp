@@ -159,15 +159,20 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	// weapon inventory full
 	if (Weapon1 && Weapon2)
 	{
-		GLog->Log("Already have 2 Weapons. Can't Pick up.");
-		return;
+		AWeapon*& WeaponTemp = EquippedWeapon == Weapon1 ? Weapon1 : Weapon2;
+		EquippedWeapon->Dropped();
+		WeaponTemp = WeaponToEquip;
+		EquipOnHand(WeaponTemp);
+
+		//InventoryComponent->AddToWeaponSlot(EquippedWeapon->GetItemDataComponent()->GetItemID().RowName.ToString(), EquippedWeapon->GetAmmo(), EquippedWeapon->GetCarriedAmmo(), EquippedWeapon->GetItemDataComponent()->GetItemType());
 	}
 	// Weapon slot is empty
 	else if (Weapon1 == nullptr && Weapon2 == nullptr)
 	{
 		Weapon1 = WeaponToEquip;
-		//Weapons[0] = WeaponToEquip;
 		EquipOnHand(Weapon1);
+
+		//InventoryComponent->AddToWeaponSlot(Weapon1->GetItemDataComponent()->GetItemID().RowName.ToString(), Weapon1->GetAmmo(), Weapon1->GetCarriedAmmo(), Weapon1->GetItemDataComponent()->GetItemType());
 	}
 	// Empty weapon slot exist
 	else
@@ -175,12 +180,12 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		if (Weapon1 == nullptr) 
 		{
 			Weapon1 = WeaponToEquip;
-			//Weapons[0] = WeaponToEquip;
+			//InventoryComponent->AddToWeaponSlot(Weapon1->GetItemDataComponent()->GetItemID().RowName.ToString(), Weapon1->GetAmmo(), Weapon1->GetCarriedAmmo(), Weapon1->GetItemDataComponent()->GetItemType());
 		}
 		else if (Weapon2 == nullptr)
 		{
 			Weapon2 = WeaponToEquip;
-			//Weapons[1] = WeaponToEquip;
+			//InventoryComponent->AddToWeaponSlot(Weapon2->GetItemDataComponent()->GetItemID().RowName.ToString(), Weapon2->GetAmmo(), Weapon2->GetCarriedAmmo(), Weapon2->GetItemDataComponent()->GetItemType());
 		}
 
 		if (EquippedWeapon == nullptr)
@@ -324,23 +329,59 @@ void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
 
 void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString InherenceName, AItem* DraggedItem)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("weapon num : %d"), NumOfWeapon));
 	AWeapon* DraggedWeapon = Cast<AWeapon>(DraggedItem);
 	AWeapon*& TargetWeapon = NumOfWeapon == EWeaponNum::EWN_Weapon1 ? Weapon1 : Weapon2;
+	AWeapon*& RestWeapon = NumOfWeapon != EWeaponNum::EWN_Weapon1 ? Weapon1 : Weapon2;
 	if (DraggedWeapon)
 	{
 		if (TargetWeapon)
 		{
-			DropWeapon(TargetWeapon);
-		}
-		TargetWeapon = DraggedWeapon;
-		if (EquippedWeapon)
-		{
-			EquipOnBack(DraggedWeapon);
+			// TargetWeapon -> Hand
+			if (TargetWeapon == EquippedWeapon)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("11")));
+				EquippedWeapon = nullptr;	
+				TargetWeapon->Dropped();
+				TargetWeapon = DraggedWeapon;
+				EquipOnHand(DraggedWeapon);
+			}
+			// TargetWeapon -> Back
+			else if (TargetWeapon != EquippedWeapon)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("22")));
+				SecondaryWeapon = nullptr;
+				TargetWeapon->Dropped();
+				TargetWeapon = DraggedWeapon;
+				EquipOnBack(DraggedWeapon);
+			}
 		}
 		else
 		{
-			EquipOnHand(DraggedWeapon);
+			if (RestWeapon && RestWeapon == EquippedWeapon)
+			{
+				TargetWeapon = DraggedWeapon;
+				EquipOnBack(DraggedWeapon);
+			}
+			else if (RestWeapon && RestWeapon == SecondaryWeapon)
+			{
+				TargetWeapon = DraggedWeapon;
+				EquipOnHand(DraggedWeapon);
+			}
+			else if (NumOfWeapon == EWeaponNum::EWN_Weapon1)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("null 1")));
+				Weapon1 = DraggedWeapon;
+				EquipOnHand(DraggedWeapon);
+			}
+			else if (NumOfWeapon == EWeaponNum::EWN_Weapon2)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("null 2")));
+				Weapon2 = DraggedWeapon;
+				EquipOnBack(DraggedWeapon);
+			}
 		}
+	
 		// EquipBackOrHand(DraggedWeapon);
 		/*if (Character && Character->HasAuthority())
 		{
@@ -372,7 +413,7 @@ void UCombatComponent::EquipBackOrHand(AWeapon* WeaponToDrag)
 
 void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 {
-	if (WeaponToDrop)
+	/*if (WeaponToDrop)
 	{
 		if (WeaponToDrop == Weapon1) 
 		{
@@ -385,7 +426,10 @@ void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 			Weapon2->Dropped();
 		}
 		
-	}
+	}*/
+	if (WeaponToDrop == nullptr) return;
+	WeaponToDrop = nullptr;
+	WeaponToDrop->Dropped();
 }
 
 void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)

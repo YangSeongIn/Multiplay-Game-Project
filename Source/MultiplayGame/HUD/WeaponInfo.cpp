@@ -90,6 +90,7 @@ bool UWeaponInfo::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 			{
 				if (GetOwningPlayerPawn()->HasAuthority())
 				{
+					
 					CombatComponent->EquipWeaponByAroundItem(WeaponNum, SlotForDragDrop->GetInherenceName(), SlotForDragDrop->GetItem());
 				}
 				else
@@ -99,10 +100,6 @@ bool UWeaponInfo::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 				
 				InventoryComponent->AddToSelectedWeaponSlot(SlotForDragDrop->GetItem(), WeaponNum);
 			}
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("%d, %d"), SlotForDragDrop->GetEquippedSlotType(), SlotForDragDrop->GetItemType()));
 		}
 	}
 	return false;

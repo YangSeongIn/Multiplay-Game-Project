@@ -38,6 +38,8 @@ public:
 	void SwapTwoWeapons();
 	void EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString InherenceName, class AItem* DraggedItem);
 
+	// class AWeapon* DraggedWeapon;
+
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);

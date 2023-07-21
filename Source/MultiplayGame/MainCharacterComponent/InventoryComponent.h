@@ -57,6 +57,8 @@ public:
 
 	void AddToSelectedWeaponSlot(class AItem* Item, EWeaponNum WeaponNum);
 
+	void DropWeaponByDragging(EWeaponNum WeaponNum);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -89,4 +91,5 @@ public:
 	FORCEINLINE TArray<FEquippedWeaponSlotStruct> GetWeaponInfos() { return WeaponInfos; };
 	FORCEINLINE TArray<FInventorySlotStruct> GetOverlappedItems() { return OverlappedItems; };
 	FORCEINLINE void SetCombatComponent(class UCombatComponent* CombatComp) { CombatComponent = CombatComp; }
+	class UTexture2D* GetWeaponImage(class AWeapon* WeaponToFind);
 };

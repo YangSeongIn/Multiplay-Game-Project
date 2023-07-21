@@ -20,6 +20,21 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 }
 
+UTexture2D* UInventoryComponent::GetWeaponImage(AWeapon* WeaponToFind)
+{
+	FString ItemIDToFind = "";
+	if (WeaponToFind && WeaponToFind->GetItemDataComponent())
+	{
+		ItemIDToFind = WeaponToFind->GetItemDataComponent()->GetItemID().RowName.ToString();
+		if (ItemIDToFind != "")
+		{
+			FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemIDToFind), "");
+			return ItemStruct->Thumbnail;
+		}
+	}
+	return nullptr;
+}
+
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -33,7 +48,6 @@ void UInventoryComponent::BeginPlay()
 	for (int i = 0; i < 2; i++) 
 	{
 		FEquippedWeaponSlotStruct EWSlot({ -1, -1, EItemType::EIT_MAX, EWeaponNum(i), "", nullptr});
-		UE_LOG(LogTemp, Log, TEXT("Weapon num %d in begin play : %d"), i + 1, EWSlot.WeaponNum);
 		WeaponInfos.Add(EWSlot);
 	}
 }
@@ -239,6 +253,20 @@ void UInventoryComponent::MulticastUpdate_Implementation()
 	if (OnInventoryUpdate.IsBound())
 	{
 		OnInventoryUpdate.Broadcast();
+	}
+}
+
+void UInventoryComponent::DropWeaponByDragging(EWeaponNum WeaponNum)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->DropWeaponByDragging(WeaponNum);
+		int32 Num = WeaponNum == EWeaponNum::EWN_Weapon1 ? 0 : 1;
+		WeaponInfos[Num] = { -1, -1, EItemType::EIT_MAX, EWeaponNum(Num), "", nullptr };
+		if (OnWeaponInfoUpdate.IsBound())
+		{
+			OnWeaponInfoUpdate.Broadcast();
+		}
 	}
 }
 

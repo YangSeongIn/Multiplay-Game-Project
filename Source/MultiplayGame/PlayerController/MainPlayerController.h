@@ -31,6 +31,8 @@ public:
 	void OnMatchStateSet(FName State);
 	void HandleMatchHasStarted();
 	void HandleCooldown();
+	void SetWeaponImage(int32 Num);
+	void UpdateWeaponState();
 
 protected:
 	virtual void BeginPlay() override;

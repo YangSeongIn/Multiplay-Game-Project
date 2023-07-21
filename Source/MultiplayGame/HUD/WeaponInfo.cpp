@@ -64,6 +64,7 @@ void UWeaponInfo::NativeOnDragDetected(const FGeometry& InGeometry, const FPoint
 				DragDropSlot->DefaultDragVisual = DragItemVisual;
 				DragDropSlot->SetEquippedSlotType(EEquippedSlotType::EST_Weapon);
 				DragDropSlot->SetItemType(ItemType);
+				DragDropSlot->SetWeaponNum(WeaponNum);
 			}
 		}
 	}

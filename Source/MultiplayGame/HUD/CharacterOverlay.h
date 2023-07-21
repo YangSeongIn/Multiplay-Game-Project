@@ -15,7 +15,6 @@ class MULTIPLAYGAME_API UCharacterOverlay : public UUserWidget
 	GENERATED_BODY()
 
 public:
-
 	UPROPERTY(meta = (BindWidget))
 		class UProgressBar* HealthBar;
 
@@ -36,4 +35,13 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* MatchCountdownText;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* Weapon1Image;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* Weapon2Image;
+
+	void ActivateWeapon(bool bIsActive, int32 Num);
+	void SetWeaponImage(class UTexture2D* NewTexture, int32 Num);
 };

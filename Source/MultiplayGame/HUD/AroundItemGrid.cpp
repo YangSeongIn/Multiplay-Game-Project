@@ -8,11 +8,42 @@
 #include "../Types/InventorySlotStruct.h"
 #include "../HUD/InventorySlot.h"
 #include "Components/WrapBox.h"
+#include "../DragDrop/DragDropSlot.h"
 
 void UAroundItemGrid::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 
+}
+
+bool UAroundItemGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
+	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
+	if (SlotForDragDrop)
+	{
+		if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon)
+		{
+			if (InventoryComponent)
+			{
+				InventoryComponent->DropWeaponByDragging(SlotForDragDrop->GetWeaponNum());
+				return true;
+			}
+		}
+		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Inventory)
+		{
+
+		}
+	}
+	return false;
+}
+
+void UAroundItemGrid::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+}
+
+void UAroundItemGrid::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
 }
 
 void UAroundItemGrid::DisplayOverlappedItems(UInventoryComponent* InventoryComp)

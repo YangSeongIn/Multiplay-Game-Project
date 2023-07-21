@@ -13,6 +13,8 @@
 #include "../HUD/Announcement.h"
 #include "Kismet/GameplayStatics.h"
 #include "../GameState/MainGameState.h"
+#include "Engine/Texture2D.h"
+#include "../MainCharacterComponent/InventoryComponent.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -56,6 +58,48 @@ void AMainPlayerController::PollInit()
 				SetHUDScore(HUDScore);
 				SetHUDDefeats(HUDDefeats);
 			}
+		}
+	}
+}
+
+void AMainPlayerController::UpdateWeaponState()
+{
+	AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetPawn());
+	if (MainCharacter && CharacterOverlay)
+	{
+		if (MainCharacter->GetWeapon1() && MainCharacter->GetWeapon1() == MainCharacter->GetEquippedWeapon())
+		{
+			CharacterOverlay->ActivateWeapon(true, 0);
+			CharacterOverlay->ActivateWeapon(false, 1);
+		}
+		else if (MainCharacter->GetWeapon1() && MainCharacter->GetWeapon1() != MainCharacter->GetEquippedWeapon())
+		{
+			CharacterOverlay->ActivateWeapon(false, 0);
+			CharacterOverlay->ActivateWeapon(true, 1);
+		}
+		if (MainCharacter->GetWeapon2() && MainCharacter->GetWeapon2() == MainCharacter->GetEquippedWeapon())
+		{
+			CharacterOverlay->ActivateWeapon(true, 1);
+			CharacterOverlay->ActivateWeapon(false, 0);
+		}
+		else if (MainCharacter->GetWeapon2() && MainCharacter->GetWeapon2() != MainCharacter->GetEquippedWeapon())
+		{
+			CharacterOverlay->ActivateWeapon(false, 1);
+			CharacterOverlay->ActivateWeapon(true, 0);
+		}
+	}
+}
+
+void AMainPlayerController::SetWeaponImage(int32 Num)
+{
+	if (CharacterOverlay)
+	{
+		AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetPawn());
+		if (MainCharacter)
+		{
+			AWeapon* TargetWeapon = Num == 0 ? MainCharacter->GetWeapon1() : MainCharacter->GetWeapon2();
+			UTexture2D* NewTexture = MainCharacter->GetInventoryComponent()->GetWeaponImage(TargetWeapon);
+			CharacterOverlay->SetWeaponImage(NewTexture, Num);
 		}
 	}
 }
@@ -210,7 +254,7 @@ void AMainPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 	{
 		if (Ammo == -1)
 		{
-			PlayerHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString("- / -"));
+			PlayerHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString("-"));
 		}
 		else
 		{
@@ -230,7 +274,7 @@ void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		if (Ammo == -1)
 		{
-			PlayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString("- / -"));
+			PlayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString("-"));
 		}
 		else
 		{

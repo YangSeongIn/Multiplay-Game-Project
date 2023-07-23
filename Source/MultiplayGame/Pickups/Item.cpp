@@ -8,6 +8,7 @@
 #include "../Character/MainCharacter.h"
 #include "../MainCharacterComponent/InventoryComponent.h"
 #include "../MainCharacterComponent/ItemDataComponent.h"
+#include "Components/WidgetComponent.h"
 
 AItem::AItem()
 {
@@ -24,6 +25,9 @@ AItem::AItem()
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	ItemDataComponent = CreateDefaultSubobject<UItemDataComponent>(TEXT("ItemDataComponent"));
+
+	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
+	PickupWidget->SetupAttachment(RootComponent);
 }
 
 void AItem::BeginPlay()
@@ -35,6 +39,11 @@ void AItem::BeginPlay()
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereOverlapBegin);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereOverlapEnd);
+	}
+
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(false);
 	}
 }
 
@@ -60,6 +69,7 @@ void AItem::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 		{
 			InvComp->OnOverlappedItemUpdate.Broadcast();
 		}
+		Character->SetOverlappingItem(this);
 	}
 }
 
@@ -74,5 +84,14 @@ void AItem::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Othe
 		{
 			InvComp->OnOverlappedItemUpdate.Broadcast();
 		}
+		Character->SetOverlappingItem(nullptr);
+	}
+}
+
+void AItem::ShowPickupWidget(bool bShowWidget)
+{
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(bShowWidget);
 	}
 }

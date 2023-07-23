@@ -7,6 +7,7 @@
 #include "../Character/MainCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "../HUD/InventorySlot.h"
+#include "../MainCharacterComponent/CombatComponent.h"
 
 void UInventoryGrid::NativePreConstruct()
 {
@@ -47,6 +48,7 @@ void UInventoryGrid::UpdateInventory()
 				{
 					InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
 				}
+
 			}
 		}
 	}

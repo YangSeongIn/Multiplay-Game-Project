@@ -46,7 +46,7 @@ private:
 	UPROPERTY(EditAnywhere)
 		EEquippedSlotType EquippedSlotType;
 
-	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"), EditAnywhere, meta = (EditCondition = "EquippedSlotType == EST_Weapon", EditConditionHides))
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"), EditAnywhere, meta = (EditCondition = "EquippedSlotType == EEquippedSlotType::EST_Weapon", EditConditionHides))
 		EWeaponNum WeaponNum;
 
 	UPROPERTY(EditAnywhere)
@@ -84,6 +84,8 @@ private:
 	UPROPERTY()
 		class UCombatComponent* CombatComponent;
 
+	class AWeapon* Weapon;
+
 public:
 	FORCEINLINE class UInventoryWeaponInfo* GetInventoryWeaponInfo() { return InventoryWeaponInfo; };
 	FORCEINLINE void SetInventoryWeaponInfo(class UInventoryWeaponInfo* WeaponInfo) { InventoryWeaponInfo = WeaponInfo; };
@@ -98,4 +100,5 @@ public:
 	FORCEINLINE void SetCarriedAmmoQuantity(int32 Quantity) { CarriedAmmoQuantity = Quantity; };
 	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
 	FORCEINLINE void SetCombatComponent(class UCombatComponent* CombatComp) { CombatComponent = CombatComp; };
+	FORCEINLINE void SetWeapon(class AWeapon* WeaponToSet) { Weapon = WeaponToSet; };
 };

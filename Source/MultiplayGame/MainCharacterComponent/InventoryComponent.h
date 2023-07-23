@@ -37,7 +37,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void DEBUGPrintContents();
 	void TransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
-	void TransferWeaponInfos(UInventoryComponent* SourceInventory);
+	void TransferWeaponInfos(/*UInventoryComponent* SourceInventory*/);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastUpdate();
@@ -45,7 +45,7 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerTransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);
 
-	void AddToWeaponSlot(FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType);
+	void AddToWeaponSlot(class AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType);
 
 	UFUNCTION(Server, Reliable)
 		void ServerSwapTwoWeapons();
@@ -91,5 +91,5 @@ public:
 	FORCEINLINE TArray<FEquippedWeaponSlotStruct> GetWeaponInfos() { return WeaponInfos; };
 	FORCEINLINE TArray<FInventorySlotStruct> GetOverlappedItems() { return OverlappedItems; };
 	FORCEINLINE void SetCombatComponent(class UCombatComponent* CombatComp) { CombatComponent = CombatComp; }
-	class UTexture2D* GetWeaponImage(class AWeapon* WeaponToFind);
+	class UTexture2D* GetWeaponImage(class AWeapon* WeaponToFind, bool bDetailImage);
 };

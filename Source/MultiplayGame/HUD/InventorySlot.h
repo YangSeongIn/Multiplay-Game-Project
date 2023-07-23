@@ -77,4 +77,5 @@ public:
 	FORCEINLINE void SetEquippedSlotType(EEquippedSlotType SlotTypeToEquip) { EquippedSlotType = SlotTypeToEquip; };
 	FORCEINLINE FString GetInherenceName() { return InherenceName; };
 	FORCEINLINE void SetItem(class AItem* ItemToSet) { Item = ItemToSet; };
+	FORCEINLINE EItemType GetItemType() { return ItemType; };
 };

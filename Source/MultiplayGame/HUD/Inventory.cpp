@@ -21,11 +21,11 @@ void UInventory::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 
-	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	/*AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (Character)
 	{
 		InventoryGrid->DisplayInventory(Character->GetInventoryComponent());
-	}
+	}*/
 }
 
 void UInventory::NativeDestruct()

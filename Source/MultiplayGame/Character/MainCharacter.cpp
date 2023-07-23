@@ -33,6 +33,8 @@
 #include "../GameInstance/MainGameInstance.h"
 #include "../HUD/InventoryWeaponInfo.h"
 #include "../HUD/AroundItemGrid.h"
+#include "../Pickups/Item.h"
+#include "../MainCharacterComponent/ItemDataComponent.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -283,7 +285,7 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingItem, COND_OwnerOnly);
 	DOREPLIFETIME(AMainCharacter, Health);
 	DOREPLIFETIME_CONDITION(AMainCharacter, PlayerInherenceNum, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(AMainCharacter, CharacterMeshCapture, COND_OwnerOnly);
@@ -462,11 +464,21 @@ void AMainCharacter::FireButtonReleased()
 
 void AMainCharacter::EquipButtonPressed()
 {
-	if (CombatComponent)
+	if (CombatComponent && OverlappingItem)
 	{
 		if (HasAuthority())
 		{
-			CombatComponent->EquipWeapon(OverlappingWeapon);
+			AWeapon* WeaponToEquip = Cast<AWeapon>(OverlappingItem);
+			// weapon
+			if (WeaponToEquip)
+			{
+				CombatComponent->EquipWeapon(WeaponToEquip);
+			}
+			// item
+			else if (OverlappingItem->GetItemDataComponent())
+			{
+				OverlappingItem->GetItemDataComponent()->Interact(this);
+			}
 		}
 		else
 		{
@@ -539,13 +551,13 @@ void AMainCharacter::InventoryKeyPressed()
 	{
 		if (IsLocallyControlled())
 		{
-			if (InventoryWidget)
+			/*if (InventoryWidget)
 			{
 				InventoryWidget->RemoveFromParent();
 				InventoryWidget = nullptr;
 			}
 			else
-			{
+			{*/
 				InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
 				if (CharacterMeshCapture)
 				{
@@ -558,7 +570,7 @@ void AMainCharacter::InventoryKeyPressed()
 					InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
 					InventoryWidget->AddToViewport();
 				}
-			}
+			//}
 		}
 		else
 		{
@@ -805,7 +817,17 @@ void AMainCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (CombatComponent)
 	{
-		CombatComponent->EquipWeapon(OverlappingWeapon);
+		AWeapon* WeaponToEquip = Cast<AWeapon>(OverlappingItem);
+		// weapon
+		if (WeaponToEquip)
+		{
+			CombatComponent->EquipWeapon(WeaponToEquip);
+		}
+		// item
+		else if (OverlappingItem && OverlappingItem->GetItemDataComponent())
+		{
+			OverlappingItem->GetItemDataComponent()->Interact(this);
+		}
 	}
 }
 
@@ -817,33 +839,33 @@ void AMainCharacter::ServerWeaponSwapButtonPressed_Implementation(int32 WeaponNu
 	}
 }
 
-void AMainCharacter::SetOverlappingWeapon(AWeapon* Weapon)
+void AMainCharacter::SetOverlappingItem(AItem* Item)
 {
-	if (OverlappingWeapon)
+	if (OverlappingItem)
 	{
-		OverlappingWeapon->ShowPickupWidget(false);
+		OverlappingItem->ShowPickupWidget(false);
 	}
-	OverlappingWeapon = Weapon;
+	OverlappingItem = Item;
 
 	// for server
 	if (IsLocallyControlled())
 	{
-		if (OverlappingWeapon)
+		if (OverlappingItem)
 		{
-			OverlappingWeapon->ShowPickupWidget(true);
+			OverlappingItem->ShowPickupWidget(true);
 		}
 	}
 }
 
-void AMainCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+void AMainCharacter::OnRep_OverlappingItem(AItem* LastItem)
 {
-	if (OverlappingWeapon)
+	if (OverlappingItem)
 	{
-		OverlappingWeapon->ShowPickupWidget(true);
+		OverlappingItem->ShowPickupWidget(true);
 	}
-	if (LastWeapon)
+	if (LastItem)
 	{
-		LastWeapon->ShowPickupWidget(false);
+		LastItem->ShowPickupWidget(false);
 	}
 }
 

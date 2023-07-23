@@ -95,7 +95,7 @@ bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 			if (SlotForDragDrop->GetContentIndex() != SlotIndex || SlotForDragDrop->GetInventoryComponent() != InventoryComponent)
 			{
 				InventoryComponent->ServerTransferSlots(SlotForDragDrop->GetContentIndex(), SlotForDragDrop->GetInventoryComponent(), SlotIndex);
-				return true;
+				//return true;
 			}
 		}
 		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon)
@@ -150,7 +150,8 @@ void UInventorySlot::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UD
 
 void UInventorySlot::SetQuantity(int32 TargetQuantity)
 {
-	QuantityText->SetText(FText::FromString(FString::FromInt(TargetQuantity)));
+	// QuantityText->SetText(FText::FromString(FString::FromInt(TargetQuantity)));
+	Quantity = TargetQuantity;
 }
 
 void UInventorySlot::SetSlot()

@@ -22,19 +22,25 @@
 void UWeaponInfo::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-	DragDropSlot = Cast<UDragDropSlot>(UWidgetBlueprintLibrary::CreateDragDropOperation(UDragDropSlot::StaticClass()));
+	/*DragDropSlot = Cast<UDragDropSlot>(UWidgetBlueprintLibrary::CreateDragDropOperation(UDragDropSlot::StaticClass()));
 
 	if (DragDropSlot)
 	{
 		DragDropSlot->SetWeaponInfoSlot(this);
 	}
 
-	//UpdateWeaponInfo();
+	UpdateWeaponInfo();*/
 }
 
 void UWeaponInfo::NativeConstruct()
 {
 	Super::NativeConstruct();
+	DragDropSlot = Cast<UDragDropSlot>(UWidgetBlueprintLibrary::CreateDragDropOperation(UDragDropSlot::StaticClass()));
+
+	if (DragDropSlot)
+	{
+		DragDropSlot->SetWeaponInfoSlot(this);
+	}
 	UpdateWeaponInfo();
 }
 
@@ -79,10 +85,9 @@ bool UWeaponInfo::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
 	{
 		if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon && SlotForDragDrop != DragDropSlot)
 		{
-			if (InventoryComponent)
+			if (InventoryComponent && CombatComponent)
 			{
-				InventoryComponent->TransferWeaponInfos(InventoryComponent);
-				return true;
+				InventoryComponent->TransferWeaponInfos();
 			}
 		}
 		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_AroundItem && SlotForDragDrop->GetItemType() == EItemType::EIT_Weapon)

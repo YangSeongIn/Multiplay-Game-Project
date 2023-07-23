@@ -17,15 +17,21 @@ void UInventoryWeaponInfo::NativePreConstruct()
 	//UpdateWeaponInfo();
 }
 
+void UInventoryWeaponInfo::NativeDestruct()
+{
+	Super::NativeDestruct();
+	InventoryComponent->OnWeaponInfoUpdate.Clear();
+}
+
 void UInventoryWeaponInfo::DisplayWeaponInfo(UInventoryComponent* InventoryComp)
 {
 	this->InventoryComponent = InventoryComp;
-	WeaponInfoGrid->ClearChildren();
 	UpdateWeaponInfo();
 }
 
 void UInventoryWeaponInfo::UpdateWeaponInfo()
 {
+	WeaponInfoGrid->ClearChildren();
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (Character)
 	{
@@ -45,15 +51,16 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 					WeaponInfo->SetAmmoQuantity(Arr[i].AmmoQuantity);
 					WeaponInfo->SetCarriedAmmoQuantity(Arr[i].CarriedAmmoQuantity);
 					WeaponInfo->SetItemType(Arr[i].ItemType);
-					WeaponInfo->SetWeaponNum(Arr[i].WeaponNum);
+					WeaponInfo->SetWeaponNum(EWeaponNum(i));
 					WeaponInfo->SetPadding(5.f);
-					UE_LOG(LogTemp, Log, TEXT("Weapon num %d : %d vs %d"), i + 1, WeaponInfo->GetWeaponNum(), Arr[i].WeaponNum);
+					WeaponInfo->SetWeapon(Arr[i].Weapon);
 					WeaponInfoGrid->AddChildToVerticalBox(WeaponInfo);
 				}
-				if (!InventoryComponent->OnWeaponInfoUpdate.IsBound())
+				/*if (InventoryComponent->OnWeaponInfoUpdate.IsBound())
 				{
-					InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));
-				}
+					InventoryComponent->OnWeaponInfoUpdate.Clear();
+				}*/
+				InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));
 			}
 		}
 	}
@@ -61,6 +68,6 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 
 void UInventoryWeaponInfo::UpdatedWeaponInfo()
 {
-	WeaponInfoGrid->ClearChildren();
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("????"));
 	UpdateWeaponInfo();
 }

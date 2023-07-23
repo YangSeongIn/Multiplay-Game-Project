@@ -3,7 +3,6 @@
 
 #include "Weapon.h"
 #include "Components/SphereComponent.h"
-#include "Components/WidgetComponent.h"
 #include "../Character/MainCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
@@ -30,9 +29,6 @@ AWeapon::AWeapon()
 	AreaSphere->SetupAttachment(WeaponMesh);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
-	PickupWidget->SetupAttachment(RootComponent);
-
 	WeaponMesh->SetSimulatePhysics(true);
 	WeaponMesh->SetEnableGravity(true);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -49,10 +45,6 @@ void AWeapon::BeginPlay()
 	//	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlapBegin);
 	//	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereOverlapEnd);
 	//}
-	if (PickupWidget)
-	{
-		PickupWidget->SetVisibility(false);
-	}
 
 	OwnerCharacter = Cast<AMainCharacter>(GetOwner());
 }
@@ -75,21 +67,11 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 void AWeapon::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OtherActor);
-	if (MainCharacter)
-	{
-		MainCharacter->SetOverlappingWeapon(this);
-	}
 }
 
 void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	Super::OnSphereOverlapEnd(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex);
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(OtherActor);
-	if (MainCharacter)
-	{
-		MainCharacter->SetOverlappingWeapon(nullptr);
-	}
 }
 
 void AWeapon::SpendRound()
@@ -196,14 +178,6 @@ void AWeapon::OnRep_WeaponState()
 	OnWeaponStateSet();
 }
 
-void AWeapon::ShowPickupWidget(bool bShowWidget)
-{
-	if (PickupWidget)
-	{
-		PickupWidget->SetVisibility(bShowWidget);
-	}
-}
-
 void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation)
@@ -238,6 +212,12 @@ void AWeapon::Dropped()
 	SetOwner(nullptr);
 	OwnerCharacter = nullptr;
 	OwnerController = nullptr;
+	if (OwnerController)
+	{
+		OwnerController->UpdateWeaponState();
+		OwnerController->SetWeaponImage(0);
+		OwnerController->SetWeaponImage(1);
+	}
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)

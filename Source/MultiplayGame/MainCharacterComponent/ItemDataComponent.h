@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "../Types/InventorySlotStruct.h"
+#include "../Weapon/WeaponTypes.h"
 #include "ItemDataComponent.generated.h"
 
 
@@ -35,6 +36,9 @@ private:
 
 	UPROPERTY()
 		AActor* OwningActor;
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "ItemType == EItemType::Ammo", EditConditionHides))
+		EWeaponType WeaponType;
 
 public:
 	FORCEINLINE FDataTableRowHandle GetItemID() { return ItemID; };

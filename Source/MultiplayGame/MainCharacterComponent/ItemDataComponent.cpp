@@ -5,6 +5,7 @@
 #include "../Character/MainCharacter.h"
 #include "../MainCharacterComponent/InventoryComponent.h"
 #include "../Weapon/Weapon.h"
+#include "../MainCharacterComponent/CombatComponent.h"
 
 UItemDataComponent::UItemDataComponent()
 {
@@ -33,17 +34,28 @@ void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 {
 	if (MainCharacter == nullptr || MainCharacter->GetInventoryComponent() == nullptr) return;
 
-
 	if (OwningActor)
 	{
 		if (ItemType != EItemType::EIT_Weapon)
 		{
 			TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName());
+			if (ItemType == EItemType::EIT_Ammo)
+			{
+				UCombatComponent* Combat = MainCharacter->GetCombatComponent();
+				if (Combat)
+				{
+					Combat->PickupAmmo(WeaponType, Quantity);
+				}
+				OwningActor->Destroy();
+			}
 		}
-		AWeapon* Weapon = Cast<AWeapon>(OwningActor);
-		if (Weapon)
+		else
 		{
-			MainCharacter->GetInventoryComponent()->AddToWeaponSlot(ItemID.RowName.ToString(), Weapon->GetAmmo(), Weapon->GetCarriedAmmo(), ItemType);
+			AWeapon* Weapon = Cast<AWeapon>(OwningActor);
+			if (Weapon)
+			{
+				MainCharacter->GetInventoryComponent()->AddToWeaponSlot(Weapon, ItemID.RowName.ToString(), Weapon->GetAmmo(), Weapon->GetCarriedAmmo(), ItemType);
+			}
 		}
 	}
 }

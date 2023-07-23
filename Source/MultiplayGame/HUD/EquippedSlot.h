@@ -36,7 +36,7 @@ private:
 	UPROPERTY(EditAnywhere)
 		EEquippedSlotType EquippedSlotType;
 
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "EquippedSlotType == EST_Weapon", EditConditionHides))
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "EquippedSlotType == EEquippedSlotType::EST_Weapon", EditConditionHides))
 		EWeaponNum WeaponNum;
 
 	UPROPERTY(EditAnywhere)

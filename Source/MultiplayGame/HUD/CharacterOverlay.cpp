@@ -28,6 +28,7 @@ void UCharacterOverlay::ActivateWeapon(bool bIsActive, int32 Num)
 	else
 	{
 		TargetImage->SetVisibility(ESlateVisibility::Hidden);
+		TargetImage->SetOpacity(0.f);
 	}
 }
 
@@ -36,6 +37,14 @@ void UCharacterOverlay::SetWeaponImage(UTexture2D* NewTexture, int32 Num)
 	UImage*& TargetImage = Num == 0 ? Weapon1Image : Weapon2Image;
 	if (TargetImage)
 	{
-		TargetImage->SetBrushFromTexture(NewTexture);
+		if (NewTexture)
+		{
+			TargetImage->SetBrushFromTexture(NewTexture);
+		}
+		else
+		{
+			TargetImage->SetVisibility(ESlateVisibility::Hidden);
+			TargetImage->SetOpacity(0);
+		}
 	}
 }

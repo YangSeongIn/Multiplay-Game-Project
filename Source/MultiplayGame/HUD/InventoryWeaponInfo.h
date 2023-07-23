@@ -16,6 +16,7 @@ class MULTIPLAYGAME_API UInventoryWeaponInfo : public UUserWidget
 
 protected:
 	virtual void NativePreConstruct() override;
+	virtual void NativeDestruct() override;
 
 public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))

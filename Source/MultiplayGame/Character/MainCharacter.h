@@ -83,11 +83,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class UWidgetComponent* OverheadWidget;
 
-	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon) // Using Callback when property update
-		class AWeapon* OverlappingWeapon;
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_OverlappingItem) // Using Callback when property update
+		class AItem* OverlappingItem;
 
 	UFUNCTION()
-		void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+		void OnRep_OverlappingItem(class AItem* Item);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class UCombatComponent* CombatComponent;
@@ -241,12 +241,12 @@ private:
 		void OnRep_CharacterMeshCapture();
 
 public:
-	void SetOverlappingWeapon(AWeapon* Weapon);
+	void SetOverlappingItem(class AItem* Item);
 	bool IsWeaponEquipped();
 	bool IsAiming();
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; };
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; };
-	AWeapon* GetEquippedWeapon();
+	class AWeapon* GetEquippedWeapon();
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; };
 	FORCEINLINE void SetTurningInPlace(ETurningInPlace Type) { TurningInPlace = Type; };
 	FVector GetHitTarget() const;

@@ -318,6 +318,8 @@ void UCombatComponent::SwapWeapon(int32 WeaponNum)
 	if (Controller)
 	{
 		Controller->UpdateWeaponState();
+		Controller->SetWeaponImage(0);
+		Controller->SetWeaponImage(1);
 	}
 }
 
@@ -338,6 +340,10 @@ void UCombatComponent::SwapTwoWeapons()
 	Weapon1 = Weapon2;
 	Weapon2 = WeaponTemp;
 
+	AWeapon* WeaponArrTemp = Weapons[0];
+	Weapons[0] = Weapons[1];
+	Weapons[1] = WeaponArrTemp;
+
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
@@ -346,10 +352,19 @@ void UCombatComponent::SwapTwoWeapons()
 		UpdateCarriedAmmo();
 		AttachActorToRightHand(EquippedWeapon);
 	}
+	else
+	{
+		if (Controller)
+		{
+			Controller->SetHUDWeaponAmmo(-1);
+			Controller->SetHUDCarriedAmmo(-1);
+		}
+	}
 
 	CombatState = ECombatState::ECS_Unoccupied;
 	if (SecondaryWeapon)
 	{
+		PlayEquipWeaponSound(SecondaryWeapon);
 		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBack(SecondaryWeapon);
 	}
@@ -357,6 +372,8 @@ void UCombatComponent::SwapTwoWeapons()
 	if (Controller)
 	{
 		Controller->UpdateWeaponState();
+		Controller->SetWeaponImage(0);
+		Controller->SetWeaponImage(1);
 	}
 }
 
@@ -380,22 +397,23 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 	{
 		if (TargetWeapon)
 		{
+			FString s1 = TargetWeapon == Weapon1 ? "Weapon1" : "Weapon2";
 			// TargetWeapon -> Hand
 			if (TargetWeapon == EquippedWeapon)
 			{
 				EquippedWeapon = nullptr;	
 				TargetWeapon->Dropped();
 				TargetWeapon = DraggedWeapon;
-				Weapons[Num] = TargetWeapon;
+				Weapons[Num] = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			// TargetWeapon -> Back
-			else if (TargetWeapon != EquippedWeapon)
+			else if (TargetWeapon == SecondaryWeapon)
 			{
 				SecondaryWeapon = nullptr;
 				TargetWeapon->Dropped();
 				TargetWeapon = DraggedWeapon;
-				Weapons[Num] = TargetWeapon;
+				Weapons[Num] = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
 		}
@@ -403,25 +421,25 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 		{
 			if (RestWeapon && RestWeapon == EquippedWeapon)
 			{
-				Weapons[Num] = TargetWeapon;
+				Weapons[Num] = DraggedWeapon;
 				TargetWeapon = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
 			else if (RestWeapon && RestWeapon == SecondaryWeapon)
 			{
-				Weapons[Num] = TargetWeapon;
+				Weapons[Num] = DraggedWeapon;
 				TargetWeapon = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			else if (NumOfWeapon == EWeaponNum::EWN_Weapon1)
 			{
-				Weapons[0] = TargetWeapon;
+				Weapons[0] = DraggedWeapon;
 				Weapon1 = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			else if (NumOfWeapon == EWeaponNum::EWN_Weapon2)
 			{
-				Weapons[1] = TargetWeapon;
+				Weapons[1] = DraggedWeapon;
 				Weapon2 = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
@@ -431,7 +449,6 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 
 void UCombatComponent::DropWeaponByDragging(EWeaponNum WeaponNum)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("3")));
 	AWeapon*& TargetWeapon = WeaponNum == EWeaponNum::EWN_Weapon1 ? Weapon1 : Weapon2;
 	AWeapon*& TargetStateWeapon = WeaponNum == EWeaponNum::EWN_Weapon1 ? EquippedWeapon : SecondaryWeapon;
 	PlayEquipWeaponSound(TargetStateWeapon);

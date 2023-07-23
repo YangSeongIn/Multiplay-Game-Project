@@ -23,23 +23,23 @@ public:
 		class AItem* Item;
 };
 
-USTRUCT(BlueprintType)
+USTRUCT(Blueprintable)
 struct FEquippedWeaponSlotStruct
 {
 public:
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 		int32 AmmoQuantity;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 		int32 CarriedAmmoQuantity;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 		EItemType ItemType;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 		EWeaponNum WeaponNum;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 		FString ItemID;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
 		class AWeapon* Weapon;
 };
 
@@ -56,7 +56,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FString ItemDescription;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UTexture2D* Thumbnail;
+		class UTexture2D* Thumbnail;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UTexture2D* DetailThumbnail;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		AActor* ItemClass;
 	

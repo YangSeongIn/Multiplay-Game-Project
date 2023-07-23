@@ -20,7 +20,7 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 }
 
-UTexture2D* UInventoryComponent::GetWeaponImage(AWeapon* WeaponToFind)
+UTexture2D* UInventoryComponent::GetWeaponImage(AWeapon* WeaponToFind, bool bDetailImage)
 {
 	FString ItemIDToFind = "";
 	if (WeaponToFind && WeaponToFind->GetItemDataComponent())
@@ -29,7 +29,21 @@ UTexture2D* UInventoryComponent::GetWeaponImage(AWeapon* WeaponToFind)
 		if (ItemIDToFind != "")
 		{
 			FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemIDToFind), "");
-			return ItemStruct->Thumbnail;
+			if (ItemStruct)
+			{
+				if (bDetailImage)
+				{
+					return ItemStruct->DetailThumbnail;
+				}
+				else
+				{
+					return ItemStruct->Thumbnail;
+				}
+			}
+			else
+			{
+				return nullptr;
+			}
 		}
 	}
 	return nullptr;
@@ -59,7 +73,7 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 }
 
-void UInventoryComponent::AddToWeaponSlot(FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType)
+void UInventoryComponent::AddToWeaponSlot(AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType)
 {
 	if (WeaponInfos[0].ItemID == "")
 	{
@@ -67,6 +81,8 @@ void UInventoryComponent::AddToWeaponSlot(FString ItemID, int32 AmmoQuantity, in
 		WeaponInfos[0].AmmoQuantity = AmmoQuantity;
 		WeaponInfos[0].CarriedAmmoQuantity = CarriedAmmoQuantity;
 		WeaponInfos[0].ItemType = ItemType;
+		WeaponInfos[0].Weapon = Weapon;
+		WeaponInfos[0].WeaponNum = EWeaponNum::EWN_Weapon1;
 	}
 	else if (WeaponInfos[1].ItemID == "")
 	{
@@ -74,6 +90,8 @@ void UInventoryComponent::AddToWeaponSlot(FString ItemID, int32 AmmoQuantity, in
 		WeaponInfos[1].AmmoQuantity = AmmoQuantity;
 		WeaponInfos[1].CarriedAmmoQuantity = CarriedAmmoQuantity;
 		WeaponInfos[1].ItemType = ItemType;
+		WeaponInfos[1].Weapon = Weapon;
+		WeaponInfos[1].WeaponNum = EWeaponNum::EWN_Weapon2;
 	}
 	if (OnWeaponInfoUpdate.IsBound())
 	{
@@ -213,15 +231,16 @@ void UInventoryComponent::TransferSlots(int SourceIndex, UInventoryComponent* So
 	}
 }
 
-void UInventoryComponent::TransferWeaponInfos(UInventoryComponent* SourceInventory)
+void UInventoryComponent::TransferWeaponInfos(/*UInventoryComponent* SourceInventory*/)
 {
-	FEquippedWeaponSlotStruct WeaponSlotStruct1 = SourceInventory->WeaponInfos[0];
-	FEquippedWeaponSlotStruct WeaponSlotStruct2 = SourceInventory->WeaponInfos[1];
-	if (WeaponSlotStruct1.ItemID != "" || WeaponSlotStruct2.ItemID != "")
+	if (WeaponInfos[0].ItemID != "" || WeaponInfos[1].ItemID != "")
 	{
-		FEquippedWeaponSlotStruct WeaponSlotStructTemp = SourceInventory->WeaponInfos[0];
-		SourceInventory->WeaponInfos[0] = SourceInventory->WeaponInfos[1];
-		SourceInventory->WeaponInfos[1] = WeaponSlotStructTemp;
+		FEquippedWeaponSlotStruct WeaponSlotStructTemp = WeaponInfos[0];
+		WeaponInfos[0] = WeaponInfos[1];
+		WeaponInfos[1] = WeaponSlotStructTemp;
+		WeaponInfos[0].WeaponNum = EWeaponNum::EWN_Weapon1;
+		WeaponInfos[1].WeaponNum = EWeaponNum::EWN_Weapon2;
+
 		if (OnWeaponInfoUpdate.IsBound())
 		{
 			OnWeaponInfoUpdate.Broadcast();

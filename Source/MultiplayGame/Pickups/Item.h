@@ -18,16 +18,21 @@ public:
 	UFUNCTION()
 		virtual void OnSphereOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	void ShowPickupWidget(bool bShowWidget);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+	UPROPERTY(VisibleAnywhere)
 		class USphereComponent* AreaSphere;
 
 private:
 	UPROPERTY(EditAnywhere)
 		class UItemDataComponent* ItemDataComponent;
+
+	UPROPERTY(VisibleAnywhere)
+		class UWidgetComponent* PickupWidget;
 
 public:
 	FORCEINLINE UItemDataComponent* GetItemDataComponent() { return ItemDataComponent; };

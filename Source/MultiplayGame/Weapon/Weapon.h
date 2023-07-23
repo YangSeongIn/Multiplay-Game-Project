@@ -29,7 +29,6 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
-	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	void AddAmmo(int32 AmmoToAdd);
@@ -99,9 +98,6 @@ private:
 
 	UFUNCTION()
 		void OnRep_WeaponState();
-
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-		class UWidgetComponent* PickupWidget;
 	
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 		class UAnimationAsset* FireAnimation;

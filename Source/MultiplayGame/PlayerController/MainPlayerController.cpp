@@ -15,6 +15,7 @@
 #include "../GameState/MainGameState.h"
 #include "Engine/Texture2D.h"
 #include "../MainCharacterComponent/InventoryComponent.h"
+#include "../Weapon/Weapon.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -98,7 +99,7 @@ void AMainPlayerController::SetWeaponImage(int32 Num)
 		if (MainCharacter)
 		{
 			AWeapon* TargetWeapon = Num == 0 ? MainCharacter->GetWeapon1() : MainCharacter->GetWeapon2();
-			UTexture2D* NewTexture = MainCharacter->GetInventoryComponent()->GetWeaponImage(TargetWeapon);
+			UTexture2D* NewTexture = MainCharacter->GetInventoryComponent()->GetWeaponImage(TargetWeapon, true);
 			CharacterOverlay->SetWeaponImage(NewTexture, Num);
 		}
 	}

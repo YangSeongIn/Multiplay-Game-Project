@@ -6,6 +6,7 @@
 #include "../MainCharacterComponent/InventoryComponent.h"
 #include "../Weapon/Weapon.h"
 #include "../MainCharacterComponent/CombatComponent.h"
+#include "../Pickups/Pickup.h"
 
 UItemDataComponent::UItemDataComponent()
 {
@@ -38,16 +39,26 @@ void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 	{
 		if (ItemType != EItemType::EIT_Weapon)
 		{
-			TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName());
-			if (ItemType == EItemType::EIT_Ammo)
+			AItem* Item = Cast<AItem>(OwningActor);
+			if (Item)
 			{
-				UCombatComponent* Combat = MainCharacter->GetCombatComponent();
-				if (Combat)
+				TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(Item, Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName());
+				if (ItemType == EItemType::EIT_Ammo)
 				{
-					Combat->PickupAmmo(WeaponType, Quantity);
+					UCombatComponent* Combat = MainCharacter->GetCombatComponent();
+					if (Combat)
+					{
+						Combat->PickupAmmo(WeaponType, Quantity);
+					}
+
+					// Hard cording. Fix later.
+					APickup* Pickup = Cast<APickup>(OwningActor);
+					if (Pickup)
+					{
+						Pickup->SetActive(false);
+					}
 				}
-				OwningActor->Destroy();
-			}
+			}	
 		}
 		else
 		{

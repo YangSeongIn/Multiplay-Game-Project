@@ -35,6 +35,7 @@
 #include "../HUD/AroundItemGrid.h"
 #include "../Pickups/Item.h"
 #include "../MainCharacterComponent/ItemDataComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -155,7 +156,7 @@ void AMainCharacter::BeginPlay()
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
 
-	if (IsLocallyControlled())
+	if (HasAuthority() && IsLocallyControlled())
 	{
 		AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 		if (MainGameMode)
@@ -164,7 +165,6 @@ void AMainCharacter::BeginPlay()
 			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
 			if (MeshCapture)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Set Mesh Capture On Server"));
 				PlayerInherenceNum = MainGameMode->GetPlayerNum();
 				CharacterMeshCapture = MeshCapture;
 				CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
@@ -192,7 +192,7 @@ void AMainCharacter::ServerSetMeshCapture_Implementation()
 			{
 				PlayerInherenceNum = MainGameMode->GetPlayerNum();
 				CharacterMeshCapture = MeshCapture;
-				//ClientSetMeshCapture(PlayerInherenceNum, CharacterMeshCapture);
+				ClientSetMeshCapture(PlayerInherenceNum, CharacterMeshCapture);
 				MainGameMode->SetPlayerNum(MainGameMode->GetPlayerNum() + 1);
 			}
 		}
@@ -211,20 +211,20 @@ void AMainCharacter::OnRep_CharacterMeshCapture()
 	CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
 }
 
-//void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
-//{
-//	PlayerInherenceNum = n;
-//	//UE_LOG(LogTemp, Warning, TEXT("PlayerNum : %d, n : %d"), PlayerInherenceNum, n);
-//	if (MeshCapture)
-//	{
-//		//UE_LOG(LogTemp, Warning, TEXT("MeshCapture in Client"));
-//		CharacterMeshCapture = MeshCapture;
-//		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-//		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-//	}
-//	// ServerAddPlayerNum();
-//}
-//
+void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
+{
+	PlayerInherenceNum = n;
+	//UE_LOG(LogTemp, Warning, TEXT("PlayerNum : %d, n : %d"), PlayerInherenceNum, n);
+	if (MeshCapture)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("MeshCapture in Client"));
+		CharacterMeshCapture = MeshCapture;
+		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
+		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+	}
+	// ServerAddPlayerNum();
+}
+
 //void AMainCharacter::ServerAddPlayerNum_Implementation()
 //{
 //	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
@@ -318,7 +318,7 @@ void AMainCharacter::Destroyed()
 
 void AMainCharacter::PlayFireMontage(bool bAiming)
 {
-	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+	if (InventoryWidget || CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && FireWeaponMontage)
 	{
@@ -420,6 +420,7 @@ void AMainCharacter::Move(const FInputActionValue& Value)
 
 void AMainCharacter::Look(const FInputActionValue& Value)
 {
+	if (InventoryWidget) return;
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -448,6 +449,7 @@ void AMainCharacter::CrouchButtonPressed()
 
 void AMainCharacter::FireButtonPressed()
 {
+	if (InventoryWidget) return;
 	if (CombatComponent)
 	{
 		CombatComponent->FireButtonPressed(true);
@@ -487,8 +489,59 @@ void AMainCharacter::EquipButtonPressed()
 	}
 }
 
+void AMainCharacter::AttachItemOnMeshCapture(const FString SocketName)
+{
+	if (IsLocallyControlled())
+	{
+		if (SocketName == "RightHandSocket" && GetEquippedWeapon())
+		{
+			CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
+		}
+		else if (SocketName == "WeaponSocket" && GetSecondaryWeapon())
+		{
+			CharacterMeshCapture->SetSkeletalMeshOnBack(GetSecondaryWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
+		}
+	}
+	else
+	{
+		ServerAttachItemOnMeshCapture(SocketName);
+	}
+}
+
+void AMainCharacter::DetachItemOnMeshCapture(const FString SocketName)
+{
+	if (IsLocallyControlled())
+	{
+		if (SocketName == "RightHandSocket")
+		{
+			CharacterMeshCapture->SetSkeletalMeshOnHand(nullptr);
+		}
+		else if (SocketName == "WeaponSocket")
+		{
+			CharacterMeshCapture->SetSkeletalMeshOnBack(nullptr);
+		}
+	}
+	else
+	{
+		ServerAttachItemOnMeshCapture(SocketName);
+	}
+}
+
+void AMainCharacter::ServerAttachItemOnMeshCapture_Implementation(const FString& SocketName)
+{
+	if (SocketName == "RightHandSocket" && GetEquippedWeapon())
+	{
+		CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
+	}
+	else if (SocketName == "WeaponSocket" && GetSecondaryWeapon())
+	{
+		CharacterMeshCapture->SetSkeletalMeshOnBack(GetSecondaryWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
+	}
+}
+
 void AMainCharacter::AimButtonPressed()
 {
+	if (InventoryWidget) return;
 	if (IsWeaponEquipped())
 	{
 		CombatComponent->SetAiming(true);
@@ -551,13 +604,13 @@ void AMainCharacter::InventoryKeyPressed()
 	{
 		if (IsLocallyControlled())
 		{
-			/*if (InventoryWidget)
+			if (InventoryWidget)
 			{
 				InventoryWidget->RemoveFromParent();
 				InventoryWidget = nullptr;
 			}
 			else
-			{*/
+			{
 				InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
 				if (CharacterMeshCapture)
 				{
@@ -565,12 +618,13 @@ void AMainCharacter::InventoryKeyPressed()
 				}
 				if (InventoryWidget)
 				{
+					CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
 					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
 					InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
 					InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
 					InventoryWidget->AddToViewport();
 				}
-			//}
+			}
 		}
 		else
 		{
@@ -589,6 +643,17 @@ void AMainCharacter::ServerInventoryWidget_Implementation()
 	else
 	{
 		InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
+		if (CharacterMeshCapture)
+		{
+			CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
+		}
+		if (InventoryWidget)
+		{
+			InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+			InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
+			InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
+			InventoryWidget->AddToViewport();
+		}
 	}
 }
 
@@ -903,6 +968,12 @@ AWeapon* AMainCharacter::GetEquippedWeapon() const
 	return CombatComponent->EquippedWeapon;
 }
 
+AWeapon* AMainCharacter::GetSecondaryWeapon() const
+{
+	if (CombatComponent == nullptr) return nullptr;
+	return CombatComponent->SecondaryWeapon;
+}
+
 AWeapon* AMainCharacter::GetWeapon1()
 {
 	if (CombatComponent == nullptr) return nullptr;
@@ -922,4 +993,9 @@ int32 AMainCharacter::GetCarriedAmmo(AWeapon* Weapon)
 		return CombatComponent->CarriedAmmoMap[Weapon->GetWeaponType()];
 	}
 	return -1;
+}
+
+FVector AMainCharacter::GetGroundLocation()
+{
+	return GetActorLocation() - FVector(0, 0, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 }

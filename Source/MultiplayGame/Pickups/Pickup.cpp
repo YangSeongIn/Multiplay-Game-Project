@@ -6,6 +6,7 @@
 #include "Sound/SoundCue.h"
 #include "Components/SphereComponent.h"
 #include "../Weapon/WeaponTypes.h"
+#include "Net/UnrealNetwork.h"
 
 APickup::APickup()
 {
@@ -47,7 +48,6 @@ void APickup::BeginPlay()
 void APickup::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereOverlapBegin(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	GLog->Log("000");
 }
 
 void APickup::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -70,13 +70,37 @@ void APickup::Destroyed()
 {
 	Super::Destroyed();
 
-	if (PickupSound)
+	
+}
+
+void APickup::SetActive(bool bIsActive, FVector LocationToSpawn)
+{
+	MulticastSetActive(bIsActive);
+	if (bIsActive)
 	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			PickupSound,
-			GetActorLocation()
-		);
+		SetActorLocation(LocationToSpawn);
+	}
+}
+
+void APickup::MulticastSetActive_Implementation(bool bIsActive)
+{
+	if (bIsActive)
+	{
+		PickupMesh->SetVisibility(true);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+	else
+	{
+		if (PickupSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				PickupSound,
+				GetActorLocation()
+			);
+		}
+		PickupMesh->SetVisibility(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
 

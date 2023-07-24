@@ -37,11 +37,19 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerInventoryWidget();
 
-	/*UFUNCTION(Client, Reliable)
+	UFUNCTION(Client, Reliable)
 		void ClientSetMeshCapture(int32 n, class ACharacterMeshCapture* MeshCapture);
 
-	UFUNCTION(Server, Reliable)
+	/*UFUNCTION(Server, Reliable)
 		void ServerAddPlayerNum();*/
+
+	void EquipButtonPressed();
+
+	void AttachItemOnMeshCapture(const FString SocketName);
+	void DetachItemOnMeshCapture(const FString SocketName);
+
+	UFUNCTION(Server, Reliable)
+		void ServerAttachItemOnMeshCapture(const FString& SocketName);
 
 protected:
 	virtual void BeginPlay() override;
@@ -52,7 +60,7 @@ protected:
 	void CrouchButtonPressed();
 	void FireButtonPressed();
 	void FireButtonReleased();
-	void EquipButtonPressed();
+	
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void Esc();
@@ -258,10 +266,12 @@ public:
 	ECombatState GetCombatState() const;
 	UCombatComponent* GetCombatComponent() const { return CombatComponent; };
 	class AWeapon* GetEquippedWeapon() const;
+	class AWeapon* GetSecondaryWeapon() const;
 	FORCEINLINE UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; };
 	FORCEINLINE void SetInventoryWidgetNull() { InventoryWidget = nullptr; };
 	FORCEINLINE void SetMeshCapture(class ACharacterMeshCapture* NewMeshCapture) { CharacterMeshCapture = NewMeshCapture; };
 	AWeapon* GetWeapon1();
 	AWeapon* GetWeapon2();
 	int32 GetCarriedAmmo(class AWeapon* Weapon);
+	FORCEINLINE FVector GetGroundLocation();
 };

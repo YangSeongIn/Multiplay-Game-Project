@@ -68,25 +68,32 @@ void AMainPlayerController::UpdateWeaponState()
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(GetPawn());
 	if (MainCharacter && CharacterOverlay)
 	{
-		if (MainCharacter->GetWeapon1() && MainCharacter->GetWeapon1() == MainCharacter->GetEquippedWeapon())
+		if (MainCharacter->GetWeapon1() == nullptr)
+		{
+			//CharacterOverlay->ActivateWeapon(false, 0);
+			CharacterOverlay->SetWeaponImage(nullptr, 0);
+		}
+		else if (MainCharacter->GetWeapon1() && MainCharacter->GetWeapon1() == MainCharacter->GetEquippedWeapon())
 		{
 			CharacterOverlay->ActivateWeapon(true, 0);
-			CharacterOverlay->ActivateWeapon(false, 1);
 		}
 		else if (MainCharacter->GetWeapon1() && MainCharacter->GetWeapon1() != MainCharacter->GetEquippedWeapon())
 		{
 			CharacterOverlay->ActivateWeapon(false, 0);
-			CharacterOverlay->ActivateWeapon(true, 1);
 		}
-		if (MainCharacter->GetWeapon2() && MainCharacter->GetWeapon2() == MainCharacter->GetEquippedWeapon())
+
+		if (MainCharacter->GetWeapon2() == nullptr)
+		{
+			// CharacterOverlay->ActivateWeapon(false, 1);
+			CharacterOverlay->SetWeaponImage(nullptr, 1);
+		}
+		else if (MainCharacter->GetWeapon2() && MainCharacter->GetWeapon2() == MainCharacter->GetEquippedWeapon())
 		{
 			CharacterOverlay->ActivateWeapon(true, 1);
-			CharacterOverlay->ActivateWeapon(false, 0);
 		}
 		else if (MainCharacter->GetWeapon2() && MainCharacter->GetWeapon2() != MainCharacter->GetEquippedWeapon())
 		{
 			CharacterOverlay->ActivateWeapon(false, 1);
-			CharacterOverlay->ActivateWeapon(true, 0);
 		}
 	}
 }

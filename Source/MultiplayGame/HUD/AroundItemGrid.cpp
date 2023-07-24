@@ -16,6 +16,12 @@ void UAroundItemGrid::NativePreConstruct()
 
 }
 
+void UAroundItemGrid::NativeDestruct()
+{
+	InventoryComponent->OnOverlappedItemUpdate.Clear();
+	Super::NativeDestruct();
+}
+
 bool UAroundItemGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
@@ -27,12 +33,14 @@ bool UAroundItemGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 			if (InventoryComponent)
 			{
 				InventoryComponent->DropWeaponByDragging(SlotForDragDrop->GetWeaponNum());
-				return true;
 			}
 		}
 		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Inventory)
 		{
-
+			if (InventoryComponent)
+			{
+				InventoryComponent->DropInventoryItemByDragging(SlotForDragDrop->GetContentIndex());
+			}
 		}
 	}
 	return false;

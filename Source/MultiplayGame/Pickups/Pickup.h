@@ -16,6 +16,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 
+	void SetActive(bool bIsActive, FVector LocationToSpawn = FVector(0.f));
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastSetActive(bool bIsActive);
+
 protected:
 	virtual void BeginPlay() override;
 

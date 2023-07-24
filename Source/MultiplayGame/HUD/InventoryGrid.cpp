@@ -16,6 +16,12 @@ void UInventoryGrid::NativePreConstruct()
 	// UpdateInventory();
 }
 
+void UInventoryGrid::NativeDestruct()
+{
+	InventoryComponent->OnInventoryUpdate.Clear();
+	Super::NativeDestruct();
+}
+
 void UInventoryGrid::DisplayInventory(UInventoryComponent* InventoryComp)
 {
 	this->InventoryComponent = InventoryComponent;
@@ -48,7 +54,6 @@ void UInventoryGrid::UpdateInventory()
 				{
 					InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
 				}
-
 			}
 		}
 	}

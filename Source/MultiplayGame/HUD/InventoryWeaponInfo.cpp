@@ -19,8 +19,8 @@ void UInventoryWeaponInfo::NativePreConstruct()
 
 void UInventoryWeaponInfo::NativeDestruct()
 {
-	Super::NativeDestruct();
 	InventoryComponent->OnWeaponInfoUpdate.Clear();
+	Super::NativeDestruct();
 }
 
 void UInventoryWeaponInfo::DisplayWeaponInfo(UInventoryComponent* InventoryComp)
@@ -56,11 +56,10 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 					WeaponInfo->SetWeapon(Arr[i].Weapon);
 					WeaponInfoGrid->AddChildToVerticalBox(WeaponInfo);
 				}
-				/*if (InventoryComponent->OnWeaponInfoUpdate.IsBound())
+				if (!InventoryComponent->OnWeaponInfoUpdate.IsBound())
 				{
-					InventoryComponent->OnWeaponInfoUpdate.Clear();
-				}*/
-				InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));
+					InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));
+				}
 			}
 		}
 	}
@@ -68,6 +67,5 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 
 void UInventoryWeaponInfo::UpdatedWeaponInfo()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("????"));
 	UpdateWeaponInfo();
 }

@@ -26,13 +26,13 @@ public:
 	FOnWeaponInfoUpdate OnWeaponInfoUpdate;
 	FOnOverlappedItemUpdate OnOverlappedItemUpdate;
 
-	TTuple<bool, int> AddToInventory(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName);
+	TTuple<bool, int> AddToInventory(class AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName);
 	void RemoveFromInventory(FString ItemID, int Quantity);
 	TTuple<int, bool> FindSlot(FString ItemID);
 	int32 GetMaxStackSize(FString ItemID);
 	void AddToStack(int Idx, int Quantity);
 	TTuple<bool, int> AnyEmptySlotAvailable();
-	bool CreateNewStack(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName);
+	bool CreateNewStack(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName, class AItem* Item);
 
 	UFUNCTION(BlueprintCallable)
 		void DEBUGPrintContents();
@@ -58,6 +58,8 @@ public:
 	void AddToSelectedWeaponSlot(class AItem* Item, EWeaponNum WeaponNum);
 
 	void DropWeaponByDragging(EWeaponNum WeaponNum);
+
+	void DropInventoryItemByDragging(int32 ContentIndex);
 
 protected:
 	virtual void BeginPlay() override;

@@ -7,6 +7,7 @@
 #include "../MainCharacterComponent/CombatComponent.h"
 #include "../Pickups/Item.h"
 #include "ItemDataComponent.h"
+#include "../Pickups/Pickup.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -117,7 +118,7 @@ void UInventoryComponent::AddToSelectedWeaponSlot(AItem* Item, EWeaponNum Weapon
 	}
 }
 
-TTuple<bool, int> UInventoryComponent::AddToInventory(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName)
+TTuple<bool, int> UInventoryComponent::AddToInventory(AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName)
 {
 	int QuantityRemaining = Quantity;
 	bool bHasFailed = false;
@@ -127,12 +128,13 @@ TTuple<bool, int> UInventoryComponent::AddToInventory(int32 Quantity, EItemType 
 		{
 			AddToStack(CurrentSlot.Get<0>(), 1);
 			QuantityRemaining -= 1;
+			Slots[CurrentSlot.Get<0>()].Item = Item;
 		}
 		else
 		{
 			if (AnyEmptySlotAvailable().Get<0>())
 			{
-				bool bIsSuccessToCreate = CreateNewStack(1, ItemType, ItemID, InherenceName);
+				bool bIsSuccessToCreate = CreateNewStack(1, ItemType, ItemID, InherenceName, Item);
 				if (bIsSuccessToCreate)
 				{
 					QuantityRemaining -= 1;
@@ -142,11 +144,12 @@ TTuple<bool, int> UInventoryComponent::AddToInventory(int32 Quantity, EItemType 
 			else bHasFailed = true;
 		}
 	}
-	return MakeTuple(!bHasFailed, QuantityRemaining);
+	
 	if (OnInventoryUpdate.IsBound())
 	{
 		OnInventoryUpdate.Broadcast();
 	}
+	return MakeTuple(!bHasFailed, QuantityRemaining);
 }
 
 void UInventoryComponent::RemoveFromInventory(FString ItemID, int Quantity)
@@ -191,11 +194,11 @@ TTuple<bool, int> UInventoryComponent::AnyEmptySlotAvailable()
 	return MakeTuple(false, -1);
 }
 
-bool UInventoryComponent::CreateNewStack(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName)
+bool UInventoryComponent::CreateNewStack(int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName, AItem* Item)
 {
 	if (AnyEmptySlotAvailable().Get<0>())
 	{
-		Slots[AnyEmptySlotAvailable().Get<1>()] = { Quantity, ItemType, ItemID, InherenceName};
+		Slots[AnyEmptySlotAvailable().Get<1>()] = { Quantity, ItemType, ItemID, InherenceName, Item };
 		return true;
 	}
 	else return false;
@@ -289,6 +292,29 @@ void UInventoryComponent::DropWeaponByDragging(EWeaponNum WeaponNum)
 	}
 }
 
+void UInventoryComponent::DropInventoryItemByDragging(int32 ContentIndex)
+{
+	AItem* ItemToSpawn = Slots[ContentIndex].Item;
+	UWorld* World = GetOwner()->GetWorld();
+	if (ItemToSpawn == nullptr) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("1"));
+	if (World && ItemToSpawn && Character)
+	{
+		APickup* Pickup = Cast<APickup>(ItemToSpawn);
+		if (Pickup)
+		{
+			Pickup->SetActive(true, Character->GetGroundLocation());
+		}
+	}
+
+	Slots[ContentIndex] = { 0, EItemType::EIT_MAX, "", "", nullptr };
+
+	if (OnInventoryUpdate.IsBound() && OnOverlappedItemUpdate.IsBound())
+	{
+		OnInventoryUpdate.Broadcast();
+		OnOverlappedItemUpdate.Broadcast();
+	}
+}
+
 void UInventoryComponent::ServerTransferSlots_Implementation(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
 {
 	TransferSlots(SourceIndex, SourceInventory, TargetIndex);
@@ -303,7 +329,6 @@ void UInventoryComponent::AddOverlappedItem(FString ItemID, int32 Quantity, EIte
 	SlotStruct.InherenceName = InherenceName;
 	SlotStruct.Item = Item;
 	OverlappedItems.Add(SlotStruct);
-
 }
 
 void UInventoryComponent::RemoveOverlappedItem(FString InherenceName)
@@ -319,16 +344,14 @@ void UInventoryComponent::RemoveOverlappedItem(FString InherenceName)
 
 void UInventoryComponent::UpdateWeaponInfoSlot(UCombatComponent* CombatComp, AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo)
 {
-	if (OnWeaponInfoUpdate.IsBound())
+	for (FEquippedWeaponSlotStruct& Slot : WeaponInfos)
 	{
-		for (FEquippedWeaponSlotStruct& Slot : WeaponInfos)
+		if (Slot.Weapon == EquippedWeapon)
 		{
-			if (Slot.Weapon == EquippedWeapon)
-			{
-				Slot.AmmoQuantity = Ammo;
-				Slot.CarriedAmmoQuantity = CarriedAmmo;
-			}
+			Slot.AmmoQuantity = Ammo;
+			Slot.CarriedAmmoQuantity = CarriedAmmo;
 		}
-		OnWeaponInfoUpdate.Broadcast();
 	}
+
+	OnWeaponInfoUpdate.Broadcast();
 }

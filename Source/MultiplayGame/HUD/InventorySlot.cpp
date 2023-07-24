@@ -13,6 +13,8 @@
 #include "Components/Border.h"
 #include "EquippedSlot.h"
 #include "EquippedSlotWidget.h"
+#include "../Character/MainCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 void UInventorySlot::NativePreConstruct()
 {
@@ -58,6 +60,17 @@ FReply UInventorySlot::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometr
 	return Reply;
 }
 
+FReply UInventorySlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FReply Reply = Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+	if (OutBorder && InBorder)
+	{
+		OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
+		InBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
+	}
+	return Reply;
+}
+
 void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
@@ -95,26 +108,15 @@ bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 			if (SlotForDragDrop->GetContentIndex() != SlotIndex || SlotForDragDrop->GetInventoryComponent() != InventoryComponent)
 			{
 				InventoryComponent->ServerTransferSlots(SlotForDragDrop->GetContentIndex(), SlotForDragDrop->GetInventoryComponent(), SlotIndex);
-				//return true;
 			}
 		}
-		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon)
+		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_AroundItem)
 		{
-			/*if (SlotForDragDrop->GetEquippedSlot() && DragDropSlot && SlotForDragDrop->GetEquippedSlot()->GetEquippedSlotWidget())
+			AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+			if (Character)
 			{
-				if (SlotForDragDrop->GetEquippedSlot()->GetWeaponNum() == EWeaponNum::EWN_Weapon1)
-				{
-					SlotForDragDrop->GetEquippedSlot()->GetEquippedSlotWidget()->SetSlotWeapon1(DragDropSlot);
-				}
-				else if (SlotForDragDrop->GetEquippedSlot()->GetWeaponNum() == EWeaponNum::EWN_Weapon2)
-				{
-					SlotForDragDrop->GetEquippedSlot()->GetEquippedSlotWidget()->SetSlotWeapon2(DragDropSlot);
-				}
-			}*/
-		}
-		else
-		{
-			// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("????"));
+				Character->EquipButtonPressed();
+			}
 		}
 	}
 	return false;
@@ -140,7 +142,7 @@ void UInventorySlot::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UD
 	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
 	if (SlotForDragDrop)
 	{
-		if (OutBorder)
+		if (OutBorder && InBorder)
 		{
 			OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
 			InBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));

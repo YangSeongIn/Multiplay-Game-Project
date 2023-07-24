@@ -14,6 +14,9 @@ class MULTIPLAYGAME_API ACharacterMeshCapture : public AActor
 public:	
 	ACharacterMeshCapture();
 	virtual void Tick(float DeltaTime) override;
+
+
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -36,8 +39,17 @@ private:
 	UPROPERTY(VisibleAnywhere)
 		USkeletalMeshComponent* SkeletalMeshComponent;
 
+	UPROPERTY(VisibleAnywhere)
+		USkeletalMeshComponent* SkeletalMeshOnHand;
+
+	UPROPERTY(VisibleAnywhere)
+		USkeletalMeshComponent* SkeletalMeshOnBack;
+
 public:
 	FORCEINLINE void SetSkeletaMesh(USkeletalMesh* NewMesh) { SkeletalMeshComponent->SetSkeletalMesh(NewMesh); };
+	FORCEINLINE USkeletalMeshComponent* GetSkeletaMesh() { return SkeletalMeshComponent; };
 	void SetCaptureTexture(int32 n);
 	void SetCaptureInventoryImage(class UInventory* Inventory, int32 n);
+	FORCEINLINE void SetSkeletalMeshOnHand(USkeletalMesh* MeshToSet) { SkeletalMeshOnHand->SetSkeletalMesh(MeshToSet); };
+	FORCEINLINE void SetSkeletalMeshOnBack(USkeletalMesh* MeshToSet) { SkeletalMeshOnBack->SetSkeletalMesh(MeshToSet); };
 };

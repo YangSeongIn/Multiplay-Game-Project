@@ -13,7 +13,8 @@ void UInventory::NativeConstruct()
 {
 	Super::NativeConstruct();
 	// UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(UGameplayStatics::GetPlayerController(this, 0), InventoryGrid);
-	UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx(UGameplayStatics::GetPlayerController(this, 0), InventoryGrid);
+	UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx(UGameplayStatics::GetPlayerController(this, 0));
+	// UWidgetBlueprintLibrary::SetInputMode_GameOnly(UGameplayStatics::GetPlayerController(this, 0), false);
 	UGameplayStatics::GetPlayerController(this, 0)->SetShowMouseCursor(true);
 }
 

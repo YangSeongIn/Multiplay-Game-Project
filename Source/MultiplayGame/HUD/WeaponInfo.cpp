@@ -55,6 +55,16 @@ FReply UWeaponInfo::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, 
 	return Reply;
 }
 
+FReply UWeaponInfo::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FReply Reply = Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+	if (OutBorder)
+	{
+		OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
+	}
+	return Reply;
+}
+
 void UWeaponInfo::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);

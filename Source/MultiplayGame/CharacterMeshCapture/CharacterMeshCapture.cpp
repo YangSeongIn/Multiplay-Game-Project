@@ -24,6 +24,12 @@ ACharacterMeshCapture::ACharacterMeshCapture()
 
 	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
 	SkeletalMeshComponent->SetupAttachment(RootComponent);
+
+	SkeletalMeshOnHand = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshOnHand"));
+	SkeletalMeshOnHand->SetupAttachment(SkeletalMeshComponent, FName("RightHandSocket"));
+
+	SkeletalMeshOnBack = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshOnBack"));
+	SkeletalMeshOnBack->SetupAttachment(SkeletalMeshComponent, FName("WeaponSocket"));
 }
 
 void ACharacterMeshCapture::BeginPlay()
@@ -31,6 +37,8 @@ void ACharacterMeshCapture::BeginPlay()
 	Super::BeginPlay();
 	
 	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshComponent);
+	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshOnHand);
+	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshOnBack);
 }
 
 void ACharacterMeshCapture::SetCaptureTexture(int32 n)

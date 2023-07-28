@@ -103,8 +103,7 @@ void UCombatComponent::Fire()
 		StartFireTimer();
 
 		// Fix Text
-
-		InventoryComponent->UpdateWeaponInfoSlot(this, EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
+		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
 	}
 }
 
@@ -331,6 +330,9 @@ void UCombatComponent::MulticastSwapWeapon_Implementation(AWeapon* WeaponToHand,
 
 void UCombatComponent::SwapTwoWeapons()
 {
+	Character->DetachItemOnMeshCapture(FString("RightHandSocket"));
+	Character->DetachItemOnMeshCapture(FString("WeaponSocket"));
+	
 	AWeapon* EquippedWeaponTemp = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = EquippedWeaponTemp;
@@ -342,6 +344,7 @@ void UCombatComponent::SwapTwoWeapons()
 	AWeapon* WeaponArrTemp = Weapons[0];
 	Weapons[0] = Weapons[1];
 	Weapons[1] = WeaponArrTemp;
+
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
@@ -357,21 +360,15 @@ void UCombatComponent::SwapTwoWeapons()
 			Controller->SetHUDWeaponAmmo(-1);
 			Controller->SetHUDCarriedAmmo(-1);
 		}
-		Character->DetachItemOnMeshCapture(FString("RightHandSocket"));
-		Character->AttachItemOnMeshCapture(FString("WeaponSocket"));
 	}
 
 	CombatState = ECombatState::ECS_Unoccupied;
+
 	if (SecondaryWeapon)
 	{
 		PlayEquipWeaponSound(SecondaryWeapon);
 		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBack(SecondaryWeapon);
-	}
-	else
-	{
-		Character->DetachItemOnMeshCapture(FString("WeaponSocket"));
-		Character->AttachItemOnMeshCapture(FString("RightHandSocket"));
 	}
 
 	if (Controller)
@@ -380,6 +377,9 @@ void UCombatComponent::SwapTwoWeapons()
 		Controller->SetWeaponImage(0);
 		Controller->SetWeaponImage(1);
 	}
+
+	Character->AttachItemOnMeshCapture(FString("WeaponSocket"));
+	Character->AttachItemOnMeshCapture(FString("RightHandSocket"));
 }
 
 void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
@@ -461,6 +461,16 @@ void UCombatComponent::DropWeaponByDragging(EWeaponNum WeaponNum)
 	bIsEquippedWeapon = TargetWeapon == EquippedWeapon;
 	AWeapon*& TargetStateWeapon = WeaponNum == EWeaponNum::EWN_Weapon1 ? EquippedWeapon : SecondaryWeapon;
 	PlayEquipWeaponSound(TargetStateWeapon);
+
+	if (Weapons[0] == TargetWeapon)
+	{
+		Weapons[0] = nullptr;
+	}
+	else if (Weapons[1] = TargetWeapon)
+	{
+		Weapons[1] = nullptr;
+	}
+
 	if (TargetWeapon == EquippedWeapon)
 	{
 		Character->DetachItemOnMeshCapture("RightHandSocket");
@@ -594,7 +604,7 @@ void UCombatComponent::FinishReloading()
 
 	if (InventoryComponent)
 	{
-		InventoryComponent->UpdateWeaponInfoSlot(this, EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
+		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
 	}
 }
 
@@ -628,6 +638,8 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 	{
 		// Reload();
 	}
+
+	InventoryComponent->OnWeaponInfoUpdate.Broadcast();
 }
 
 void UCombatComponent::OnRep_CombatState()

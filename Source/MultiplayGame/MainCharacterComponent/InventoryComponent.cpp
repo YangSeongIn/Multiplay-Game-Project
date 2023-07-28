@@ -111,6 +111,7 @@ void UInventoryComponent::AddToSelectedWeaponSlot(AItem* Item, EWeaponNum Weapon
 		WeaponInfos[n].AmmoQuantity = Weapon->GetAmmo();
 		WeaponInfos[n].CarriedAmmoQuantity = CombatComponent->GetCarriedAmmo(Weapon->GetWeaponType());
 		WeaponInfos[n].ItemType = EItemType::EIT_Weapon;
+		WeaponInfos[n].Weapon = Cast<AWeapon>(Item);
 	}
 	if (OnWeaponInfoUpdate.IsBound())
 	{
@@ -296,7 +297,6 @@ void UInventoryComponent::DropInventoryItemByDragging(int32 ContentIndex)
 {
 	AItem* ItemToSpawn = Slots[ContentIndex].Item;
 	UWorld* World = GetOwner()->GetWorld();
-	if (ItemToSpawn == nullptr) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("1"));
 	if (World && ItemToSpawn && Character)
 	{
 		APickup* Pickup = Cast<APickup>(ItemToSpawn);
@@ -342,7 +342,7 @@ void UInventoryComponent::RemoveOverlappedItem(FString InherenceName)
 	}
 }
 
-void UInventoryComponent::UpdateWeaponInfoSlot(UCombatComponent* CombatComp, AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo)
+void UInventoryComponent::UpdateWeaponInfoSlot(AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo)
 {
 	for (FEquippedWeaponSlotStruct& Slot : WeaponInfos)
 	{
@@ -352,6 +352,8 @@ void UInventoryComponent::UpdateWeaponInfoSlot(UCombatComponent* CombatComp, AWe
 			Slot.CarriedAmmoQuantity = CarriedAmmo;
 		}
 	}
-
-	OnWeaponInfoUpdate.Broadcast();
+	if (OnWeaponInfoUpdate.IsBound())
+	{
+		OnWeaponInfoUpdate.Broadcast();
+	}
 }

@@ -56,6 +56,7 @@ void UInventoryWeaponInfo::UpdateWeaponInfo()
 					WeaponInfo->SetWeapon(Arr[i].Weapon);
 					WeaponInfoGrid->AddChildToVerticalBox(WeaponInfo);
 				}
+				
 				if (!InventoryComponent->OnWeaponInfoUpdate.IsBound())
 				{
 					InventoryComponent->OnWeaponInfoUpdate.AddUFunction(this, FName("UpdatedWeaponInfo"));

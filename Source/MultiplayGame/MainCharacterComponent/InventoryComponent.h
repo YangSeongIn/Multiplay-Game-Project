@@ -53,7 +53,7 @@ public:
 	void AddOverlappedItem(FString ItemID, int32 Quantity, EItemType ItemType, FString InherenceName, class AItem* Item);
 	void RemoveOverlappedItem(FString InherenceName);
 
-	void UpdateWeaponInfoSlot(class UCombatComponent* InventoryComp, class AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo);
+	void UpdateWeaponInfoSlot(class AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo);
 
 	void AddToSelectedWeaponSlot(class AItem* Item, EWeaponNum WeaponNum);
 

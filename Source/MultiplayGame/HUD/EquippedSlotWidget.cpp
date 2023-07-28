@@ -26,7 +26,8 @@ void UEquippedSlotWidget::SwapEquippedWeaponSlot()
 {
 	//if (EquippedSlot_Weapon1 || EquippedSlot_Weapon2)
 	//{
-	//	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("%s"), *EquippedSlot_Weapon1->GetName()));
+	//	//GEngine->
+	// ScreenDebugMessage(-1, 5, FColor::Blue, FString::Printf(TEXT("%s"), *EquippedSlot_Weapon1->GetName()));
 	//	UEquippedSlot* EquippedSlotTemp = EquippedSlot_Weapon1;
 	//	EquippedSlot_Weapon1 = EquippedSlot_Weapon2;
 	//	EquippedSlot_Weapon2 = EquippedSlotTemp;

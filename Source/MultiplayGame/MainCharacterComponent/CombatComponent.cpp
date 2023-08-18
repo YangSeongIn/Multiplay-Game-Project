@@ -162,17 +162,18 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		AWeapon*& WeaponTemp = EquippedWeapon == Weapon1 ? Weapon1 : Weapon2;
 		EquippedWeapon->Dropped();
+
 		Character->DetachItemOnMeshCapture("RightHandSocket");
 		WeaponTemp = WeaponToEquip;
 		int32 Num = WeaponTemp == Weapon1 ? 0 : 1;
-		Weapons[Num] = WeaponToEquip;
+		//Weapons[Num] = WeaponToEquip;
 		EquipOnHand(WeaponTemp);
 	}
 	// Weapon slot is empty
 	else if (Weapon1 == nullptr && Weapon2 == nullptr)
 	{
 		Weapon1 = WeaponToEquip;
-		Weapons[0] = WeaponToEquip;
+		//Weapons[0] = WeaponToEquip;
 		EquipOnHand(Weapon1);
 	}
 	// Empty weapon slot exist
@@ -181,12 +182,12 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		if (Weapon1 == nullptr) 
 		{
 			Weapon1 = WeaponToEquip;
-			Weapons[0] = WeaponToEquip;
+			//Weapons[0] = WeaponToEquip;
 		}
 		else if (Weapon2 == nullptr)
 		{
 			Weapon2 = WeaponToEquip;
-			Weapons[1] = WeaponToEquip;
+			//Weapons[1] = WeaponToEquip;
 		}
 
 		if (EquippedWeapon == nullptr)
@@ -294,8 +295,13 @@ void UCombatComponent::OnRep_SecondaryWeapon(AWeapon* PrevWeapon)
 
 void UCombatComponent::SwapWeapon(int32 WeaponNum)
 {
-	if (Weapons[WeaponNum] == EquippedWeapon) return;
+	// if (Weapons[WeaponNum] == EquippedWeapon) return;
+	AWeapon*& TargetWeapon = WeaponNum == 0 ? Weapon1 : Weapon2;
+	if (TargetWeapon == EquippedWeapon) return;
 	if (EquippedWeapon == nullptr || SecondaryWeapon == nullptr) return;
+	Character->DetachItemOnMeshCapture(FString("RightHandSocket"));
+	Character->DetachItemOnMeshCapture(FString("WeaponSocket"));
+
 	AWeapon* WeaponTemp = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = WeaponTemp;
@@ -319,6 +325,9 @@ void UCombatComponent::SwapWeapon(int32 WeaponNum)
 		Controller->SetWeaponImage(0);
 		Controller->SetWeaponImage(1);
 	}
+
+	Character->AttachItemOnMeshCapture(FString("WeaponSocket"));
+	Character->AttachItemOnMeshCapture(FString("RightHandSocket"));
 }
 
 void UCombatComponent::MulticastSwapWeapon_Implementation(AWeapon* WeaponToHand, AWeapon* WeaponToBack)
@@ -341,9 +350,9 @@ void UCombatComponent::SwapTwoWeapons()
 	Weapon1 = Weapon2;
 	Weapon2 = WeaponTemp;
 
-	AWeapon* WeaponArrTemp = Weapons[0];
-	Weapons[0] = Weapons[1];
-	Weapons[1] = WeaponArrTemp;
+	//AWeapon* WeaponArrTemp = Weapons[0];
+	//Weapons[0] = Weapons[1];
+	//Weapons[1] = WeaponArrTemp;
 
 	if (EquippedWeapon)
 	{
@@ -410,7 +419,7 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 				TargetWeapon->Dropped();
 				Character->DetachItemOnMeshCapture("RightHandSocket");
 				TargetWeapon = DraggedWeapon;
-				Weapons[Num] = DraggedWeapon;
+				//Weapons[Num] = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			// TargetWeapon -> Back
@@ -420,7 +429,7 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 				TargetWeapon->Dropped();
 				Character->DetachItemOnMeshCapture("WeaponSocket");
 				TargetWeapon = DraggedWeapon;
-				Weapons[Num] = DraggedWeapon;
+				//Weapons[Num] = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
 		}
@@ -428,25 +437,25 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 		{
 			if (RestWeapon && RestWeapon == EquippedWeapon)
 			{
-				Weapons[Num] = DraggedWeapon;
+				//Weapons[Num] = DraggedWeapon;
 				TargetWeapon = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
 			else if (RestWeapon && RestWeapon == SecondaryWeapon)
 			{
-				Weapons[Num] = DraggedWeapon;
+				//Weapons[Num] = DraggedWeapon;
 				TargetWeapon = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			else if (NumOfWeapon == EWeaponNum::EWN_Weapon1)
 			{
-				Weapons[0] = DraggedWeapon;
+				//Weapons[0] = DraggedWeapon;
 				Weapon1 = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			else if (NumOfWeapon == EWeaponNum::EWN_Weapon2)
 			{
-				Weapons[1] = DraggedWeapon;
+				//Weapons[1] = DraggedWeapon;
 				Weapon2 = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
@@ -462,14 +471,14 @@ void UCombatComponent::DropWeaponByDragging(EWeaponNum WeaponNum)
 	AWeapon*& TargetStateWeapon = WeaponNum == EWeaponNum::EWN_Weapon1 ? EquippedWeapon : SecondaryWeapon;
 	PlayEquipWeaponSound(TargetStateWeapon);
 
-	if (Weapons[0] == TargetWeapon)
+	/*if (Weapons[0] == TargetWeapon)
 	{
 		Weapons[0] = nullptr;
 	}
 	else if (Weapons[1] = TargetWeapon)
 	{
 		Weapons[1] = nullptr;
-	}
+	}*/
 
 	if (TargetWeapon == EquippedWeapon)
 	{
@@ -849,4 +858,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSubmachineGunAmmo);
 }

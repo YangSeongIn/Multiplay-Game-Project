@@ -42,6 +42,12 @@ public:
 	UPROPERTY(meta = (BindWidget))
 		class UImage* Weapon2Image;
 
+	UPROPERTY(meta = (BindWidget))
+		class UImage* HighPingImage;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		class UWidgetAnimation* HighPingAnimation;
+
 	void ActivateWeapon(bool bIsActive, int32 Num);
 	void SetWeaponImage(class UTexture2D* NewTexture, int32 Num);
 };

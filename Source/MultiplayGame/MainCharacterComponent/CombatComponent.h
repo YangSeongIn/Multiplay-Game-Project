@@ -178,10 +178,28 @@ private:
 		int32 StartingRocketAmmo = 12;
 
 	UPROPERTY(EditAnywhere)
+		int32 StartingPistolAmmo = 28;
+
+	UPROPERTY(EditAnywhere)
+		int32 StartingSniperAmmo = 20;
+
+	UPROPERTY(EditAnywhere)
+		int32 StartingSubmachineGunAmmo = 20;
+
+	UPROPERTY(EditAnywhere)
 		int32 MaxARAmmo = 90;
 
 	UPROPERTY(EditAnywhere)
 		int32 MaxRocketAmmo = 24;
+
+	UPROPERTY(EditAnywhere)
+		int32 MaxPistolAmmo = 56;
+
+	UPROPERTY(EditAnywhere)
+		int32 MaxSniperAmmo = 40;
+
+	UPROPERTY(EditAnywhere)
+		int32 MaxSubmachineGunAmmo = 40;
 
 	void InitializeCarriedAmmo();
 

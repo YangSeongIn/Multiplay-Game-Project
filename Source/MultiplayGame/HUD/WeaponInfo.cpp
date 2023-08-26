@@ -226,6 +226,7 @@ void UWeaponInfo::UpdateWeaponInfo()
 		{
 			if (IconImage)
 			{
+				IconImage->SetBrushTintColor(FLinearColor(1.f, 1.f, 1.f, 1));
 				IconImage->SetBrushFromTexture(ItemStruct->Thumbnail);
 				IconImage->SetVisibility(ESlateVisibility::Visible);
 				AmmoText->SetText(FText::FromString(FString::FromInt(AmmoQuantity) + FString(" / ") + FString::FromInt(CarriedAmmoQuantity)));
@@ -235,8 +236,8 @@ void UWeaponInfo::UpdateWeaponInfo()
 		{
 			if (IconImage)
 			{
-				IconImage->SetVisibility(ESlateVisibility::Hidden);
-				AmmoText->SetText(FText::FromString(FString("- / -")));
+				IconImage->SetBrushTintColor(FLinearColor(1.f, 1.f, 1.f, 0));
+				AmmoText->SetText(FText::FromString(FString("")));
 			}
 		}
 	}

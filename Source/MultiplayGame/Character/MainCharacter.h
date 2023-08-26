@@ -29,16 +29,16 @@ public:
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim();
 	UFUNCTION(NetMulticast, Reliable)
-		void MulticastElim();
+	void MulticastElim();
 
 	UFUNCTION(Server, Reliable)
-		void ServerSetMeshCapture();
+	void ServerSetMeshCapture();
 
 	UFUNCTION(Server, Reliable)
-		void ServerInventoryWidget();
+	void ServerInventoryWidget();
 
 	UFUNCTION(Client, Reliable)
-		void ClientSetMeshCapture(int32 n, class ACharacterMeshCapture* MeshCapture);
+	void ClientSetMeshCapture(int32 n, class ACharacterMeshCapture* MeshCapture);
 
 	/*UFUNCTION(Server, Reliable)
 		void ServerAddPlayerNum();*/
@@ -49,7 +49,7 @@ public:
 	void DetachItemOnMeshCapture(const FString SocketName);
 
 	UFUNCTION(Server, Reliable)
-		void ServerAttachItemOnMeshCapture(const FString& SocketName);
+	void ServerAttachItemOnMeshCapture(const FString& SocketName);
 
 protected:
 	virtual void BeginPlay() override;
@@ -60,7 +60,7 @@ protected:
 	void CrouchButtonPressed();
 	void FireButtonPressed();
 	void FireButtonReleased();
-	
+
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void Esc();
@@ -75,39 +75,60 @@ protected:
 	void InventoryKeyPressed();
 	virtual void Jump() override;
 	UFUNCTION()
-		void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class USpringArmComponent* CameraBoom;
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* UpperBodyMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* HeadMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* LowerBodyMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* BeardMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* HairMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* GoggleMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* HandMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class UCameraComponent* FollowCamera;
+	class USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UWidgetComponent* OverheadWidget;
+	class UWidgetComponent* OverheadWidget;
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_OverlappingItem) // Using Callback when property update
 		class AItem* OverlappingItem;
 
 	UFUNCTION()
-		void OnRep_OverlappingItem(class AItem* Item);
+	void OnRep_OverlappingItem(class AItem* Item);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UCombatComponent* CombatComponent;
+	class UCombatComponent* CombatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UInventoryComponent* InventoryComponent;
+	class UInventoryComponent* InventoryComponent;
 
 	UFUNCTION(Server, Reliable)
-		void ServerEquipButtonPressed();
+	void ServerEquipButtonPressed();
 
 	UFUNCTION(Server, Reliable)
-		void ServerWeaponSwapButtonPressed(int32 WeaponNum);
+	void ServerWeaponSwapButtonPressed(int32 WeaponNum);
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
@@ -118,10 +139,10 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 	UFUNCTION()
-		void OnMontageNotifyBegin();
+	void OnMontageNotifyBegin();
 
 	UFUNCTION(NetMulticast, Reliable)
-		void MultiCastMontageMotify();
+	void MultiCastMontageMotify();
 
 	FScriptDelegate Delegate_OnMontageNotifyBegin;
 
@@ -130,21 +151,21 @@ private:
 	*/
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		class UAnimMontage* FireWeaponMontage;
+	class UAnimMontage* FireWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		UAnimMontage* HitReactMontage;
+	UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		UAnimMontage* ElimMontage;
+	UAnimMontage* ElimMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		UAnimMontage* ReloadMontage;
+	UAnimMontage* ReloadMontage;
 
 	void HideCameraIfCharacterClose();
 
 	UPROPERTY(EditAnywhere)
-		float CameraThreshold = 200.f;
+	float CameraThreshold = 200.f;
 
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
@@ -159,94 +180,94 @@ private:
 	*/
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
-		float MaxHealth = 100.f;
+	float MaxHealth = 100.f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
-		float Health = 100.f;
+	float Health = 100.f;
 
 	UFUNCTION()
-		void OnRep_Health();
+	void OnRep_Health();
 
 	UPROPERTY()
-		class AMainPlayerController* MainPlayerController;
+	class AMainPlayerController* MainPlayerController;
 
 	bool bElimmed = false;
 
 	FTimerHandle ElimTimer;
 
 	UPROPERTY(EditDefaultsOnly)
-		float ElimDelay = 5.f;
+	float ElimDelay = 5.f;
 
 	void ElimTimerFinished();
 
 	UPROPERTY()
-		class AMainPlayerState* MainPlayerState;
+	class AMainPlayerState* MainPlayerState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputMappingContext* DefaultMappingContext;
+	class UInputMappingContext* DefaultMappingContext;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* JumpAction;
+	class UInputAction* JumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* CrouchAction;
+	class UInputAction* CrouchAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* EscAction;
+	class UInputAction* EscAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* FireAction;
+	class UInputAction* FireAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* MoveAction;
+	class UInputAction* MoveAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* LookAction;
+	class UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* InteractAction;
+	class UInputAction* InteractAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* AimAction;
+	class UInputAction* AimAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* ReloadAction;
+	class UInputAction* ReloadAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* PrimaryWeaponAction;
+	class UInputAction* PrimaryWeaponAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* SecondaryWeaponAction;
+	class UInputAction* SecondaryWeaponAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* TertiaryWeaponAction;
+	class UInputAction* TertiaryWeaponAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* InventoryAction;
+	class UInputAction* InventoryAction;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<UUserWidget> InventoryWidgetClass;
+	TSubclassOf<UUserWidget> InventoryWidgetClass;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<class ACharacterMeshCapture> CharacterMeshCaptureClass;
+	TSubclassOf<class ACharacterMeshCapture> CharacterMeshCaptureClass;
 
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryWidget)
-		class UInventory* InventoryWidget;
+	class UInventory* InventoryWidget;
 
 	UFUNCTION()
-		void OnRep_InventoryWidget(class UInventory* PostInventoryWidget);
+	void OnRep_InventoryWidget(class UInventory* PostInventoryWidget);
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_PlayerInherenceNum, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		int32 PlayerInherenceNum;
+	int32 PlayerInherenceNum;
 
 	UFUNCTION()
-		void OnRep_PlayerInherenceNum();
+	void OnRep_PlayerInherenceNum();
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CharacterMeshCapture, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class ACharacterMeshCapture* CharacterMeshCapture;
+	class ACharacterMeshCapture* CharacterMeshCapture;
 
 	UFUNCTION()
-		void OnRep_CharacterMeshCapture();
+	void OnRep_CharacterMeshCapture();
 
 public:
 	void SetOverlappingItem(class AItem* Item);

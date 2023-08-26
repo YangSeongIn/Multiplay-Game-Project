@@ -36,6 +36,7 @@
 #include "../Pickups/Item.h"
 #include "../MainCharacterComponent/ItemDataComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "../SaveGameData/SaveGameData.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -67,6 +68,21 @@ AMainCharacter::AMainCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	UpperBodyMesh = GetMesh();
+	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
+	HeadMesh->SetupAttachment(UpperBodyMesh);
+	LowerBodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LowerBodyMesh"));
+	LowerBodyMesh->SetupAttachment(UpperBodyMesh);
+	BeardMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BeardMesh"));
+	BeardMesh->SetupAttachment(UpperBodyMesh);
+	HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HairMesh"));
+	HairMesh->SetupAttachment(UpperBodyMesh);
+	GoggleMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GoggleMesh"));
+	GoggleMesh->SetupAttachment(UpperBodyMesh);
+	HandMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandMesh"));
+	HandMesh->SetupAttachment(UpperBodyMesh);
+
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
@@ -75,6 +91,13 @@ AMainCharacter::AMainCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
+	HeadMesh->SetLeaderPoseComponent(UpperBodyMesh);
+	LowerBodyMesh->SetLeaderPoseComponent(UpperBodyMesh);
+	BeardMesh->SetLeaderPoseComponent(UpperBodyMesh);
+	HairMesh->SetLeaderPoseComponent(UpperBodyMesh);
+	GoggleMesh->SetLeaderPoseComponent(UpperBodyMesh);
+	HandMesh->SetLeaderPoseComponent(UpperBodyMesh);
 }
 
 void AMainCharacter::OnRep_ReplicatedMovement()
@@ -178,6 +201,18 @@ void AMainCharacter::BeginPlay()
 		ServerSetMeshCapture();
 	}
 
+
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	if (GameInstance)
+	{
+		FCustomizingSaveDataStruct SaveGameData = GameInstance->GetSaveGameData();
+		UE_LOG(LogTemp, Log, TEXT("%d %d %d %d %d"), SaveGameData.HairIndex, SaveGameData.GoggleIndex, SaveGameData.BeardIndex, SaveGameData.UpperBodyIndex, SaveGameData.LowerBodyIndex);
+		HairMesh->SetSkeletalMesh(GameInstance->Hairs[SaveGameData.HairIndex].Mesh);
+		GoggleMesh->SetSkeletalMesh(GameInstance->Goggles[SaveGameData.GoggleIndex].Mesh);
+		BeardMesh->SetSkeletalMesh(GameInstance->Beards[SaveGameData.BeardIndex].Mesh);
+		UpperBodyMesh->SetSkeletalMesh(GameInstance->UpperBodies[SaveGameData.UpperBodyIndex].Mesh);
+		LowerBodyMesh->SetSkeletalMesh(GameInstance->LowerBodies[SaveGameData.LowerBodyIndex].Mesh);
+	}
 }
 
 void AMainCharacter::ServerSetMeshCapture_Implementation()
@@ -207,8 +242,11 @@ void AMainCharacter::OnRep_PlayerInherenceNum()
 void AMainCharacter::OnRep_CharacterMeshCapture()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnRep_CharacterMeshCapture"));
-	CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-	CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+	if (CharacterMeshCapture)
+	{
+		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
+		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+	}
 }
 
 void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
@@ -499,11 +537,11 @@ void AMainCharacter::AttachItemOnMeshCapture(const FString SocketName)
 {
 	if (IsLocallyControlled())
 	{
-		if (SocketName == "RightHandSocket" && GetEquippedWeapon())
+		if (SocketName == "RightHandSocket" && GetEquippedWeapon() && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
 		}
-		else if (SocketName == "WeaponSocket" && GetSecondaryWeapon())
+		else if (SocketName == "WeaponSocket" && GetSecondaryWeapon() && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnBack(GetSecondaryWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
 		}
@@ -518,11 +556,11 @@ void AMainCharacter::DetachItemOnMeshCapture(const FString SocketName)
 {
 	if (IsLocallyControlled())
 	{
-		if (SocketName == "RightHandSocket")
+		if (SocketName == "RightHandSocket" && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnHand(nullptr);
 		}
-		else if (SocketName == "WeaponSocket")
+		else if (SocketName == "WeaponSocket" && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnBack(nullptr);
 		}
@@ -535,11 +573,11 @@ void AMainCharacter::DetachItemOnMeshCapture(const FString SocketName)
 
 void AMainCharacter::ServerAttachItemOnMeshCapture_Implementation(const FString& SocketName)
 {
-	if (SocketName == "RightHandSocket" && GetEquippedWeapon())
+	if (SocketName == "RightHandSocket" && GetEquippedWeapon() && CharacterMeshCapture)
 	{
 		CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
 	}
-	else if (SocketName == "WeaponSocket" && GetSecondaryWeapon())
+	else if (SocketName == "WeaponSocket" && GetSecondaryWeapon() && CharacterMeshCapture)
 	{
 		CharacterMeshCapture->SetSkeletalMeshOnBack(GetSecondaryWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
 	}
@@ -621,14 +659,14 @@ void AMainCharacter::InventoryKeyPressed()
 				if (CharacterMeshCapture)
 				{
 					CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
-				}
-				if (InventoryWidget)
-				{
-					CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
-					InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
-					InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
-					InventoryWidget->AddToViewport();
+					if (InventoryWidget)
+					{
+						CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
+						InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+						InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
+						InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
+						InventoryWidget->AddToViewport();
+					}
 				}
 			}
 		}

@@ -20,6 +20,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/ThirdPerson/Maps/Lobby")));
 
+	UPROPERTY(BlueprintReadWrite)
+	AActor* CustomizingActor;
+
 protected:
 	virtual bool Initialize() override;
 	virtual void NativeDestruct() override;

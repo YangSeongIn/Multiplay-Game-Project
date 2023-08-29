@@ -17,6 +17,10 @@
 #include "../MainCharacterComponent/InventoryComponent.h"
 #include "../Weapon/Weapon.h"
 #include "Components/Image.h"
+#include "../CharacterMeshCapture/CharacterMeshCapture.h"
+#include "../HUD/CustomizingWidget.h"
+#include "../PlayerState/MainPlayerState.h"
+#include "../SaveGameData/SaveGameData.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -24,18 +28,81 @@ void AMainPlayerController::BeginPlay()
 
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
 	ServerCheckMatchState();
+
+	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	if (MainPlayerState)
+	{
+		if (UGameplayStatics::DoesSaveGameExist(SaveDataName, 0))
+		{
+			MainPlayerState->SaveGameData = Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0));
+		}
+		else
+		{
+			MainPlayerState->SaveGameData = Cast<USaveGameData>(UGameplayStatics::CreateSaveGameObject(USaveGameData::StaticClass()));
+		}
+	}
+
+	if (UGameplayStatics::GetCurrentLevelName(GetWorld()) != "MainMap")
+	{
+		Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
+	}
+}
+
+void AMainPlayerController::Init()
+{
+	if (MeshCapture == nullptr)
+	{
+		TArray<AActor*> Locs;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MeshCaptureLocation"), Locs);
+		if (Locs.Num() > 0 && Locs[0])
+		{
+			Locs[0]->SetActorHiddenInGame(true);
+
+
+			UObject* SpawnActor = Cast<UObject>(StaticLoadObject(UObject::StaticClass(), NULL,
+				TEXT("/Game/Blueprints/CharacterMeshCapture/BP_CharacterMeshCapture.BP_CharacterMeshCapture'")));
+			if (SpawnActor)
+			{
+				UBlueprint* GeneratedBP = Cast<UBlueprint>(SpawnActor);
+				if (GeneratedBP)
+				{
+					UWorld* World = GetWorld();
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.Owner = this;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					MeshCapture = World->SpawnActor<ACharacterMeshCapture>(GeneratedBP->GeneratedClass, Locs[0]->GetActorLocation(), Locs[0]->GetActorRotation(), SpawnParams);
+				}
+			}
+		}
+	}
 }
 
 void AMainPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
 	if (MainCharacter)
 	{
 		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
-	}
+		Init();
 
+		FTimerHandle WaitHandle;
+		float WaitTime = 0.05f;
+		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([WeakThis = TWeakObjectPtr<AMainPlayerController>(this), MainCharacter]()
+			{
+				FCustomizingSaveDataStruct CustomizingSaveData = WeakThis->GetSaveGameData();
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(
+						-1,
+						15,
+						FColor::Red,
+						FString::Printf(TEXT(" %d %d %d %d %d"), CustomizingSaveData.HairIndex, CustomizingSaveData.GoggleIndex, CustomizingSaveData.BeardIndex, CustomizingSaveData.UpperBodyIndex, CustomizingSaveData.LowerBodyIndex)
+					);
+				}
+				MainCharacter->SetCustomizingInfoToMesh(CustomizingSaveData);
+			}), WaitTime, false);
+	}
 }
 
 void AMainPlayerController::Tick(float DeltaTime)
@@ -104,7 +171,7 @@ void AMainPlayerController::CheckPing(float DeltaTime)
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if (PlayerState)
 		{
-			if (PlayerState->GetPing() * 4 > HighPingThreshold)
+			if (PlayerState->GetPingInMilliseconds() * 4 > HighPingThreshold)
 			{
 				HighPingWarning();
 				PingAnimationRunningTime = 0.f;
@@ -159,6 +226,18 @@ void AMainPlayerController::UpdateWeaponState()
 			CharacterOverlay->ActivateWeapon(false, 1);
 		}
 	}
+}
+
+void AMainPlayerController::UpdateMeshCaptureCustomizingInfo(FCustomizingSaveDataStruct Data)
+{
+	/*if (MeshCapture && OwningCharacter)
+	{
+		MeshCapture->HairMesh = OwningCharacter->Hairs[Data.HairIndex];
+		MeshCapture->GoggleMesh = OwningCharacter->Goggles[Data.GoggleIndex];
+		MeshCapture->BeardMesh = OwningCharacter->Beards[Data.BeardIndex];
+		MeshCapture->UpperBodyMesh = OwningCharacter->UpperBodies[Data.UpperBodyIndex];
+		MeshCapture->LowerBodyMesh = OwningCharacter->LowerBodies[Data.LowerBodyIndex];
+	}*/
 }
 
 void AMainPlayerController::SetWeaponImage(int32 Num)
@@ -242,6 +321,17 @@ void AMainPlayerController::SetHUDTime()
 		}
 	}
 	CountdownInt = SecondsLeft;
+}
+
+void AMainPlayerController::OnRep_Pawn()
+{
+	Super::OnRep_Pawn();
+	OwningCharacter = Cast<AMainCharacter>(GetPawn());
+
+	if (OwningCharacter)
+	{
+		Init();
+	}
 }
 
 void AMainPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
@@ -451,5 +541,52 @@ void AMainPlayerController::HandleCooldown()
 		{
 			PlayerHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 		}
+	}
+}
+
+UCustomizingWidget* AMainPlayerController::CreateCustomizingWidget(TSubclassOf<UUserWidget> Widget)
+{
+	if (Widget)
+	{
+		CustomizingWidget = Cast<UCustomizingWidget>(CreateWidget(GetWorld(), Widget));
+
+	}
+	return CustomizingWidget;
+}
+
+FCustomizingSaveDataStruct AMainPlayerController::GetSaveGameData()
+{
+	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	if (MainPlayerState)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15,
+				FColor::Red,
+				FString::Printf(TEXT("playerstate ok"))
+			);
+		}
+		return MainPlayerState->GetSaveGameData();
+	}
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			15,
+			FColor::Red,
+			FString::Printf(TEXT("playerstate null"))
+		);
+	}
+	return FCustomizingSaveDataStruct{ 0, 0, 0, 0, 0 };
+}
+
+void AMainPlayerController::SaveData(FCustomizingSaveDataStruct Data)
+{
+	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	if (MainPlayerState)
+	{
+		MainPlayerState->SaveData(Data);
 	}
 }

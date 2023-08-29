@@ -33,20 +33,6 @@ ACustomizingCharacter::ACustomizingCharacter()
 	HandMesh->SetLeaderPoseComponent(UpperBodyMesh);
 }
 
-UCustomizingWidget* ACustomizingCharacter::CreateCustomizingWidget()
-{
-	if (CustomizingWidgetClass)
-	{
-		CustomizingWidget = Cast<UCustomizingWidget>(CreateWidget(GetWorld(), CustomizingWidgetClass));
-		if (CustomizingWidget)
-		{
-			CustomizingWidget->AddToViewport();
-			CustomizingWidget->SetMainMesh(this);
-		}
-	}
-	return CustomizingWidget;
-}
-
 void ACustomizingCharacter::RemoveCustomizingWidget()
 {
 	if (CustomizingWidget)

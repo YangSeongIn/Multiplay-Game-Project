@@ -24,17 +24,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void LoadGame();
 
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> Hairs;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> Goggles;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> Beards;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> UpperBodies;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> LowerBodies;
-
 private:
 	UPROPERTY()
 	USaveGameData* SaveGameData;

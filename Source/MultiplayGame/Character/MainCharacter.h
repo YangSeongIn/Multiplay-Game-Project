@@ -8,6 +8,8 @@
 #include "../Types/TurningInPlace.h"
 #include "../Interfaces/InteractWithCrosshairsInterface.h"
 #include "../Types/CombatState.h"
+#include "../Customizing/CustomizingSaveDataStruct.h"
+#include "../Customizing/CustomizingInfoStruct.h"
 #include "MainCharacter.generated.h"
 
 UCLASS()
@@ -32,13 +34,7 @@ public:
 	void MulticastElim();
 
 	UFUNCTION(Server, Reliable)
-	void ServerSetMeshCapture();
-
-	UFUNCTION(Server, Reliable)
 	void ServerInventoryWidget();
-
-	UFUNCTION(Client, Reliable)
-	void ClientSetMeshCapture(int32 n, class ACharacterMeshCapture* MeshCapture);
 
 	/*UFUNCTION(Server, Reliable)
 		void ServerAddPlayerNum();*/
@@ -50,6 +46,49 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerAttachItemOnMeshCapture(const FString& SocketName);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ApplyCustomizingInfo();
+
+	UFUNCTION(Client, Reliable)
+	void Client_ApplyCustomizingInfoToMeshCapture(FCustomizingSaveDataStruct Data);
+
+	UPROPERTY(EditAnywhere)
+	TArray<FCustomizingInfoStruct> Hairs;
+	UPROPERTY(EditAnywhere)
+	TArray<FCustomizingInfoStruct> Goggles;
+	UPROPERTY(EditAnywhere)
+	TArray<FCustomizingInfoStruct> Beards;
+	UPROPERTY(EditAnywhere)
+	TArray<FCustomizingInfoStruct> UpperBodies;
+	UPROPERTY(EditAnywhere)
+	TArray<FCustomizingInfoStruct> LowerBodies;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* UpperBodyMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* HeadMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* LowerBodyMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* BeardMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* HairMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* GoggleMesh;
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* HandMesh;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UpdateCostume(const TArray<USkeletalMesh*>& Meshes);
+
+	void SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData);
 
 protected:
 	virtual void BeginPlay() override;
@@ -81,28 +120,10 @@ protected:
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
 
+	UFUNCTION(BlueprintCallable)
+	UCustomizingWidget* CreateCustomizingWidget();
+
 private:
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* UpperBodyMesh;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HeadMesh;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* LowerBodyMesh;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* BeardMesh;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HairMesh;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* GoggleMesh;
-
-	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* HandMesh;
-
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
 
@@ -254,20 +275,23 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_InventoryWidget)
 	class UInventory* InventoryWidget;
 
+
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UUserWidget> CustomizingWidgetClass;
+
+	UPROPERTY()
+	class UCustomizingWidget* CustomizingWidget;
+
 	UFUNCTION()
 	void OnRep_InventoryWidget(class UInventory* PostInventoryWidget);
 
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_PlayerInherenceNum, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	int32 PlayerInherenceNum;
 
-	UFUNCTION()
-	void OnRep_PlayerInherenceNum();
-
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CharacterMeshCapture, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class ACharacterMeshCapture* CharacterMeshCapture;
 
-	UFUNCTION()
-	void OnRep_CharacterMeshCapture();
+	/*UPROPERTY()
+	class USaveGameData* SaveGameData;*/
 
 public:
 	void SetOverlappingItem(class AItem* Item);
@@ -294,5 +318,6 @@ public:
 	AWeapon* GetWeapon1();
 	AWeapon* GetWeapon2();
 	int32 GetCarriedAmmo(class AWeapon* Weapon);
-	FORCEINLINE FVector GetGroundLocation();
+	FVector GetGroundLocation();
+	//FORCEINLINE class USaveGameData* GetSaveGameData() { return SaveGameData; };
 };

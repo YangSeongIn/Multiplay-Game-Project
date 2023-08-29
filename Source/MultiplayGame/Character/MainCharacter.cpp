@@ -37,12 +37,14 @@
 #include "../MainCharacterComponent/ItemDataComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "../SaveGameData/SaveGameData.h"
+#include "../HUD/CustomizingWidget.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -157,6 +159,47 @@ void AMainCharacter::ElimTimerFinished()
 	}
 }
 
+void AMainCharacter::Multicast_ApplyCustomizingInfo_Implementation()
+{
+	MainPlayerState = GetPlayerState<AMainPlayerState>();
+	if (MainPlayerState)
+	{
+		FCustomizingSaveDataStruct CustomizingSaveData = MainPlayerState->GetSaveGameData();
+		HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
+		GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
+		BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
+		UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
+		LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+	}
+}
+
+void AMainCharacter::Client_ApplyCustomizingInfoToMeshCapture_Implementation(FCustomizingSaveDataStruct Data)
+{
+	if (GetOwner())
+	{
+		CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
+		if (CharacterMeshCapture)
+		{
+			CharacterMeshCapture->Client_ApplyCustomizingInfo({
+				Hairs[Data.HairIndex].Mesh,
+				Goggles[Data.GoggleIndex].Mesh,
+				Beards[Data.BeardIndex].Mesh,
+				UpperBodies[Data.UpperBodyIndex].Mesh,
+				LowerBodies[Data.LowerBodyIndex].Mesh
+				});
+		}
+	}
+}
+
+void AMainCharacter::Multicast_UpdateCostume_Implementation(const TArray<USkeletalMesh*>& Meshes)
+{
+	HairMesh->SetSkeletalMesh(Meshes[0]);
+	GoggleMesh->SetSkeletalMesh(Meshes[1]);
+	BeardMesh->SetSkeletalMesh(Meshes[2]);
+	UpperBodyMesh->SetSkeletalMesh(Meshes[3]);
+	LowerBodyMesh->SetSkeletalMesh(Meshes[4]);
+}
+
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay()
 {
@@ -178,100 +221,19 @@ void AMainCharacter::BeginPlay()
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
-
-	if (HasAuthority() && IsLocallyControlled())
-	{
-		AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-		if (MainGameMode)
-		{
-			MainGameMode->SetPlayerNum(MainGameMode->GetPlayerNum());
-			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
-			if (MeshCapture)
-			{
-				PlayerInherenceNum = MainGameMode->GetPlayerNum();
-				CharacterMeshCapture = MeshCapture;
-				CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-				CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-				MainGameMode->SetPlayerNum(PlayerInherenceNum + 1);
-			}
-		}
-	}
-	else
-	{
-		ServerSetMeshCapture();
-	}
-
-
-	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	if (GameInstance)
-	{
-		FCustomizingSaveDataStruct SaveGameData = GameInstance->GetSaveGameData();
-		UE_LOG(LogTemp, Log, TEXT("%d %d %d %d %d"), SaveGameData.HairIndex, SaveGameData.GoggleIndex, SaveGameData.BeardIndex, SaveGameData.UpperBodyIndex, SaveGameData.LowerBodyIndex);
-		HairMesh->SetSkeletalMesh(GameInstance->Hairs[SaveGameData.HairIndex].Mesh);
-		GoggleMesh->SetSkeletalMesh(GameInstance->Goggles[SaveGameData.GoggleIndex].Mesh);
-		BeardMesh->SetSkeletalMesh(GameInstance->Beards[SaveGameData.BeardIndex].Mesh);
-		UpperBodyMesh->SetSkeletalMesh(GameInstance->UpperBodies[SaveGameData.UpperBodyIndex].Mesh);
-		LowerBodyMesh->SetSkeletalMesh(GameInstance->LowerBodies[SaveGameData.LowerBodyIndex].Mesh);
-	}
+	//Multicast_ApplyCustomizingInfo();
 }
 
-void AMainCharacter::ServerSetMeshCapture_Implementation()
+void AMainCharacter::SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (MainGameMode)
-	{
-		if (MainGameMode->CanAddPlayerNum())
-		{
-			ACharacterMeshCapture* MeshCapture = Cast<ACharacterMeshCapture>(MainGameMode->GetMeshCapture(MainGameMode->GetPlayerNum()));
-			if (MeshCapture)
-			{
-				PlayerInherenceNum = MainGameMode->GetPlayerNum();
-				CharacterMeshCapture = MeshCapture;
-				ClientSetMeshCapture(PlayerInherenceNum, CharacterMeshCapture);
-				MainGameMode->SetPlayerNum(MainGameMode->GetPlayerNum() + 1);
-			}
-		}
-	}
+	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+	
+	Client_ApplyCustomizingInfoToMeshCapture(CustomizingSaveData);
 }
-
-void AMainCharacter::OnRep_PlayerInherenceNum()
-{
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_PlayerInherenceNum"));
-}
-
-void AMainCharacter::OnRep_CharacterMeshCapture()
-{
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_CharacterMeshCapture"));
-	if (CharacterMeshCapture)
-	{
-		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-	}
-}
-
-void AMainCharacter::ClientSetMeshCapture_Implementation(int32 n, ACharacterMeshCapture* MeshCapture)
-{
-	PlayerInherenceNum = n;
-	//UE_LOG(LogTemp, Warning, TEXT("PlayerNum : %d, n : %d"), PlayerInherenceNum, n);
-	if (MeshCapture)
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("MeshCapture in Client"));
-		CharacterMeshCapture = MeshCapture;
-		CharacterMeshCapture->SetCaptureTexture(PlayerInherenceNum);
-		CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-	}
-	// ServerAddPlayerNum();
-}
-
-//void AMainCharacter::ServerAddPlayerNum_Implementation()
-//{
-//	//UE_LOG(LogTemp, Warning, TEXT("PlayerInherenceNum : 3333"));
-//	AMainGameMode* MainGameMode = Cast<AMainGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
-//	if (MainGameMode)
-//	{
-//		MainGameMode->SetPlayerNum(MainGameMode->GetPlayerNum() + 1);
-//	}
-//}
 
 // Called every frame
 void AMainCharacter::Tick(float DeltaTime)
@@ -325,8 +287,6 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingItem, COND_OwnerOnly);
 	DOREPLIFETIME(AMainCharacter, Health);
-	DOREPLIFETIME_CONDITION(AMainCharacter, PlayerInherenceNum, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(AMainCharacter, CharacterMeshCapture, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(AMainCharacter, InventoryWidget, COND_OwnerOnly);
 }
 
@@ -537,6 +497,7 @@ void AMainCharacter::AttachItemOnMeshCapture(const FString SocketName)
 {
 	if (IsLocallyControlled())
 	{
+		CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
 		if (SocketName == "RightHandSocket" && GetEquippedWeapon() && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
@@ -556,6 +517,7 @@ void AMainCharacter::DetachItemOnMeshCapture(const FString SocketName)
 {
 	if (IsLocallyControlled())
 	{
+		CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
 		if (SocketName == "RightHandSocket" && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnHand(nullptr);
@@ -573,6 +535,7 @@ void AMainCharacter::DetachItemOnMeshCapture(const FString SocketName)
 
 void AMainCharacter::ServerAttachItemOnMeshCapture_Implementation(const FString& SocketName)
 {
+	CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
 	if (SocketName == "RightHandSocket" && GetEquippedWeapon() && CharacterMeshCapture)
 	{
 		CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
@@ -656,17 +619,12 @@ void AMainCharacter::InventoryKeyPressed()
 			else
 			{
 				InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
-				if (CharacterMeshCapture)
+				if (InventoryWidget)
 				{
-					CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
-					if (InventoryWidget)
-					{
-						CharacterMeshCapture->SetSkeletaMesh(GetMesh()->GetSkeletalMeshAsset());
-						InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
-						InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
-						InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
-						InventoryWidget->AddToViewport();
-					}
+					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+					InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
+					InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
+					InventoryWidget->AddToViewport();
 				}
 			}
 		}
@@ -687,10 +645,6 @@ void AMainCharacter::ServerInventoryWidget_Implementation()
 	else
 	{
 		InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
-		if (CharacterMeshCapture)
-		{
-			CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
-		}
 		if (InventoryWidget)
 		{
 			InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
@@ -706,11 +660,6 @@ void AMainCharacter::OnRep_InventoryWidget(UInventory* PostInventoryWidget)
 	if (PostInventoryWidget)
 	{
 		PostInventoryWidget->RemoveFromParent();
-	}
-
-	if (CharacterMeshCapture && InventoryWidget)
-	{
-		CharacterMeshCapture->SetCaptureInventoryImage(InventoryWidget, PlayerInherenceNum);
 	}
 	if (InventoryWidget && InventoryWidget->InventoryGrid && InventoryComponent)
 	{
@@ -863,6 +812,21 @@ void AMainCharacter::PollInit()
 			MainPlayerState->AddToDefeats(0);
 		}
 	}
+}
+
+UCustomizingWidget* AMainCharacter::CreateCustomizingWidget()
+{
+	if (CustomizingWidgetClass)
+	{
+		CustomizingWidget = Cast<UCustomizingWidget>(CreateWidget(GetWorld(), CustomizingWidgetClass));
+		if (CustomizingWidget)
+		{
+			CustomizingWidget->AddToViewport();
+			CustomizingWidget->SetCharacter(this);
+			return CustomizingWidget;
+		}
+	}
+	return CustomizingWidget;
 }
 
 void AMainCharacter::TurnInPlace(float DeltaTime)

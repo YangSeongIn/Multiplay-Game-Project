@@ -22,21 +22,48 @@ ACharacterMeshCapture::ACharacterMeshCapture()
 	SceneCaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("SceneCaptureComponent2D"));
 	SceneCaptureComponent2D->SetupAttachment(SpringArmComponent);
 
-	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
-	SkeletalMeshComponent->SetupAttachment(RootComponent);
+	UpperBodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("UpperBodyMesh"));
+	UpperBodyMesh->SetupAttachment(RootComponent);
+
+	LowerBodyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("LowerBodyMesh"));
+	LowerBodyMesh->SetupAttachment(UpperBodyMesh);
+
+	HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HairMesh"));
+	HairMesh->SetupAttachment(UpperBodyMesh);
+
+	GoggleMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GoggleMesh"));
+	GoggleMesh->SetupAttachment(UpperBodyMesh);
+
+	BeardMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BeardMesh"));
+	BeardMesh->SetupAttachment(UpperBodyMesh);
+
+	HandMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandMesh"));
+	HandMesh->SetupAttachment(UpperBodyMesh);
+
+	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
+	HeadMesh->SetupAttachment(UpperBodyMesh);
 
 	SkeletalMeshOnHand = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshOnHand"));
-	SkeletalMeshOnHand->SetupAttachment(SkeletalMeshComponent, FName("RightHandSocket"));
+	SkeletalMeshOnHand->SetupAttachment(UpperBodyMesh, FName("RightHandSocket"));
 
 	SkeletalMeshOnBack = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshOnBack"));
-	SkeletalMeshOnBack->SetupAttachment(SkeletalMeshComponent, FName("WeaponSocket"));
+	SkeletalMeshOnBack->SetupAttachment(UpperBodyMesh, FName("WeaponSocket"));
+}
+
+void ACharacterMeshCapture::Client_ApplyCustomizingInfo_Implementation(const TArray<USkeletalMesh*>& Meshes)
+{
+	HairMesh->SetSkeletalMesh(Meshes[0]);
+	GoggleMesh->SetSkeletalMesh(Meshes[1]);
+	BeardMesh->SetSkeletalMesh(Meshes[2]);
+	UpperBodyMesh->SetSkeletalMesh(Meshes[3]);
+	LowerBodyMesh->SetSkeletalMesh(Meshes[4]);
 }
 
 void ACharacterMeshCapture::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshComponent);
+	SceneCaptureComponent2D->ShowOnlyComponent(UpperBodyMesh);
 	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshOnHand);
 	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshOnBack);
 }

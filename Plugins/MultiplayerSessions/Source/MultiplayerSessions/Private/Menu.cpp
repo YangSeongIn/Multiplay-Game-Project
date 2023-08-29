@@ -102,12 +102,6 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		}
 		HostButton->SetIsEnabled(true);
 	}
-	// Test
-	if (MultiplayerSessionsSubsystem == nullptr)
-	{
-		MultiplayerSessionsSubsystem->StartSession();
-		return;
-	}
 }
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)

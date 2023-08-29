@@ -42,7 +42,5 @@ public:
 	USkeletalMeshComponent* HandMesh;
 
 	UFUNCTION(BlueprintCallable)
-	UCustomizingWidget* CreateCustomizingWidget();
-	UFUNCTION(BlueprintCallable)
 	void RemoveCustomizingWidget();
 };

@@ -7,7 +7,7 @@
 #include "CustomizingInfoStruct.generated.h"
 
 USTRUCT(BlueprintType)
-struct FCustomizingInfotruct : public FTableRowBase
+struct FCustomizingInfoStruct : public FTableRowBase
 {
 public:
 	GENERATED_USTRUCT_BODY()

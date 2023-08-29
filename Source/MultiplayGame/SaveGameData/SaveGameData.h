@@ -15,7 +15,11 @@ class MULTIPLAYGAME_API USaveGameData : public USaveGame
 {
 	GENERATED_BODY()
 	
-public:
-	FCustomizingSaveDataStruct CustomizingSaveDataStruct{ 0, 0, 0, 0, 0 };
+private:
+	UPROPERTY()
+	FCustomizingSaveDataStruct CustomizingSaveDataStruct;
 
+public:
+	FORCEINLINE FCustomizingSaveDataStruct GetCutomizingSaveData() { return CustomizingSaveDataStruct; };
+	FORCEINLINE void SetCutomizingSaveData(FCustomizingSaveDataStruct SaveData) { CustomizingSaveDataStruct = SaveData; };
 };

@@ -10,7 +10,7 @@ void UMainGameInstance::SetSaveGameData(FCustomizingSaveDataStruct CustomizingSa
 {
 	if (SaveGameData)
 	{
-		SaveGameData->CustomizingSaveDataStruct = CustomizingSaveDataStruct;
+		SaveGameData->SetCutomizingSaveData(CustomizingSaveDataStruct);
 	}
 	UGameplayStatics::SaveGameToSlot(SaveGameData, SaveData, 0);
 }
@@ -19,7 +19,7 @@ FCustomizingSaveDataStruct UMainGameInstance::GetSaveGameData()
 {
 	if (SaveGameData)
 	{
-		return SaveGameData->CustomizingSaveDataStruct;
+		return SaveGameData->GetCutomizingSaveData();
 	}
 	return FCustomizingSaveDataStruct{ 0, 0, 0, 0, 0 };
 }

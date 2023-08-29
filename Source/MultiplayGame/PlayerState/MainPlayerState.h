@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "../Customizing/CustomizingSaveDataStruct.h"
 #include "MainPlayerState.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYGAME_API AMainPlayerState : public APlayerState
@@ -16,24 +17,33 @@ class MULTIPLAYGAME_API AMainPlayerState : public APlayerState
 
 public:
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
-
-	/**
-	* Replication notifies
-	*/
 	virtual void OnRep_Score() override;
+
 	UFUNCTION()
-		void OnRep_Defeats();
+	void OnRep_Defeats();
 
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
 
+	void ApplyCustomizingInfo();
+	void UpdateCustomizingInfo();
+	FCustomizingSaveDataStruct GetSaveGameData();
+	void SaveData(FCustomizingSaveDataStruct DataToSave);
+
+	UPROPERTY()
+	class USaveGameData* SaveGameData;
+	FString SaveDataName = "SaveData";
+
 private:
 	UPROPERTY()
-		class AMainCharacter* Character;
+	class AMainCharacter* Character;
 	UPROPERTY()
-		class AMainPlayerController* Controller;
+	class AMainPlayerController* Controller;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
-		int32 Defeats;
-	
+	int32 Defeats;
+
+	UPROPERTY()
+	FCustomizingSaveDataStruct CustomizingSaveData;
+
 };

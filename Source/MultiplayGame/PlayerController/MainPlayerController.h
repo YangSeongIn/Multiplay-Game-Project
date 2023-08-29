@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "../Customizing/CustomizingSaveDataStruct.h"
 #include "MainPlayerController.generated.h"
 
 /**
@@ -34,9 +35,23 @@ public:
 	void SetWeaponImage(int32 Num);
 	void UpdateWeaponState();
 
+	void UpdateMeshCaptureCustomizingInfo(FCustomizingSaveDataStruct Data);
+
+	UPROPERTY()
+	TObjectPtr<class AMainCharacter> OwningCharacter = nullptr;
+
+	UFUNCTION(BlueprintCallable)
+	class UCustomizingWidget* CreateCustomizingWidget(TSubclassOf<UUserWidget> Widget);
+
+	UPROPERTY()
+	class UCustomizingWidget* CustomizingWidget;
+
+	void SaveData(FCustomizingSaveDataStruct Data);
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
+	virtual void OnRep_Pawn() override;
 
 	/**
 	* Sync time between client and server
@@ -106,4 +121,15 @@ private:
 		float HighPingThreshold = 50.f;
 
 	float PingAnimationRunningTime = 0.f;
+
+	UPROPERTY()
+	class ACharacterMeshCapture* MeshCapture;
+
+	void Init();
+
+	FString SaveDataName = "SaveData";
+
+public:
+	FORCEINLINE class ACharacterMeshCapture* GetMeshCapture() { return MeshCapture; };
+	FCustomizingSaveDataStruct GetSaveGameData();
 };

@@ -9,6 +9,11 @@
 #include "../Character/CustomizingCharacter.h"
 #include "Animation/AnimInstance.h"
 #include "../GameInstance/MainGameInstance.h"
+#include "../Character/MainCharacter.h"
+#include "../SaveGameData/SaveGameData.h"
+#include "GameFramework/PlayerState.h"
+#include "../PlayerController/MainPlayerController.h"
+#include "../PlayerState/MainPlayerState.h"
 
 void UCustomizingWidget::NativeConstruct()
 {
@@ -19,37 +24,36 @@ void UCustomizingWidget::NativeConstruct()
 	Btn_UpperBody->OnClicked.AddDynamic(this, &UCustomizingWidget::OnClicked_Btn_UpperBody);
 	Btn_LowerBody->OnClicked.AddDynamic(this, &UCustomizingWidget::OnClicked_Btn_LowerBody);
 
-	GameInstance = Cast<UMainGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	if (GameInstance)
+	AMainPlayerController* MainPlayerController = Cast<AMainPlayerController>(GetOwningPlayer());
+	if (MainPlayerController)
 	{
-		CustomizingSaveDataStruct = GameInstance->GetSaveGameData();
+		CustomizingSaveDataStruct = MainPlayerController->GetSaveGameData();
 	}
 }
 
 void UCustomizingWidget::SetPartMesh(FString SlotID, USkeletalMesh* MeshToSet)
 {
-	if (MainMesh)
+	if (Character)
 	{
-		
 		if (SlotID == "Hair")
 		{
-			SetMeshVisibility(MeshToSet, MainMesh->HairMesh);
+			SetMeshVisibility(MeshToSet, Character->HairMesh);
 		}
 		else if (SlotID == "Goggle")
 		{
-			SetMeshVisibility(MeshToSet, MainMesh->GoggleMesh);
+			SetMeshVisibility(MeshToSet, Character->GoggleMesh);
 		}
 		else if (SlotID == "Beard")
 		{
-			SetMeshVisibility(MeshToSet, MainMesh->BeardMesh);
+			SetMeshVisibility(MeshToSet, Character->BeardMesh);
 		}
 		else if (SlotID == "UpperBody")
 		{
-			SetMeshVisibility(MeshToSet, MainMesh->UpperBodyMesh);
+			SetMeshVisibility(MeshToSet, Character->UpperBodyMesh);
 		}
 		else if (SlotID == "LowerBody")
 		{
-			SetMeshVisibility(MeshToSet, MainMesh->LowerBodyMesh);
+			SetMeshVisibility(MeshToSet, Character->LowerBodyMesh);
 		}
 	}
 }
@@ -72,33 +76,29 @@ void UCustomizingWidget::SetPartIndex(FString SlotID, int32 Index)
 	HighlightingSlot(Index);
 	if (SlotID == "Hair")
 	{
-		//CustomizingSa CurrentHair = Index;
 		CustomizingSaveDataStruct.HairIndex = Index;
 	}
 	else if (SlotID == "Goggle")
 	{
-		//CurrentGoggle = Index;
 		CustomizingSaveDataStruct.GoggleIndex = Index;
 	}
 	else if (SlotID == "Beard")
 	{
-		//CurrentBeard = Index;
 		CustomizingSaveDataStruct.BeardIndex = Index;
 	}
 	else if (SlotID == "UpperBody")
 	{
-		//CurrentUpperBody = Index;
 		CustomizingSaveDataStruct.UpperBodyIndex = Index;
 	}
 	else if (SlotID == "LowerBody")
 	{
-		//CurrentLowerBody = Index;
 		CustomizingSaveDataStruct.LowerBodyIndex = Index;
 	}
-
-	if (GameInstance)
+	
+	AMainPlayerController* MainPlayerController = Cast<AMainPlayerController>(GetOwningPlayer());
+	if (MainPlayerController)
 	{
-		GameInstance->SetSaveGameData(CustomizingSaveDataStruct);
+		MainPlayerController->SaveData(CustomizingSaveDataStruct);
 	}
 }
 
@@ -119,111 +119,45 @@ void UCustomizingWidget::HighlightingSlot(int32 TargetIdx)
 
 void UCustomizingWidget::OnClicked_Btn_Hair()
 {
-	Slots.Empty();
-	Grid->ClearChildren();
-	for (int32 i = 0; i < GameInstance->Hairs.Num(); i++) {
-		CustomizingSlot = Cast<UCustomizingSlot>(CreateWidget(this, SlotClass));
-		if (CustomizingSlot)
-		{
-			CustomizingSlot->SetImage(GameInstance->Hairs[i].Thumbnail);
-			CustomizingSlot->SetCustomMesh(GameInstance->Hairs[i].Mesh);
-			CustomizingSlot->SetSlotID("Hair");
-			CustomizingSlot->SetIndex(i);
-			CustomizingSlot->SetCustomizingWidget(this);
-			Slots.Add(CustomizingSlot);
-			if (i == CustomizingSaveDataStruct.HairIndex)
-			{
-				CustomizingSlot->SetSlotClicked(true);
-			}
-			Grid->AddChildToWrapBox(CustomizingSlot);
-		}
-	}
+	SetCustomizingSlot(Character->Hairs, "Hair", CustomizingSaveDataStruct.HairIndex);
 }
 
 void UCustomizingWidget::OnClickedBtn_Goggle()
 {
-	Slots.Empty();
-	Grid->ClearChildren();
-	for (int32 i = 0; i < GameInstance->Goggles.Num(); i++) {
-		CustomizingSlot = Cast<UCustomizingSlot>(CreateWidget(this, SlotClass));
-		if (CustomizingSlot)
-		{
-			CustomizingSlot->SetImage(GameInstance->Goggles[i].Thumbnail);
-			CustomizingSlot->SetCustomMesh(GameInstance->Goggles[i].Mesh);
-			CustomizingSlot->SetSlotID("Goggle");
-			CustomizingSlot->SetIndex(i);
-			CustomizingSlot->SetCustomizingWidget(this);
-			Slots.Add(CustomizingSlot);
-			if (i == CustomizingSaveDataStruct.GoggleIndex)
-			{
-				CustomizingSlot->SetSlotClicked(true);
-			}
-			Grid->AddChildToWrapBox(CustomizingSlot);
-		}
-	}
+	SetCustomizingSlot(Character->Goggles, "Goggle", CustomizingSaveDataStruct.GoggleIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_Beard()
 {
-	Slots.Empty();
-	Grid->ClearChildren();
-	for (int32 i = 0; i < GameInstance->Beards.Num(); i++) {
-		CustomizingSlot = Cast<UCustomizingSlot>(CreateWidget(this,SlotClass));
-		if (CustomizingSlot)
-		{
-			CustomizingSlot->SetImage(GameInstance->Beards[i].Thumbnail);
-			CustomizingSlot->SetCustomMesh(GameInstance->Beards[i].Mesh);
-			CustomizingSlot->SetSlotID("Beard");
-			CustomizingSlot->SetIndex(i);
-			CustomizingSlot->SetCustomizingWidget(this);
-			Slots.Add(CustomizingSlot);
-			if (i == CustomizingSaveDataStruct.BeardIndex)
-			{
-				CustomizingSlot->SetSlotClicked(true);
-			}
-			Grid->AddChildToWrapBox(CustomizingSlot);
-		}
-	}
+	SetCustomizingSlot(Character->Beards, "Beard", CustomizingSaveDataStruct.BeardIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_UpperBody()
 {
-	Slots.Empty();
-	Grid->ClearChildren();
-	for (int32 i = 0; i < GameInstance->UpperBodies.Num(); i++) {
-		CustomizingSlot = Cast<UCustomizingSlot>(CreateWidget(this, SlotClass));
-		if (CustomizingSlot)
-		{
-			CustomizingSlot->SetImage(GameInstance->UpperBodies[i].Thumbnail);
-			CustomizingSlot->SetCustomMesh(GameInstance->UpperBodies[i].Mesh);
-			CustomizingSlot->SetSlotID("UpperBody");
-			CustomizingSlot->SetIndex(i);
-			CustomizingSlot->SetCustomizingWidget(this);
-			Slots.Add(CustomizingSlot);
-			if (i == CustomizingSaveDataStruct.UpperBodyIndex)
-			{
-				CustomizingSlot->SetSlotClicked(true);
-			}
-			Grid->AddChildToWrapBox(CustomizingSlot);
-		}
-	}
+	SetCustomizingSlot(Character->UpperBodies, "UpperBody", CustomizingSaveDataStruct.UpperBodyIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_LowerBody()
 {
+	SetCustomizingSlot(Character->LowerBodies, "LowerBody", CustomizingSaveDataStruct.LowerBodyIndex);
+}
+
+void UCustomizingWidget::SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, FString SlotID, int32 BodyIndex)
+{
 	Slots.Empty();
 	Grid->ClearChildren();
-	for (int32 i = 0; i < GameInstance->LowerBodies.Num(); i++) {
+	if (Character == nullptr) return;
+	for (int32 i = 0; i < InfoStructToCustomize.Num(); i++) {
 		CustomizingSlot = Cast<UCustomizingSlot>(CreateWidget(this, SlotClass));
 		if (CustomizingSlot)
 		{
-			CustomizingSlot->SetImage(GameInstance->LowerBodies[i].Thumbnail);
-			CustomizingSlot->SetCustomMesh(GameInstance->LowerBodies[i].Mesh);
-			CustomizingSlot->SetSlotID("LowerBody");
+			CustomizingSlot->SetImage(InfoStructToCustomize[i].Thumbnail);
+			CustomizingSlot->SetCustomMesh(InfoStructToCustomize[i].Mesh);
+			CustomizingSlot->SetSlotID(SlotID);
 			CustomizingSlot->SetIndex(i);
 			CustomizingSlot->SetCustomizingWidget(this);
 			Slots.Add(CustomizingSlot);
-			if (i == CustomizingSaveDataStruct.LowerBodyIndex)
+			if (i == BodyIndex)
 			{
 				CustomizingSlot->SetSlotClicked(true);
 			}

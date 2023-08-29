@@ -5,6 +5,8 @@
 #include "../Character/MainCharacter.h"
 #include "../PlayerController/MainPlayerController.h"
 #include "Net/UnrealNetwork.h"
+#include "../SaveGameData/SaveGameData.h"
+#include "Kismet/GameplayStatics.h"
 
 void AMainPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -66,5 +68,46 @@ void AMainPlayerState::OnRep_Defeats()
 		{
 			Controller->SetHUDDefeats(Defeats);
 		}
+	}
+}
+
+void AMainPlayerState::ApplyCustomizingInfo()
+{
+	Character = Character == nullptr ? Cast<AMainCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+
+	}
+}
+
+void AMainPlayerState::UpdateCustomizingInfo()
+{
+	SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
+	if (SaveGameData)
+	{
+		CustomizingSaveData = SaveGameData->GetCutomizingSaveData();
+		ApplyCustomizingInfo();
+	}
+}
+
+FCustomizingSaveDataStruct AMainPlayerState::GetSaveGameData()
+{
+	SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
+	if (SaveGameData)
+	{
+		CustomizingSaveData = SaveGameData->GetCutomizingSaveData();
+		return CustomizingSaveData;
+	}
+	return FCustomizingSaveDataStruct{ 0, 0, 0, 0, 0 };
+}
+
+void AMainPlayerState::SaveData(FCustomizingSaveDataStruct DataToSave)
+{
+	SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
+	if (SaveGameData)
+	{
+		SaveGameData->SetCutomizingSaveData(DataToSave);
+
+		UGameplayStatics::SaveGameToSlot(SaveGameData, SaveDataName, 0);
 	}
 }

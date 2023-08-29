@@ -20,11 +20,6 @@ public:
 	void SetPartMesh(FString SlotID, class USkeletalMesh* MeshToSet);
 	void SetPartIndex(FString SlotID, int32 Index);
 	void HighlightingSlot(int32 TargetIdx);
-	/*int32 CurrentHair;
-	int32 CurrentGoggle;
-	int32 CurrentBeard;
-	int32 CurrentUpperBody;
-	int32 CurrentLowerBody;*/
 
 	FCustomizingSaveDataStruct CustomizingSaveDataStruct;
 
@@ -32,8 +27,6 @@ protected:
 	virtual void NativeConstruct() override;
 
 private:
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	class ACustomizingCharacter* MainMesh;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UUserWidget> SlotClass;
 	UPROPERTY()
@@ -45,18 +38,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	UDataTable* DataTable;
 
-	/*UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> Hairs;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> Goggles;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> Beards;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> UpperBodies;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfotruct> LowerBodies;*/
-	UPROPERTY()
-	class UMainGameInstance* GameInstance;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	class AMainCharacter* Character;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_Hair;
@@ -89,7 +72,9 @@ private:
 
 	void SetMeshVisibility(USkeletalMesh* MeshToSet, USkeletalMeshComponent* TargetMesh);
 
+	void SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, FString SlotID, int32 BodyIndex);
 public:
-	FORCEINLINE void SetMainMesh(class ACustomizingCharacter* MeshToSet) { MainMesh = MeshToSet; };
 	FORCEINLINE TArray<class UCustomizingSlot*> GetSlots() { return Slots; };
+	FORCEINLINE class AMainCharacter* GetCharacter() { return Character; };
+	FORCEINLINE void SetCharacter(class AMainCharacter* CharacterToSet) { Character = CharacterToSet; };
 };

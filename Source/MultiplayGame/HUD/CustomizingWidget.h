@@ -17,8 +17,8 @@ class MULTIPLAYGAME_API UCustomizingWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void SetPartMesh(FString SlotID, class USkeletalMesh* MeshToSet);
-	void SetPartIndex(FString SlotID, int32 Index);
+	void SetPartMesh(ECustomizingCategory Category, class USkeletalMesh* MeshToSet);
+	void SetPartIndex(ECustomizingCategory Category, int32 Index);
 	void HighlightingSlot(int32 TargetIdx);
 
 	FCustomizingSaveDataStruct CustomizingSaveDataStruct;
@@ -72,7 +72,7 @@ private:
 
 	void SetMeshVisibility(USkeletalMesh* MeshToSet, USkeletalMeshComponent* TargetMesh);
 
-	void SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, FString SlotID, int32 BodyIndex);
+	void SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, ECustomizingCategory Category, int32 BodyIndex);
 public:
 	FORCEINLINE TArray<class UCustomizingSlot*> GetSlots() { return Slots; };
 	FORCEINLINE class AMainCharacter* GetCharacter() { return Character; };

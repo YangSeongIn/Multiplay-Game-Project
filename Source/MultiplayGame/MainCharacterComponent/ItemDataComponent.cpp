@@ -23,6 +23,15 @@ void UItemDataComponent::BeginPlay()
 	
 }
 
+EWeaponType UItemDataComponent::GetWeaponType()
+{
+	if (ItemType == EItemType::EIT_Ammo)
+	{
+		return WeaponType;
+	}
+	return EWeaponType::EWT_MAX;
+}
+
 
 void UItemDataComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -42,7 +51,7 @@ void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 			AItem* Item = Cast<AItem>(OwningActor);
 			if (Item)
 			{
-				TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(Item, Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName());
+				TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(Item, Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName(), WeaponType);
 				if (ItemType == EItemType::EIT_Ammo)
 				{
 					UCombatComponent* Combat = MainCharacter->GetCombatComponent();
@@ -65,7 +74,7 @@ void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 			AWeapon* Weapon = Cast<AWeapon>(OwningActor);
 			if (Weapon)
 			{
-				MainCharacter->GetInventoryComponent()->AddToWeaponSlot(Weapon, ItemID.RowName.ToString(), Weapon->GetAmmo(), Weapon->GetCarriedAmmo(), ItemType);
+				MainCharacter->GetInventoryComponent()->AddToWeaponSlot(Weapon, ItemID.RowName.ToString(), 0, Weapon->GetCarriedAmmo(), ItemType);
 			}
 		}
 	}

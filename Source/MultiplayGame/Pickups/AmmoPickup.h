@@ -22,4 +22,6 @@ private:
 	UPROPERTY(EditAnywhere)
 		EWeaponType WeaponType;
 
+public:
+	FORCEINLINE EWeaponType GetWeaponType() { return WeaponType; };
 };

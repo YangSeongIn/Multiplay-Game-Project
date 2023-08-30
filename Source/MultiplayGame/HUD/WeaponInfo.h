@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "../Types/EquippedSlotType.h"
+#include "../Weapon/WeaponTypes.h"
 #include "WeaponInfo.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYGAME_API UWeaponInfo : public UUserWidget
@@ -19,10 +20,10 @@ public:
 	void UpdateSlot();
 
 	UFUNCTION()
-		void UpdateWeaponInfo();
-	
+	void UpdateWeaponInfo();
+
 	UFUNCTION(Server, Reliable)
-		void ServerEquipWeaponByAroundItem(class UDragDropSlot* SlotForDragDrop);
+	void ServerEquipWeaponByAroundItem(class UDragDropSlot* SlotForDragDrop);
 
 protected:
 	virtual void NativePreConstruct() override;
@@ -36,46 +37,46 @@ protected:
 
 private:
 	UPROPERTY(meta = (BindWidget))
-		class UBorder* OutBorder;
+	class UBorder* OutBorder;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Drag Item Visual", meta = (ExposeOnSpawn = "true"), meta = (AllowPrivateAccess = "true"))
-		FString ItemID;
+	FString ItemID;
 
 	UPROPERTY()
-		class AMainCharacter* Character;
+	class AMainCharacter* Character;
 
 	UPROPERTY(EditAnywhere)
-		EEquippedSlotType EquippedSlotType;
+	EEquippedSlotType EquippedSlotType;
 
-	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess = "true"), EditAnywhere, meta = (EditCondition = "EquippedSlotType == EEquippedSlotType::EST_Weapon", EditConditionHides))
-		EWeaponNum WeaponNum;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), EditAnywhere, meta = (EditCondition = "EquippedSlotType == EEquippedSlotType::EST_Weapon", EditConditionHides))
+	EWeaponNum WeaponNum;
 
 	UPROPERTY(EditAnywhere)
-		class UDataTable* InventoryDataTable;
+	class UDataTable* InventoryDataTable;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
-		class UImage* IconImage;
+	class UImage* IconImage;
 
 	UPROPERTY(meta = (BindWidget))
-		class UTextBlock* AmmoText;
+	class UTextBlock* AmmoText;
 
 	UPROPERTY(EditAnywhere, Category = "Drag Item Visual")
-		TSubclassOf<UUserWidget> DragItemVisualClass;
+	TSubclassOf<UUserWidget> DragItemVisualClass;
 	UPROPERTY()
-		class UDragItemVisual* DragItemVisual;
+	class UDragItemVisual* DragItemVisual;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<UDragDropOperation> DragDropSlotClass;
+	TSubclassOf<UDragDropOperation> DragDropSlotClass;
 	UPROPERTY()
-		class UDragDropSlot* DragDropSlot;
+	class UDragDropSlot* DragDropSlot;
 
 	UPROPERTY()
-		class UInventoryWeaponInfo* InventoryWeaponInfo;
+	class UInventoryWeaponInfo* InventoryWeaponInfo;
 
 	void SetSlot(class UItemDataComponent* ItemDataComponent);
 
 	UPROPERTY()
-		class UInventoryComponent* InventoryComponent;
+	class UInventoryComponent* InventoryComponent;
 
 	int32 AmmoQuantity;
 	int32 CarriedAmmoQuantity;
@@ -83,9 +84,12 @@ private:
 	EItemType ItemType;
 
 	UPROPERTY()
-		class UCombatComponent* CombatComponent;
+	class UCombatComponent* CombatComponent;
 
+	UPROPERTY()
 	class AWeapon* Weapon;
+
+	EWeaponType WeaponType;
 
 public:
 	FORCEINLINE class UInventoryWeaponInfo* GetInventoryWeaponInfo() { return InventoryWeaponInfo; };
@@ -102,4 +106,5 @@ public:
 	FORCEINLINE void SetItemType(EItemType NewType) { ItemType = NewType; };
 	FORCEINLINE void SetCombatComponent(class UCombatComponent* CombatComp) { CombatComponent = CombatComp; };
 	FORCEINLINE void SetWeapon(class AWeapon* WeaponToSet) { Weapon = WeaponToSet; };
+	FORCEINLINE void SetWeaponType(EWeaponType TypeOfWeapon) { WeaponType = TypeOfWeapon; };
 };

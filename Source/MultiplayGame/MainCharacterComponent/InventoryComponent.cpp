@@ -8,6 +8,7 @@
 #include "../Pickups/Item.h"
 #include "ItemDataComponent.h"
 #include "../Pickups/Pickup.h"
+#include "../Pickups/AmmoPickup.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -54,12 +55,6 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (int i = 0; i < InventorySize; i++) 
-	{
-		FInventorySlotStruct s{ 0, EItemType::EIT_MAX, "", "", nullptr };
-		Slots.Add(s);
-	}
-
 	for (int i = 0; i < 2; i++) 
 	{
 		FEquippedWeaponSlotStruct EWSlot({ -1, -1, EItemType::EIT_MAX, EWeaponNum(i), "", nullptr});
@@ -98,6 +93,7 @@ void UInventoryComponent::AddToWeaponSlot(AWeapon* Weapon, FString ItemID, int32
 	{
 		OnWeaponInfoUpdate.Broadcast();
 	}
+	UpdateWeaponInfoSlot(Weapon, AmmoQuantity, CarriedAmmoQuantity);
 }
 
 void UInventoryComponent::AddToSelectedWeaponSlot(AItem* Item, EWeaponNum WeaponNum)
@@ -119,38 +115,16 @@ void UInventoryComponent::AddToSelectedWeaponSlot(AItem* Item, EWeaponNum Weapon
 	}
 }
 
-TTuple<bool, int> UInventoryComponent::AddToInventory(AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName)
+TTuple<bool, int> UInventoryComponent::AddToInventory(AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName, EWeaponType WeaponType)
 {
-	int QuantityRemaining = Quantity;
-	bool bHasFailed = false;
-	while (QuantityRemaining > 0 && !bHasFailed) {
-		TTuple<int, bool> CurrentSlot = FindSlot(ItemID);
-		if (CurrentSlot.Get<1>())
-		{
-			AddToStack(CurrentSlot.Get<0>(), 1);
-			QuantityRemaining -= 1;
-			Slots[CurrentSlot.Get<0>()].Item = Item;
-		}
-		else
-		{
-			if (AnyEmptySlotAvailable().Get<0>())
-			{
-				bool bIsSuccessToCreate = CreateNewStack(1, ItemType, ItemID, InherenceName, Item);
-				if (bIsSuccessToCreate)
-				{
-					QuantityRemaining -= 1;
-				}
-				else bHasFailed = true;
-			}
-			else bHasFailed = true;
-		}
-	}
+	FInventorySlotStruct Slot{ Quantity, ItemType, ItemID, InherenceName, Item, WeaponType };
+	Slots.Add(Slot);
 	
 	if (OnInventoryUpdate.IsBound())
 	{
 		OnInventoryUpdate.Broadcast();
 	}
-	return MakeTuple(!bHasFailed, QuantityRemaining);
+	return MakeTuple(true, 0);
 }
 
 void UInventoryComponent::RemoveFromInventory(FString ItemID, int Quantity)
@@ -299,20 +273,52 @@ void UInventoryComponent::DropInventoryItemByDragging(int32 ContentIndex)
 	UWorld* World = GetOwner()->GetWorld();
 	if (World && ItemToSpawn && Character)
 	{
-		APickup* Pickup = Cast<APickup>(ItemToSpawn);
-		if (Pickup)
+		DropPickup(ItemToSpawn, ContentIndex);
+	}
+
+	Slots.RemoveAt(ContentIndex);
+
+	AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon();
+	if (EquippedWeapon)
+	{
+		UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), EquippedWeapon->GetCarriedAmmo());
+	}
+	OnInventoryUpdate.Broadcast();
+	OnOverlappedItemUpdate.Broadcast();
+}
+
+void UInventoryComponent::DropPickup(AItem* ItemToSpawn, const int32& ContentIndex)
+{
+	APickup* Pickup = Cast<APickup>(ItemToSpawn);
+	if (Pickup)
+	{
+		Pickup->SetActive(true, Character->GetGroundLocation());
+		DropAmmo(Pickup, ContentIndex);
+		UpdateAmmoSlot();
+		CombatComponent->GetEquippedWeapon()->SetHUDAmmo();
+	}
+}
+
+void UInventoryComponent::DropAmmo(APickup* Pickup, const int32& ContentIndex)
+{
+	AAmmoPickup* AmmoPickup = Cast<AAmmoPickup>(Pickup);
+	if (CombatComponent && AmmoPickup && AmmoPickup->GetItemDataComponent())
+	{
+		CombatComponent->SubAmmo(AmmoPickup->GetWeaponType(), Slots[ContentIndex].Quantity);
+		AmmoPickup->GetItemDataComponent()->SetQuantity(Slots[ContentIndex].Quantity);
+	}
+}
+
+int32 UInventoryComponent::GetAmmoIndexFromInventory()
+{
+	for (int32 i = 0; i < Slots.Num(); i++)
+	{
+		if (Slots[i].ItemType == EItemType::EIT_Ammo && CombatComponent && Slots[i].WeaponType == CombatComponent->GetEquippedWeapon()->GetWeaponType())
 		{
-			Pickup->SetActive(true, Character->GetGroundLocation());
+			return  i;
 		}
 	}
-
-	Slots[ContentIndex] = { 0, EItemType::EIT_MAX, "", "", nullptr };
-
-	if (OnInventoryUpdate.IsBound() && OnOverlappedItemUpdate.IsBound())
-	{
-		OnInventoryUpdate.Broadcast();
-		OnOverlappedItemUpdate.Broadcast();
-	}
+	return -1;
 }
 
 void UInventoryComponent::ServerTransferSlots_Implementation(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
@@ -356,4 +362,18 @@ void UInventoryComponent::UpdateWeaponInfoSlot(AWeapon* EquippedWeapon, int32 Am
 	{
 		OnWeaponInfoUpdate.Broadcast();
 	}
+}
+
+void UInventoryComponent::UpdateAmmoSlot()
+{
+	int32 Index = GetAmmoIndexFromInventory();
+	if (Index == -1) return;
+	Slots[Index].Quantity--;
+
+	if (Slots[GetAmmoIndexFromInventory()].Quantity <= 0)
+	{
+		Slots.RemoveAt(Index);
+	}
+
+	OnInventoryUpdate.Broadcast();
 }

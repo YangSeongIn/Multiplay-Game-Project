@@ -19,8 +19,8 @@ void UCustomizingSlot::NativeConstruct()
 
 void UCustomizingSlot::OnClickedButton()
 {
-	CustomizingWidget->SetPartMesh(SlotID, Mesh);
-	CustomizingWidget->SetPartIndex(SlotID, Index);
+	CustomizingWidget->SetPartMesh(Category, Mesh);
+	CustomizingWidget->SetPartIndex(Category, Index);
 }
 
 void UCustomizingSlot::SetImage(UTexture2D* ImageToSet)

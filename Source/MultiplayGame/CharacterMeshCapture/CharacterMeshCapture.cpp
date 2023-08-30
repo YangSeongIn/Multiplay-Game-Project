@@ -7,6 +7,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "../HUD/Inventory.h"
 #include "Components/Image.h"
+#include "../Character/MainCharacter.h"
 
 ACharacterMeshCapture::ACharacterMeshCapture()
 {
@@ -50,13 +51,13 @@ ACharacterMeshCapture::ACharacterMeshCapture()
 	SkeletalMeshOnBack->SetupAttachment(UpperBodyMesh, FName("WeaponSocket"));
 }
 
-void ACharacterMeshCapture::Client_ApplyCustomizingInfo_Implementation(const TArray<USkeletalMesh*>& Meshes)
+void ACharacterMeshCapture::ClientUpdateMeshCapture_Implementation(AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	HairMesh->SetSkeletalMesh(Meshes[0]);
-	GoggleMesh->SetSkeletalMesh(Meshes[1]);
-	BeardMesh->SetSkeletalMesh(Meshes[2]);
-	UpperBodyMesh->SetSkeletalMesh(Meshes[3]);
-	LowerBodyMesh->SetSkeletalMesh(Meshes[4]);
+	HairMesh->SetSkeletalMesh(MainCharacter->Hairs[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(MainCharacter->Goggles[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(MainCharacter->Beards[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(MainCharacter->UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(MainCharacter->LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
 }
 
 void ACharacterMeshCapture::BeginPlay()
@@ -64,31 +65,18 @@ void ACharacterMeshCapture::BeginPlay()
 	Super::BeginPlay();
 	
 	SceneCaptureComponent2D->ShowOnlyComponent(UpperBodyMesh);
+	SceneCaptureComponent2D->ShowOnlyComponent(GoggleMesh);
+	SceneCaptureComponent2D->ShowOnlyComponent(BeardMesh);
+	SceneCaptureComponent2D->ShowOnlyComponent(HairMesh);
+	SceneCaptureComponent2D->ShowOnlyComponent(LowerBodyMesh);
 	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshOnHand);
 	SceneCaptureComponent2D->ShowOnlyComponent(SkeletalMeshOnBack);
+	SceneCaptureComponent2D->ShowOnlyComponent(HandMesh);
+	SceneCaptureComponent2D->ShowOnlyComponent(HeadMesh);
 }
-
-void ACharacterMeshCapture::SetCaptureTexture(int32 n)
-{
-	if (ActTextures.Num() > n)
-	{
-		SceneCaptureComponent2D->TextureTarget = ActTextures[n];
-	}
-}
-
-void ACharacterMeshCapture::SetCaptureInventoryImage(UInventory* Inventory, int32 n)
-{
-	if (Inventory && InvTextures.Num() > n)
-	{
-		Inventory->SetMeshCaptureImage(InvTextures[n]);
-	}
-}
-
-
 
 void ACharacterMeshCapture::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
-

@@ -89,6 +89,7 @@ void AWeapon::SetHUDAmmo()
 		if (OwnerController)
 		{
 			OwnerController->SetHUDWeaponAmmo(Ammo);
+			OwnerController->SetHUDCarriedAmmo(GetCarriedAmmo());
 		}
 	}
 }

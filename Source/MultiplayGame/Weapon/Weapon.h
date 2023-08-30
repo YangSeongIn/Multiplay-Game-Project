@@ -22,8 +22,8 @@ UCLASS()
 class MULTIPLAYGAME_API AWeapon : public AItem
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -35,42 +35,45 @@ public:
 
 	// Texture for the weapon crosshair
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		class UTexture2D* CrosshairsCenter;
+	class UTexture2D* CrosshairsCenter;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		class UTexture2D* CrosshairsLeft;
+	class UTexture2D* CrosshairsLeft;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		class UTexture2D* CrosshairsRight;
+	class UTexture2D* CrosshairsRight;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		class UTexture2D* CrosshairsTop;
+	class UTexture2D* CrosshairsTop;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-		class UTexture2D* CrosshairsBottom;
+	class UTexture2D* CrosshairsBottom;
 
 	/**
 	* Zoomed FOV while aiming
 	*/
 
 	UPROPERTY(EditAnywhere)
-		float ZoomedFOV = 30.f;
+	float ZoomedFOV = 30.f;
 
 	UPROPERTY(EditAnywhere)
-		float ZoomInterpSpeed = 20.f;
+	float ZoomInterpSpeed = 20.f;
 
 	/**
 	* Automatic Fire
 	*/
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		float FireDelay = 0.15f;
+	float FireDelay = 0.15f;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-		bool bAutomatic = true;
+	bool bAutomatic = true;
 
 	UPROPERTY(EditAnywhere)
-		class USoundCue* EquipSound;
+	class USoundCue* EquipSound;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* OutOfAmmoSound;
 
 	void EnableCustomDepth(bool bEnable);
 
@@ -88,42 +91,42 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-		USkeletalMeshComponent* WeaponMesh;
+	USkeletalMeshComponent* WeaponMesh;
 
 	/*UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 		class USphereComponent* AreaSphere;*/
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
-		EWeaponState WeaponState;
+	EWeaponState WeaponState;
 
 	UFUNCTION()
-		void OnRep_WeaponState();
-	
-	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-		class UAnimationAsset* FireAnimation;
+	void OnRep_WeaponState();
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-		TSubclassOf<class ACasing> CasingClass;
+	class UAnimationAsset* FireAnimation;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	TSubclassOf<class ACasing> CasingClass;
 
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
-		int32 Ammo;
+	int32 Ammo;
 
 	UFUNCTION()
-		void OnRep_Ammo();
+	void OnRep_Ammo();
 
 	void SpendRound();
 
 	UPROPERTY(EditAnywhere)
-		int32 MagCapacity = 30;
+	int32 MagCapacity = 30;
 
 	UPROPERTY()
-		class AMainCharacter* OwnerCharacter;
+	class AMainCharacter* OwnerCharacter;
 
 	UPROPERTY()
-		class AMainPlayerController* OwnerController;
+	class AMainPlayerController* OwnerController;
 
 	UPROPERTY(EditAnywhere)
-		EWeaponType WeaponType;
+	EWeaponType WeaponType;
 
 	EEquippedSlotType EquippedSlotType = EEquippedSlotType::EST_Weapon;
 
@@ -137,6 +140,7 @@ public:
 	bool IsFull();
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; };
 	FORCEINLINE int32 GetAmmo() const { return Ammo; };
+	FORCEINLINE void SetAmmo(int32 AmmoToSet) { Ammo = AmmoToSet; };
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; };
 	FORCEINLINE EEquippedSlotType GetEquippedSlotType() { return EquippedSlotType; };
 };

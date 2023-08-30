@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "../Types/InventorySlotStruct.h"
+#include "../Weapon/WeaponTypes.h"
 #include "InventoryComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnInventoryUpdate);
@@ -26,7 +27,7 @@ public:
 	FOnWeaponInfoUpdate OnWeaponInfoUpdate;
 	FOnOverlappedItemUpdate OnOverlappedItemUpdate;
 
-	TTuple<bool, int> AddToInventory(class AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName);
+	TTuple<bool, int> AddToInventory(class AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName, EWeaponType WeaponType);
 	void RemoveFromInventory(FString ItemID, int Quantity);
 	TTuple<int, bool> FindSlot(FString ItemID);
 	int32 GetMaxStackSize(FString ItemID);
@@ -54,12 +55,19 @@ public:
 	void RemoveOverlappedItem(FString InherenceName);
 
 	void UpdateWeaponInfoSlot(class AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo);
+	void UpdateAmmoSlot();
 
 	void AddToSelectedWeaponSlot(class AItem* Item, EWeaponNum WeaponNum);
 
 	void DropWeaponByDragging(EWeaponNum WeaponNum);
 
 	void DropInventoryItemByDragging(int32 ContentIndex);
+
+	void DropPickup(class AItem* ItemToSpawn, const int32& ContentIndex);
+
+	void DropAmmo(class APickup* Pickup, const int32& ContentIndex);
+
+	int32 GetAmmoIndexFromInventory();
 
 protected:
 	virtual void BeginPlay() override;

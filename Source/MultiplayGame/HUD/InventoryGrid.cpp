@@ -8,6 +8,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "../HUD/InventorySlot.h"
 #include "../MainCharacterComponent/CombatComponent.h"
+#include "../DragDrop/DragDropSlot.h"
+#include "DragItemVisual.h"
 
 void UInventoryGrid::NativePreConstruct()
 {
@@ -20,6 +22,24 @@ void UInventoryGrid::NativeDestruct()
 {
 	InventoryComponent->OnInventoryUpdate.Clear();
 	Super::NativeDestruct();
+}
+
+bool UInventoryGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
+	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
+	if (SlotForDragDrop)
+	{
+		if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_AroundItem)
+		{
+			AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+			if (Character)
+			{
+				Character->EquipButtonPressed();
+			}
+		}
+	}
+	return false;
 }
 
 void UInventoryGrid::DisplayInventory(UInventoryComponent* InventoryComp)
@@ -48,6 +68,7 @@ void UInventoryGrid::UpdateInventory()
 					ItemSlot->SetInventoryComponent(InventoryComponent);
 					ItemSlot->SetSlotIndex(i);
 					ItemSlot->SetItemType(Arr[i].ItemType);
+					ItemSlot->SetWeaponType(Arr[i].WeaponType);
 					ItemGrid->AddChildToWrapBox(ItemSlot);
 				}
 				if (!InventoryComponent->OnInventoryUpdate.IsBound())

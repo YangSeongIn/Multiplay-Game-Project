@@ -42,7 +42,7 @@ void AMainPlayerController::BeginPlay()
 		}
 	}
 
-	if (UGameplayStatics::GetCurrentLevelName(GetWorld()) != "MainMap")
+	if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
 	{
 		Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
 	}
@@ -57,10 +57,8 @@ void AMainPlayerController::Init()
 		if (Locs.Num() > 0 && Locs[0])
 		{
 			Locs[0]->SetActorHiddenInGame(true);
-
-
 			UObject* SpawnActor = Cast<UObject>(StaticLoadObject(UObject::StaticClass(), NULL,
-				TEXT("/Game/Blueprints/CharacterMeshCapture/BP_CharacterMeshCapture.BP_CharacterMeshCapture'")));
+				TEXT("/Script/Engine.Blueprint'/Game/Blueprints/CharacterMeshCapture/BP_CharacterMeshCapture.BP_CharacterMeshCapture'")));
 			if (SpawnActor)
 			{
 				UBlueprint* GeneratedBP = Cast<UBlueprint>(SpawnActor);
@@ -83,6 +81,7 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
 	if (MainCharacter)
 	{
+		UE_LOG(LogTemp, Log, TEXT("1111111111"));
 		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
 		Init();
 
@@ -91,16 +90,8 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([WeakThis = TWeakObjectPtr<AMainPlayerController>(this), MainCharacter]()
 			{
 				FCustomizingSaveDataStruct CustomizingSaveData = WeakThis->GetSaveGameData();
-				if (GEngine)
-				{
-					GEngine->AddOnScreenDebugMessage(
-						-1,
-						15,
-						FColor::Red,
-						FString::Printf(TEXT(" %d %d %d %d %d"), CustomizingSaveData.HairIndex, CustomizingSaveData.GoggleIndex, CustomizingSaveData.BeardIndex, CustomizingSaveData.UpperBodyIndex, CustomizingSaveData.LowerBodyIndex)
-					);
-				}
-				MainCharacter->SetCustomizingInfoToMesh(CustomizingSaveData);
+				//MainCharacter->SetCustomizingInfoToMesh(CustomizingSaveData);
+				MainCharacter->OnApplyingCustomizingInfo.Broadcast(CustomizingSaveData);
 			}), WaitTime, false);
 	}
 }
@@ -559,25 +550,7 @@ FCustomizingSaveDataStruct AMainPlayerController::GetSaveGameData()
 	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
 	if (MainPlayerState)
 	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				15,
-				FColor::Red,
-				FString::Printf(TEXT("playerstate ok"))
-			);
-		}
 		return MainPlayerState->GetSaveGameData();
-	}
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			15,
-			FColor::Red,
-			FString::Printf(TEXT("playerstate null"))
-		);
 	}
 	return FCustomizingSaveDataStruct{ 0, 0, 0, 0, 0 };
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "../Types/EquippedSlotType.h"
+#include "../Weapon/WeaponTypes.h"
 #include "InventorySlot.generated.h"
 
 /**
@@ -67,6 +68,8 @@ private:
 
 	EEquippedSlotType EquippedSlotType = EEquippedSlotType::EST_Inventory;
 
+	EWeaponType WeaponType;
+
 public:
 	FORCEINLINE void SetIcon(class UImage* TargetImage) { IconImage = TargetImage; };
 	void SetQuantity(int32 TargetQuantity);
@@ -79,4 +82,5 @@ public:
 	FORCEINLINE FString GetInherenceName() { return InherenceName; };
 	FORCEINLINE void SetItem(class AItem* ItemToSet) { Item = ItemToSet; };
 	FORCEINLINE EItemType GetItemType() { return ItemType; };
+	FORCEINLINE void SetWeaponType(EWeaponType TypeOfWeapon) { WeaponType = TypeOfWeapon; };
 };

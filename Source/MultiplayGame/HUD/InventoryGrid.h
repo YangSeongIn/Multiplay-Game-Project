@@ -18,6 +18,7 @@ class MULTIPLAYGAME_API UInventoryGrid : public UUserWidget
 protected:
 	virtual void NativePreConstruct() override;
 	virtual void NativeDestruct() override;
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
 public:
 	UPROPERTY(BlueprintReadWrite)

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "../Customizing/CustomizingSaveDataStruct.h"
+#include "../Customizing/CustomizingInfoStruct.h"
 #include "CharacterMeshCapture.generated.h"
 
 UCLASS()
@@ -43,9 +44,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* HandMesh;
 
-
-	UFUNCTION(BlueprintCallable, Client, Reliable)
-	void Client_ApplyCustomizingInfo(const TArray<USkeletalMesh*>& Meshes);
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateMeshCapture(class AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData);
 
 protected:
 	virtual void BeginPlay() override;
@@ -60,15 +60,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class USceneCaptureComponent2D* SceneCaptureComponent2D;
 
-	UPROPERTY(EditAnywhere)
-	TArray<TObjectPtr<class UTextureRenderTarget2D>> ActTextures;
-
-	UPROPERTY(EditAnywhere)
-	TArray<class UMaterialInterface*> InvTextures;
-
 public:
-	void SetCaptureTexture(int32 n);
-	void SetCaptureInventoryImage(class UInventory* Inventory, int32 n);
 	FORCEINLINE void SetSkeletalMeshOnHand(USkeletalMesh* MeshToSet) { SkeletalMeshOnHand->SetSkeletalMesh(MeshToSet); };
 	FORCEINLINE void SetSkeletalMeshOnBack(USkeletalMesh* MeshToSet) { SkeletalMeshOnBack->SetSkeletalMesh(MeshToSet); };
 };

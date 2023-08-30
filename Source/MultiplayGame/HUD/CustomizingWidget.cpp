@@ -31,68 +31,66 @@ void UCustomizingWidget::NativeConstruct()
 	}
 }
 
-void UCustomizingWidget::SetPartMesh(FString SlotID, USkeletalMesh* MeshToSet)
-{
-	if (Character)
-	{
-		if (SlotID == "Hair")
-		{
-			SetMeshVisibility(MeshToSet, Character->HairMesh);
-		}
-		else if (SlotID == "Goggle")
-		{
-			SetMeshVisibility(MeshToSet, Character->GoggleMesh);
-		}
-		else if (SlotID == "Beard")
-		{
-			SetMeshVisibility(MeshToSet, Character->BeardMesh);
-		}
-		else if (SlotID == "UpperBody")
-		{
-			SetMeshVisibility(MeshToSet, Character->UpperBodyMesh);
-		}
-		else if (SlotID == "LowerBody")
-		{
-			SetMeshVisibility(MeshToSet, Character->LowerBodyMesh);
-		}
-	}
-}
-
 void UCustomizingWidget::SetMeshVisibility(USkeletalMesh* MeshToSet, USkeletalMeshComponent* TargetMesh)
 {
-	if (MeshToSet == nullptr)
+	TargetMesh->SetVisibility(MeshToSet ? true : false);
+	if (MeshToSet)
 	{
-		TargetMesh->SetVisibility(false);
-	}
-	else
-	{
-		TargetMesh->SetVisibility(true);
 		TargetMesh->SetSkeletalMesh(MeshToSet);
 	}
 }
 
-void UCustomizingWidget::SetPartIndex(FString SlotID, int32 Index)
+
+void UCustomizingWidget::SetPartMesh(ECustomizingCategory Category, USkeletalMesh* MeshToSet)
+{
+	if (Character)
+	{
+		switch (Category)
+		{
+		case ECustomizingCategory::ECC_Hair:
+			SetMeshVisibility(MeshToSet, Character->HairMesh);
+			break;
+		case ECustomizingCategory::ECC_Goggle:
+			SetMeshVisibility(MeshToSet, Character->GoggleMesh);
+			break;
+		case ECustomizingCategory::ECC_Beard:
+			SetMeshVisibility(MeshToSet, Character->BeardMesh);
+			break;
+		case ECustomizingCategory::ECC_UpperBody:
+			SetMeshVisibility(MeshToSet, Character->UpperBodyMesh);
+			break;
+		case ECustomizingCategory::ECC_LowerBody:
+			SetMeshVisibility(MeshToSet, Character->LowerBodyMesh);
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void UCustomizingWidget::SetPartIndex(ECustomizingCategory Category, int32 Index)
 {
 	HighlightingSlot(Index);
-	if (SlotID == "Hair")
+
+	switch (Category)
 	{
+	case ECustomizingCategory::ECC_Hair:
 		CustomizingSaveDataStruct.HairIndex = Index;
-	}
-	else if (SlotID == "Goggle")
-	{
+		break;
+	case ECustomizingCategory::ECC_Goggle:
 		CustomizingSaveDataStruct.GoggleIndex = Index;
-	}
-	else if (SlotID == "Beard")
-	{
+		break;
+	case ECustomizingCategory::ECC_Beard:
 		CustomizingSaveDataStruct.BeardIndex = Index;
-	}
-	else if (SlotID == "UpperBody")
-	{
+		break;
+	case ECustomizingCategory::ECC_UpperBody:
 		CustomizingSaveDataStruct.UpperBodyIndex = Index;
-	}
-	else if (SlotID == "LowerBody")
-	{
+		break;
+	case ECustomizingCategory::ECC_LowerBody:
 		CustomizingSaveDataStruct.LowerBodyIndex = Index;
+		break;
+	default:
+		break;
 	}
 	
 	AMainPlayerController* MainPlayerController = Cast<AMainPlayerController>(GetOwningPlayer());
@@ -119,30 +117,30 @@ void UCustomizingWidget::HighlightingSlot(int32 TargetIdx)
 
 void UCustomizingWidget::OnClicked_Btn_Hair()
 {
-	SetCustomizingSlot(Character->Hairs, "Hair", CustomizingSaveDataStruct.HairIndex);
+	SetCustomizingSlot(Character->Hairs, ECustomizingCategory::ECC_Hair, CustomizingSaveDataStruct.HairIndex);
 }
 
 void UCustomizingWidget::OnClickedBtn_Goggle()
 {
-	SetCustomizingSlot(Character->Goggles, "Goggle", CustomizingSaveDataStruct.GoggleIndex);
+	SetCustomizingSlot(Character->Goggles, ECustomizingCategory::ECC_Goggle, CustomizingSaveDataStruct.GoggleIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_Beard()
 {
-	SetCustomizingSlot(Character->Beards, "Beard", CustomizingSaveDataStruct.BeardIndex);
+	SetCustomizingSlot(Character->Beards, ECustomizingCategory::ECC_Beard, CustomizingSaveDataStruct.BeardIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_UpperBody()
 {
-	SetCustomizingSlot(Character->UpperBodies, "UpperBody", CustomizingSaveDataStruct.UpperBodyIndex);
+	SetCustomizingSlot(Character->UpperBodies, ECustomizingCategory::ECC_UpperBody, CustomizingSaveDataStruct.UpperBodyIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_LowerBody()
 {
-	SetCustomizingSlot(Character->LowerBodies, "LowerBody", CustomizingSaveDataStruct.LowerBodyIndex);
+	SetCustomizingSlot(Character->LowerBodies, ECustomizingCategory::ECC_LowerBody, CustomizingSaveDataStruct.LowerBodyIndex);
 }
 
-void UCustomizingWidget::SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, FString SlotID, int32 BodyIndex)
+void UCustomizingWidget::SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, ECustomizingCategory Category, int32 BodyIndex)
 {
 	Slots.Empty();
 	Grid->ClearChildren();
@@ -153,7 +151,7 @@ void UCustomizingWidget::SetCustomizingSlot(const TArray<FCustomizingInfoStruct>
 		{
 			CustomizingSlot->SetImage(InfoStructToCustomize[i].Thumbnail);
 			CustomizingSlot->SetCustomMesh(InfoStructToCustomize[i].Mesh);
-			CustomizingSlot->SetSlotID(SlotID);
+			CustomizingSlot->SetCategory(Category);
 			CustomizingSlot->SetIndex(i);
 			CustomizingSlot->SetCustomizingWidget(this);
 			Slots.Add(CustomizingSlot);

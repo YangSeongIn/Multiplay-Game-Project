@@ -26,32 +26,21 @@ bool UAroundItemGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 {
 	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
 	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
-	if (SlotForDragDrop)
+	if (SlotForDragDrop && InventoryComponent)
 	{
-		if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Weapon)
-		{
-			if (InventoryComponent)
-			{
-				InventoryComponent->DropWeaponByDragging(SlotForDragDrop->GetWeaponNum());
-			}
-		}
-		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Inventory)
-		{
-			if (InventoryComponent)
-			{
-				InventoryComponent->DropInventoryItemByDragging(SlotForDragDrop->GetContentIndex());
-			}
+		switch(SlotForDragDrop->GetEquippedSlotType())
+		{ 
+		case EEquippedSlotType::EST_Weapon:
+			InventoryComponent->DropWeaponByDragging(SlotForDragDrop->GetWeaponNum());
+			break;
+		case EEquippedSlotType::EST_Inventory:
+			InventoryComponent->DropInventoryItemByDragging(SlotForDragDrop->GetContentIndex());
+			break;
+		default:
+			break;
 		}
 	}
 	return false;
-}
-
-void UAroundItemGrid::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
-{
-}
-
-void UAroundItemGrid::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
-{
 }
 
 void UAroundItemGrid::DisplayOverlappedItems(UInventoryComponent* InventoryComp)

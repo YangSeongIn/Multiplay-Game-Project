@@ -26,7 +26,6 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
 	virtual float GetServerTime(); // Sync with server world clock
 	virtual void ReceivedPlayer() override;	// Sync with server clock as soons as possible
 	void OnMatchStateSet(FName State);

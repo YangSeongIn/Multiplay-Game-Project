@@ -92,6 +92,11 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 void UCombatComponent::Fire()
 {
+	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->OutOfAmmoSound)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), EquippedWeapon->OutOfAmmoSound);
+		return;
+	}
 	if (CanFire())
 	{
 		bCanFire = false;
@@ -104,6 +109,7 @@ void UCombatComponent::Fire()
 
 		// Fix Text
 		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
+		InventoryComponent->UpdateAmmoSlot();
 	}
 }
 
@@ -639,15 +645,38 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 {
 	if (CarriedAmmoMap.Contains(WeaponType))
 	{
-		CarriedAmmoMap[WeaponType] =  FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0, MaxARAmmo);
-
+		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0, MaxARAmmo);
 		UpdateCarriedAmmo();
 	}
 	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
 	{
-		// Reload();
+		
 	}
 
+	if (InventoryComponent && EquippedWeapon)
+	{
+		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
+		InventoryComponent->OnWeaponInfoUpdate.Broadcast();
+	}
+}
+
+void UCombatComponent::SubAmmo(EWeaponType WeaponType, int32 AmmoAmount)
+{
+	if (CarriedAmmoMap.Contains(WeaponType))
+	{
+		if (CarriedAmmoMap[WeaponType] < AmmoAmount)
+		{
+			AmmoAmount -= CarriedAmmoMap[WeaponType];
+			CarriedAmmoMap[WeaponType] = 0;
+			EquippedWeapon->SetAmmo(EquippedWeapon->GetAmmo() - AmmoAmount);
+			
+		}
+		else
+		{
+			CarriedAmmoMap[WeaponType] = CarriedAmmoMap[WeaponType] - AmmoAmount;
+		}
+		UpdateCarriedAmmo();
+	}
 	InventoryComponent->OnWeaponInfoUpdate.Broadcast();
 }
 

@@ -100,6 +100,8 @@ AMainCharacter::AMainCharacter()
 	HairMesh->SetLeaderPoseComponent(UpperBodyMesh);
 	GoggleMesh->SetLeaderPoseComponent(UpperBodyMesh);
 	HandMesh->SetLeaderPoseComponent(UpperBodyMesh);
+
+	SetReplicateMovement(true);
 }
 
 void AMainCharacter::OnRep_ReplicatedMovement()
@@ -159,45 +161,35 @@ void AMainCharacter::ElimTimerFinished()
 	}
 }
 
-void AMainCharacter::Multicast_ApplyCustomizingInfo_Implementation()
+void AMainCharacter::ServerApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	MainPlayerState = GetPlayerState<AMainPlayerState>();
-	if (MainPlayerState)
+	UE_LOG(LogTemp, Log, TEXT("Received"));
+	MulticastApplyCustomizingInfo(CustomizingSaveData);
+}
+
+void AMainCharacter::MulticastApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
+{
+	UE_LOG(LogTemp, Log, TEXT("MULTICAST"));
+	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+	if (IsLocallyControlled())
 	{
-		FCustomizingSaveDataStruct CustomizingSaveData = MainPlayerState->GetSaveGameData();
-		HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
-		GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
-		BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
-		UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
-		LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+		ClientUpdateMeshCapture(CustomizingSaveData);
 	}
 }
 
-void AMainCharacter::Client_ApplyCustomizingInfoToMeshCapture_Implementation(FCustomizingSaveDataStruct Data)
+void AMainCharacter::ClientUpdateMeshCapture_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	if (GetOwner())
+	if (Controller)
 	{
-		CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
-		if (CharacterMeshCapture)
+		if (ACharacterMeshCapture* MeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture())
 		{
-			CharacterMeshCapture->Client_ApplyCustomizingInfo({
-				Hairs[Data.HairIndex].Mesh,
-				Goggles[Data.GoggleIndex].Mesh,
-				Beards[Data.BeardIndex].Mesh,
-				UpperBodies[Data.UpperBodyIndex].Mesh,
-				LowerBodies[Data.LowerBodyIndex].Mesh
-				});
+			MeshCapture->ClientUpdateMeshCapture(this, CustomizingSaveData);
 		}
 	}
-}
-
-void AMainCharacter::Multicast_UpdateCostume_Implementation(const TArray<USkeletalMesh*>& Meshes)
-{
-	HairMesh->SetSkeletalMesh(Meshes[0]);
-	GoggleMesh->SetSkeletalMesh(Meshes[1]);
-	BeardMesh->SetSkeletalMesh(Meshes[2]);
-	UpperBodyMesh->SetSkeletalMesh(Meshes[3]);
-	LowerBodyMesh->SetSkeletalMesh(Meshes[4]);
 }
 
 // Called when the game starts or when spawned
@@ -221,7 +213,29 @@ void AMainCharacter::BeginPlay()
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
-	//Multicast_ApplyCustomizingInfo();
+
+	/*MainPlayerState = MainPlayerState == nullptr ? GetPlayerState<AMainPlayerState>() : MainPlayerState;
+	if (MainPlayerState)
+	{
+		FCustomizingSaveDataStruct SaveData = MainPlayerState->GetSaveGameData();
+		MulticastApplyCustomizingInfo_Implementation(SaveData);
+	}*/
+
+	OnApplyingCustomizingInfo.AddUFunction(this, FName("MulticastApplyCustomizingInfo"));
+}
+
+void AMainCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	MainPlayerState = MainPlayerState == nullptr ? GetPlayerState<AMainPlayerState>() : MainPlayerState;
+	if (MainPlayerState)
+	{
+		/*UE_LOG(LogTemp, Log, TEXT("OnRep_PlayerState"));
+		MainPlayerState->SetMeshWithCustomizingInfo();*/
+		/*FCustomizingSaveDataStruct CustomizingSaveData = MainPlayerState->GetSaveGameData();
+		ServerApplyCustomizingInfo(CustomizingSaveData);*/
+		
+	}
 }
 
 void AMainCharacter::SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData)
@@ -231,8 +245,6 @@ void AMainCharacter::SetCustomizingInfoToMesh(FCustomizingSaveDataStruct Customi
 	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
 	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
 	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
-	
-	Client_ApplyCustomizingInfoToMeshCapture(CustomizingSaveData);
 }
 
 // Called every frame
@@ -314,6 +326,22 @@ void AMainCharacter::Destroyed()
 	}
 }
 
+void AMainCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	UE_LOG(LogTemp, Log, TEXT("2222222222222"));
+	//AMainPlayerController* PlayerController = Cast<AMainPlayerController>(NewController);
+	//if (PlayerController)
+	//{
+	//	FCustomizingSaveDataStruct SaveData = PlayerController->GetSaveGameData();
+	//	if (OnApplyingCustomizingInfo.IsBound())
+	//	{
+	//		OnApplyingCustomizingInfo.Broadcast(SaveData);
+	//	}
+	//	//ServerApplyCustomizingInfo(SaveData);
+	//}
+}
+
 void AMainCharacter::PlayFireMontage(bool bAiming)
 {
 	if (InventoryWidget || CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
@@ -375,7 +403,7 @@ void AMainCharacter::PlayReloadMontage()
 			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_SubmachineGun:
-			SectionName = FName("Pistol");
+			SectionName = FName("SubmachineGun");
 			break;
 		default:
 			break;
@@ -474,6 +502,7 @@ void AMainCharacter::EquipButtonPressed()
 	{
 		if (HasAuthority())
 		{
+			UE_LOG(LogTemp, Log, TEXT("EQUIPED"));
 			AWeapon* WeaponToEquip = Cast<AWeapon>(OverlappingItem);
 			// weapon
 			if (WeaponToEquip)

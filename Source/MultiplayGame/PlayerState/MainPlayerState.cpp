@@ -111,3 +111,14 @@ void AMainPlayerState::SaveData(FCustomizingSaveDataStruct DataToSave)
 		UGameplayStatics::SaveGameToSlot(SaveGameData, SaveDataName, 0);
 	}
 }
+
+void AMainPlayerState::SetMeshWithCustomizingInfo()
+{
+	FCustomizingSaveDataStruct SaveData = GetSaveGameData();
+	Character = Character == nullptr ? Cast<AMainCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		UE_LOG(LogTemp, Log, TEXT("OnRep_PlayerState2"));
+		Character->MulticastApplyCustomizingInfo(SaveData);
+	}
+}

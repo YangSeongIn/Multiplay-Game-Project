@@ -37,11 +37,13 @@ private:
 	UPROPERTY()
 		AActor* OwningActor;
 
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "ItemType == EItemType::Ammo", EditConditionHides))
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "ItemType == EItemType::EIT_Ammo", EditConditionHides))
 		EWeaponType WeaponType;
 
 public:
 	FORCEINLINE FDataTableRowHandle GetItemID() { return ItemID; };
 	FORCEINLINE int32 GetQuantity() { return Quantity; };
 	FORCEINLINE EItemType GetItemType() { return ItemType; };
+	EWeaponType GetWeaponType();
+	FORCEINLINE void SetQuantity(int32 QuantityToSet) { Quantity = QuantityToSet; };
 };

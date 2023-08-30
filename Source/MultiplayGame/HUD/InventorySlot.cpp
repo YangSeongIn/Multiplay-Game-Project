@@ -100,24 +100,10 @@ void UInventorySlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
 bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
-	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
-	if (SlotForDragDrop)
+	if (OutBorder && InBorder)
 	{
-		if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_Inventory)
-		{
-			if (SlotForDragDrop->GetContentIndex() != SlotIndex || SlotForDragDrop->GetInventoryComponent() != InventoryComponent)
-			{
-				InventoryComponent->ServerTransferSlots(SlotForDragDrop->GetContentIndex(), SlotForDragDrop->GetInventoryComponent(), SlotIndex);
-			}
-		}
-		else if (SlotForDragDrop->GetEquippedSlotType() == EEquippedSlotType::EST_AroundItem)
-		{
-			AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-			if (Character)
-			{
-				Character->EquipButtonPressed();
-			}
-		}
+		OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.5f));
+		InBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.5f));
 	}
 	return false;
 }
@@ -125,28 +111,20 @@ bool UInventorySlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 void UInventorySlot::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDragEnter(InGeometry, InDragDropEvent, InOperation);
-	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
-	if (SlotForDragDrop)
+	if (OutBorder)
 	{
-		if (OutBorder)
-		{
-			OutBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f));
-			InBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f));
-		}
+		OutBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f, 0.8f));
+		InBorder->SetBrushColor(FLinearColor(1.f, 0.3f, 0.f, 0.8f));
 	}
 }
 
 void UInventorySlot::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDragLeave(InDragDropEvent, InOperation);
-	UDragDropSlot* SlotForDragDrop = Cast<UDragDropSlot>(InOperation);
-	if (SlotForDragDrop)
+	if (OutBorder && InBorder)
 	{
-		if (OutBorder && InBorder)
-		{
-			OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
-			InBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f));
-		}
+		OutBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.5f));
+		InBorder->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.5f));
 	}
 }
 

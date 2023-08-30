@@ -12,6 +12,8 @@
 #include "../Customizing/CustomizingInfoStruct.h"
 #include "MainCharacter.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnApplyingCustomizingInfo, FCustomizingSaveDataStruct);
+
 UCLASS()
 class MULTIPLAYGAME_API AMainCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -24,6 +26,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	virtual void Destroyed() override;
+	virtual void PossessedBy(AController* NewController) override;
 	void PlayFireMontage(bool bAiming);
 	void PlayElimMontage();
 	void PlayReloadMontage();
@@ -47,11 +50,12 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerAttachItemOnMeshCapture(const FString& SocketName);
 	
+	UFUNCTION(Server, Reliable)
+	void ServerApplyCustomizingInfo(FCustomizingSaveDataStruct CustomizingSaveData);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_ApplyCustomizingInfo();
-
+	void MulticastApplyCustomizingInfo(FCustomizingSaveDataStruct CustomizingSaveData);
 	UFUNCTION(Client, Reliable)
-	void Client_ApplyCustomizingInfoToMeshCapture(FCustomizingSaveDataStruct Data);
+	void ClientUpdateMeshCapture(FCustomizingSaveDataStruct CustomizingSaveData);
 
 	UPROPERTY(EditAnywhere)
 	TArray<FCustomizingInfoStruct> Hairs;
@@ -85,14 +89,13 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* HandMesh;
 
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_UpdateCostume(const TArray<USkeletalMesh*>& Meshes);
-
 	void SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData);
+
+	FOnApplyingCustomizingInfo OnApplyingCustomizingInfo;
 
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void OnRep_PlayerState() override;
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartJump();

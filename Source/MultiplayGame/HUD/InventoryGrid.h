@@ -8,7 +8,7 @@
 #include "InventoryGrid.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYGAME_API UInventoryGrid : public UUserWidget
@@ -22,17 +22,22 @@ protected:
 
 public:
 	UPROPERTY(BlueprintReadWrite)
-		class UInventoryComponent* InventoryComponent;
+	class UInventoryComponent* InventoryComponent;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		class UWrapBox* ItemGrid;
+	class UWrapBox* ItemGrid;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<UUserWidget> InventorySlotWidgetClass;
+	TSubclassOf<UUserWidget> InventorySlotWidgetClass;
 
 	UFUNCTION()
-		void DisplayInventory(class UInventoryComponent* InventoryComp);
+	void DisplayInventory(class UInventoryComponent* InventoryComp);
 	UFUNCTION()
-		void UpdateInventory();
+	void UpdateInventory();
 	UFUNCTION()
-		void UpdatedInventory();
+	void UpdatedInventory();
+
+	UFUNCTION(Server, Reliable)
+	void ServerBinding();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastBinding();
 };

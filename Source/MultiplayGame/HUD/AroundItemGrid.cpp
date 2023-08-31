@@ -34,7 +34,8 @@ bool UAroundItemGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 			InventoryComponent->DropWeaponByDragging(SlotForDragDrop->GetWeaponNum());
 			break;
 		case EEquippedSlotType::EST_Inventory:
-			InventoryComponent->DropInventoryItemByDragging(SlotForDragDrop->GetContentIndex());
+			// InventoryComponent->DropInventoryItemByDragging(SlotForDragDrop->GetContentIndex());
+			InventoryComponent->ServerRemoveItemFromSlot(SlotForDragDrop->GetContentIndex());
 			break;
 		default:
 			break;
@@ -52,6 +53,7 @@ void UAroundItemGrid::DisplayOverlappedItems(UInventoryComponent* InventoryComp)
 
 void UAroundItemGrid::UpdateInventory()
 {
+	UE_LOG(LogTemp, Log, TEXT("UpdateInventory"));
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (Character)
 	{

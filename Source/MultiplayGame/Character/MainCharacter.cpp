@@ -68,6 +68,8 @@ AMainCharacter::AMainCharacter()
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 	InventoryComponent->SetIsReplicated(true);
 
+	InventoryComponent->SetIsReplicatedByDefault(true);
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
@@ -163,13 +165,11 @@ void AMainCharacter::ElimTimerFinished()
 
 void AMainCharacter::ServerApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	UE_LOG(LogTemp, Log, TEXT("Received"));
 	MulticastApplyCustomizingInfo(CustomizingSaveData);
 }
 
 void AMainCharacter::MulticastApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	UE_LOG(LogTemp, Log, TEXT("MULTICAST"));
 	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
 	GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
 	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
@@ -227,15 +227,6 @@ void AMainCharacter::BeginPlay()
 void AMainCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-	MainPlayerState = MainPlayerState == nullptr ? GetPlayerState<AMainPlayerState>() : MainPlayerState;
-	if (MainPlayerState)
-	{
-		/*UE_LOG(LogTemp, Log, TEXT("OnRep_PlayerState"));
-		MainPlayerState->SetMeshWithCustomizingInfo();*/
-		/*FCustomizingSaveDataStruct CustomizingSaveData = MainPlayerState->GetSaveGameData();
-		ServerApplyCustomizingInfo(CustomizingSaveData);*/
-		
-	}
 }
 
 void AMainCharacter::SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData)
@@ -329,7 +320,6 @@ void AMainCharacter::Destroyed()
 void AMainCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	UE_LOG(LogTemp, Log, TEXT("2222222222222"));
 	//AMainPlayerController* PlayerController = Cast<AMainPlayerController>(NewController);
 	//if (PlayerController)
 	//{
@@ -502,7 +492,6 @@ void AMainCharacter::EquipButtonPressed()
 	{
 		if (HasAuthority())
 		{
-			UE_LOG(LogTemp, Log, TEXT("EQUIPED"));
 			AWeapon* WeaponToEquip = Cast<AWeapon>(OverlappingItem);
 			// weapon
 			if (WeaponToEquip)

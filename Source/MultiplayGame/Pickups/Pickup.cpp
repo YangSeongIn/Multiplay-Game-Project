@@ -87,7 +87,7 @@ void APickup::MulticastSetActive_Implementation(bool bIsActive)
 	if (bIsActive)
 	{
 		PickupMesh->SetVisibility(true);
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 	else
 	{

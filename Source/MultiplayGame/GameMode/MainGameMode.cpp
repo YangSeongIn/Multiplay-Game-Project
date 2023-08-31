@@ -32,6 +32,42 @@ void AMainGameMode::BeginPlay()
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacterMeshCapture::StaticClass(), MeshCaptures);
 }
 
+void AMainGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	/*UE_LOG(LogTemp, Log, TEXT("MULTICAST in gamemode 0"));
+
+	AMainPlayerController* CurrentController = Cast<AMainPlayerController>(NewPlayer);
+	Controllers.Add(CurrentController);
+
+	for (AMainPlayerController* Controller : Controllers)
+	{
+		AMainCharacter* Character = Controller->GetOwningCharacter();
+		UE_LOG(LogTemp, Log, TEXT("MULTICAST in gamemode 1"));
+		if (Character)
+		{
+			UE_LOG(LogTemp, Log, TEXT("MULTICAST in gamemode 2"));
+			Character->MulticastApplyCustomizingInfo(Controller->GetSaveGameData());
+		}
+	}*/
+}
+
+void AMainGameMode::OnPlayerPossessCharacter(AMainPlayerController* PossessedController, APawn* PossessedPawn)
+{
+	Controllers.Add(PossessedController);
+	for (AMainPlayerController* CController : Controllers)
+	{
+		UE_LOG(LogTemp, Log, TEXT("MULTICAST Controller's Name : %s"), *CController->GetFName().ToString());
+		AMainCharacter* Character = Cast<AMainCharacter>(CController->GetPawn());
+		//UE_LOG(LogTemp, Log, TEXT("MULTICAST in gamemode 1"));
+		if (Character)
+		{
+			//UE_LOG(LogTemp, Log, TEXT("MULTICAST in gamemode 2"));
+			Character->MulticastApplyCustomizingInfo(CController->GetSaveGameData());
+		}
+	}
+}
 
 AActor* AMainGameMode::GetMeshCapture(int32 n)
 {

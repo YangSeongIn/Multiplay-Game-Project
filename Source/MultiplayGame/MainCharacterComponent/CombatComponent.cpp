@@ -551,6 +551,9 @@ void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
 
 void UCombatComponent::UpdateCarriedAmmo()
 {
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
+	if (Controller == nullptr) return;
+
 	if (EquippedWeapon == nullptr)
 	{
 		Controller->SetHUDCarriedAmmo(-1);
@@ -561,7 +564,6 @@ void UCombatComponent::UpdateCarriedAmmo()
 		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 
-	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
 	if (Controller)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
@@ -668,7 +670,11 @@ void UCombatComponent::SubAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 		{
 			AmmoAmount -= CarriedAmmoMap[WeaponType];
 			CarriedAmmoMap[WeaponType] = 0;
-			EquippedWeapon->SetAmmo(EquippedWeapon->GetAmmo() - AmmoAmount);
+
+			if (EquippedWeapon)
+			{
+				EquippedWeapon->SetAmmo(EquippedWeapon->GetAmmo() - AmmoAmount);
+			}
 			
 		}
 		else

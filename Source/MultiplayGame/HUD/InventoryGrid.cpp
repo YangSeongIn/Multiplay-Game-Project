@@ -71,9 +71,16 @@ void UInventoryGrid::UpdateInventory()
 					ItemSlot->SetWeaponType(Arr[i].WeaponType);
 					ItemGrid->AddChildToWrapBox(ItemSlot);
 				}
-				if (!InventoryComponent->OnInventoryUpdate.IsBound())
+				if (Character->HasAuthority())
 				{
-					InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
+					if (!InventoryComponent->OnInventoryUpdate.IsBound())
+					{
+						InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
+					}
+				}
+				else
+				{
+					ServerBinding();
 				}
 			}
 		}
@@ -84,4 +91,19 @@ void UInventoryGrid::UpdatedInventory()
 {
 	ItemGrid->ClearChildren();
 	UpdateInventory();
+}
+
+void UInventoryGrid::MulticastBinding_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("SERVERBINDING 1"));
+	if (!InventoryComponent->OnInventoryUpdate.IsBound())
+	{
+		UE_LOG(LogTemp, Log, TEXT("SERVERBINDING 2"));
+		InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
+	}
+}
+
+void UInventoryGrid::ServerBinding_Implementation()
+{
+	MulticastBinding();
 }

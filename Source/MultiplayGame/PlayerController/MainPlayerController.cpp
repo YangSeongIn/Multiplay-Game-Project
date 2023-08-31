@@ -81,17 +81,22 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
 	if (MainCharacter)
 	{
-		UE_LOG(LogTemp, Log, TEXT("1111111111"));
 		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
 		Init();
 
 		FTimerHandle WaitHandle;
 		float WaitTime = 0.05f;
-		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([WeakThis = TWeakObjectPtr<AMainPlayerController>(this), MainCharacter]()
+		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([WeakThis = TWeakObjectPtr<AMainPlayerController>(this), InPawn]()
 			{
-				FCustomizingSaveDataStruct CustomizingSaveData = WeakThis->GetSaveGameData();
-				//MainCharacter->SetCustomizingInfoToMesh(CustomizingSaveData);
-				MainCharacter->OnApplyingCustomizingInfo.Broadcast(CustomizingSaveData);
+				if (WeakThis.IsValid())
+				{
+					AMainGameMode* GameMode = Cast<AMainGameMode>(WeakThis->GetWorld()->GetAuthGameMode());
+					if (GameMode)
+					{
+						GameMode->OnPlayerPossessCharacter(WeakThis.Get(), InPawn);
+					}
+				}
+				
 			}), WaitTime, false);
 	}
 }
@@ -314,6 +319,7 @@ void AMainPlayerController::SetHUDTime()
 	CountdownInt = SecondsLeft;
 }
 
+// notifying client from server
 void AMainPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();

@@ -131,4 +131,5 @@ private:
 public:
 	FORCEINLINE class ACharacterMeshCapture* GetMeshCapture() { return MeshCapture; };
 	FCustomizingSaveDataStruct GetSaveGameData();
+	FORCEINLINE TObjectPtr<class AMainCharacter> GetOwningCharacter() { return OwningCharacter; };
 };

@@ -25,6 +25,7 @@ public:
 	virtual void PlayerEliminated(class AMainCharacter* ElimmedCharacter, class AMainPlayerController* VictimController, AMainPlayerController* AttackerController);
 	virtual void RequestRespawn(class ACharacter* ElimmedCharacter, AController* ElimmedController);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	UPROPERTY(EditDefaultsOnly)
 		float WarmupTime = 10.f;
@@ -37,16 +38,17 @@ public:
 
 	float LevelStartingTime = 0.f;
 
+	void OnPlayerPossessCharacter(class AMainPlayerController* PossessedController, APawn* PossessedPawn);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
 
 private:
 	float CountdownTime = 0.f;
-
+	TArray<class AMainPlayerController*> Controllers;
 
 public:
-
 	int32 PlayerNum = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated)

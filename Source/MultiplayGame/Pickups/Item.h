@@ -14,25 +14,27 @@ class MULTIPLAYGAME_API AItem : public AActor
 public:
 	AItem();
 	UFUNCTION()
-		virtual void OnSphereOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnSphereOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
-		virtual void OnSphereOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	virtual void OnSphereOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	void ShowPickupWidget(bool bShowWidget);
+	UFUNCTION(Client, Reliable)
+	void ServerBroadcast(class UInventoryComponent* InvComp);
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
 	UPROPERTY(VisibleAnywhere)
-		class USphereComponent* AreaSphere;
+	class USphereComponent* AreaSphere;
 
 private:
 	UPROPERTY(EditAnywhere)
-		class UItemDataComponent* ItemDataComponent;
+	class UItemDataComponent* ItemDataComponent;
 
 	UPROPERTY(VisibleAnywhere)
-		class UWidgetComponent* PickupWidget;
+	class UWidgetComponent* PickupWidget;
 
 public:
 	FORCEINLINE UItemDataComponent* GetItemDataComponent() { return ItemDataComponent; };

@@ -63,11 +63,9 @@ AMainCharacter::AMainCharacter()
 	OverheadWidget->SetupAttachment(RootComponent);
 
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	CombatComponent->SetIsReplicated(true);
+	CombatComponent->SetIsReplicatedByDefault(true);
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
-	InventoryComponent->SetIsReplicated(true);
-
 	InventoryComponent->SetIsReplicatedByDefault(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -119,6 +117,8 @@ void AMainCharacter::Elim()
 	if (CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		CombatComponent->EquippedWeapon->Dropped();
+		CombatComponent->SecondaryWeapon->Dropped();
+		InventoryComponent->RemoveAllContents();
 	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
@@ -204,7 +204,7 @@ void AMainCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	
+
 	UpdateHUDHealth();
 
 	if (HasAuthority())
@@ -213,13 +213,6 @@ void AMainCharacter::BeginPlay()
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
-
-	/*MainPlayerState = MainPlayerState == nullptr ? GetPlayerState<AMainPlayerState>() : MainPlayerState;
-	if (MainPlayerState)
-	{
-		FCustomizingSaveDataStruct SaveData = MainPlayerState->GetSaveGameData();
-		MulticastApplyCustomizingInfo_Implementation(SaveData);
-	}*/
 
 	OnApplyingCustomizingInfo.AddUFunction(this, FName("MulticastApplyCustomizingInfo"));
 }
@@ -291,6 +284,7 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingItem, COND_OwnerOnly);
 	DOREPLIFETIME(AMainCharacter, Health);
 	DOREPLIFETIME_CONDITION(AMainCharacter, InventoryWidget, COND_OwnerOnly);
+	DOREPLIFETIME(AMainCharacter, OverlappingItems);
 }
 
 void AMainCharacter::PostInitializeComponents()
@@ -490,24 +484,30 @@ void AMainCharacter::EquipButtonPressed()
 {
 	if (CombatComponent && OverlappingItem)
 	{
-		if (HasAuthority())
+		Equip(OverlappingItem);
+	}
+}
+
+void AMainCharacter::Equip(AItem* ItemOverlapped)
+{
+	if (HasAuthority())
+	{
+		AWeapon* WeaponToEquip = Cast<AWeapon>(ItemOverlapped);
+		// weapon
+		if (WeaponToEquip)
 		{
-			AWeapon* WeaponToEquip = Cast<AWeapon>(OverlappingItem);
-			// weapon
-			if (WeaponToEquip)
-			{
-				CombatComponent->EquipWeapon(WeaponToEquip);
-			}
-			// item
-			else if (OverlappingItem->GetItemDataComponent())
-			{
-				OverlappingItem->GetItemDataComponent()->Interact(this);
-			}
+			CombatComponent->EquipWeapon(WeaponToEquip);
 		}
-		else
+		// item
+		else if (ItemOverlapped->GetItemDataComponent())
 		{
-			ServerEquipButtonPressed();
+			ItemOverlapped->GetItemDataComponent()->Interact(this);
 		}
+		OverlappingItems.Num() == 0 ? OverlappingItem = nullptr : OverlappingItem = OverlappingItems[0];
+	}
+	else
+	{
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -625,7 +625,7 @@ void AMainCharacter::SelectTertiaryWeapon()
 
 void AMainCharacter::InventoryKeyPressed()
 {
-	if (InventoryWidgetClass)
+	/*if (InventoryWidgetClass)
 	{
 		if (IsLocallyControlled())
 		{
@@ -649,6 +649,25 @@ void AMainCharacter::InventoryKeyPressed()
 		else
 		{
 			ServerInventoryWidget();
+		}
+	}*/
+	if (InventoryWidgetClass)
+	{
+		if (InventoryWidget)
+		{
+			InventoryWidget->RemoveFromParent();
+			InventoryWidget = nullptr;
+		}
+		else
+		{
+			InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
+			if (InventoryWidget)
+			{
+				InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+				InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
+				InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
+				InventoryWidget->AddToViewport();
+			}
 		}
 	}
 }
@@ -919,6 +938,7 @@ void AMainCharacter::ServerEquipButtonPressed_Implementation()
 		{
 			OverlappingItem->GetItemDataComponent()->Interact(this);
 		}
+		OverlappingItems.Num() == 0 ? OverlappingItem = nullptr : OverlappingItem = OverlappingItems[0];
 	}
 }
 
@@ -937,7 +957,6 @@ void AMainCharacter::SetOverlappingItem(AItem* Item)
 		OverlappingItem->ShowPickupWidget(false);
 	}
 	OverlappingItem = Item;
-
 	// for server
 	if (IsLocallyControlled())
 	{

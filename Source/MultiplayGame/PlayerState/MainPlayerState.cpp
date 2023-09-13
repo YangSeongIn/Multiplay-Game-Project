@@ -97,7 +97,7 @@ FCustomizingSaveDataStruct AMainPlayerState::GetSaveGameData()
 	{
 		CustomizingSaveData = SaveGameData->GetCutomizingSaveData();
 		return CustomizingSaveData;
-	}
+	};
 	return FCustomizingSaveDataStruct{ 0, 0, 0, 0, 0 };
 }
 
@@ -118,7 +118,6 @@ void AMainPlayerState::SetMeshWithCustomizingInfo()
 	Character = Character == nullptr ? Cast<AMainCharacter>(GetPawn()) : Character;
 	if (Character)
 	{
-		UE_LOG(LogTemp, Log, TEXT("OnRep_PlayerState2"));
 		Character->MulticastApplyCustomizingInfo(SaveData);
 	}
 }

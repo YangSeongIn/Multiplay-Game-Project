@@ -16,6 +16,8 @@ AItem::AItem()
 	bReplicates = true;
 	SetReplicateMovement(true);
 
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(RootComponent);
 	AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -65,13 +67,15 @@ void AItem::OnSphereOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 	if (Character && Character->GetInventoryComponent())
 	{
 		UInventoryComponent* InvComp = Character->GetInventoryComponent();
-		UItemDataComponent* DataComp = GetItemDataComponent();
-		InvComp->AddOverlappedItem(DataComp->GetItemID().RowName.ToString(), DataComp->GetQuantity(), DataComp->GetItemType(), GetName(), this);
+		//UItemDataComponent* DataComp = GetItemDataComponent();
+		//InvComp->AddOverlappedItem(DataComp->GetItemID().RowName.ToString(), DataComp->GetQuantity(), DataComp->GetItemType(), GetName(), this);
+		
+		Character->AddToOverlappingItems(this);
+		Character->SetOverlappingItem(this);
 		if (InvComp->OnOverlappedItemUpdate.IsBound())
 		{
 			InvComp->OnOverlappedItemUpdate.Broadcast();
 		}
-		Character->SetOverlappingItem(this);
 	}
 }
 
@@ -80,13 +84,15 @@ void AItem::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Othe
 	AMainCharacter* Character = Cast<AMainCharacter>(OtherActor);
 	if (Character && Character->GetInventoryComponent())
 	{
-		Character->GetInventoryComponent()->RemoveOverlappedItem(GetName());
+		//Character->GetInventoryComponent()->RemoveOverlappedItem(GetName());
 		UInventoryComponent* InvComp = Character->GetInventoryComponent();
+		
+		Character->RemoveFromOveralappingItems(this);
+		Character->GetOverlappingItems().Num() == 0 ? Character->SetOverlappingItem(nullptr) : Character->SetOverlappingItem(Character->GetOverlappingItems()[0]);
 		if (InvComp->OnOverlappedItemUpdate.IsBound())
 		{
 			InvComp->OnOverlappedItemUpdate.Broadcast();
 		}
-		Character->SetOverlappingItem(nullptr);
 	}
 }
 
@@ -95,5 +101,13 @@ void AItem::ShowPickupWidget(bool bShowWidget)
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
+	}
+}
+
+void AItem::ServerBroadcast_Implementation(UInventoryComponent* InvComp)
+{
+	if (InvComp->OnOverlappedItemUpdate.IsBound())
+	{
+		InvComp->OnOverlappedItemUpdate.Broadcast();
 	}
 }

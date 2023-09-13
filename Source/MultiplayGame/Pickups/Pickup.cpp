@@ -12,8 +12,6 @@ APickup::APickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
 	PickupMesh->SetupAttachment(RootComponent);

@@ -58,6 +58,8 @@ void ACharacterMeshCapture::ClientUpdateMeshCapture_Implementation(AMainCharacte
 	BeardMesh->SetSkeletalMesh(MainCharacter->Beards[CustomizingSaveData.BeardIndex].Mesh);
 	UpperBodyMesh->SetSkeletalMesh(MainCharacter->UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
 	LowerBodyMesh->SetSkeletalMesh(MainCharacter->LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+
+	MainCharacter->UpperBodyMesh->SetMaterial(0, UpperBodyMesh->GetMaterial(0));
 }
 
 void ACharacterMeshCapture::BeginPlay()

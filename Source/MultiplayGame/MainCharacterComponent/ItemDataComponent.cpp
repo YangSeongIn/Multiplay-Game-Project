@@ -41,7 +41,6 @@ void UItemDataComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 {
 	if (MainCharacter == nullptr || MainCharacter->GetInventoryComponent() == nullptr) return;
-
 	if (OwningActor)
 	{
 		if (ItemType != EItemType::EIT_Weapon)

@@ -80,7 +80,7 @@ void AProjectile::MulticastHitImpact_Implementation(const FHitResult HitResult)
 		break;
 	default:
 		GLog->Log("Default");
-		SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal);
+		SetBulletMarks(ImpactParticlesBody, ImpactSoundBody);
 		break;
 	}
 }

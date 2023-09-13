@@ -9,11 +9,12 @@
 #include "../HUD/InventorySlot.h"
 #include "Components/WrapBox.h"
 #include "../DragDrop/DragDropSlot.h"
+#include "../Pickups/Item.h"
+#include "../MainCharacterComponent/ItemDataComponent.h"
 
 void UAroundItemGrid::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-
 }
 
 void UAroundItemGrid::NativeDestruct()
@@ -46,6 +47,11 @@ bool UAroundItemGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropE
 
 void UAroundItemGrid::DisplayOverlappedItems(UInventoryComponent* InventoryComp)
 {
+	ClientUpdateInventory();
+}
+
+void UAroundItemGrid::ClientUpdateInventory_Implementation()
+{
 	this->InventoryComponent = InventoryComponent;
 	ItemGrid->ClearChildren();
 	UpdateInventory();
@@ -53,7 +59,6 @@ void UAroundItemGrid::DisplayOverlappedItems(UInventoryComponent* InventoryComp)
 
 void UAroundItemGrid::UpdateInventory()
 {
-	UE_LOG(LogTemp, Log, TEXT("UpdateInventory"));
 	AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (Character)
 	{
@@ -62,18 +67,19 @@ void UAroundItemGrid::UpdateInventory()
 		{
 			if (InventorySlotWidgetClass != nullptr)
 			{
-				TArray<FInventorySlotStruct> Arr = InventoryComponent->GetOverlappedItems();
+				//TArray<FInventorySlotStruct> Arr = InventoryComponent->GetOverlappedItems();
+				TArray<AItem*> Arr = Character->GetOverlappingItems();//
 				for (int i = 0; i < Arr.Num(); i++)
 				{
 					UInventorySlot* ItemSlot = Cast<UInventorySlot>(CreateWidget(this, InventorySlotWidgetClass));
-					ItemSlot->SetItemID(Arr[i].ItemID);
-					ItemSlot->SetQuantity(Arr[i].Quantity);
+					ItemSlot->SetItemID(Arr[i]->GetItemDataComponent()->GetItemID().RowName.ToString());
+					ItemSlot->SetQuantity(Arr[i]->GetItemDataComponent()->GetQuantity());
 					ItemSlot->SetInventoryComponent(InventoryComponent);
 					ItemSlot->SetSlotIndex(i);
-					ItemSlot->SetInherenceName(Arr[i].InherenceName);
-					ItemSlot->SetItemType(Arr[i].ItemType);
+					ItemSlot->SetInherenceName(Arr[i]->GetName());
+					ItemSlot->SetItemType(Arr[i]->GetItemDataComponent()->GetItemType());
 					ItemSlot->SetEquippedSlotType(EEquippedSlotType::EST_AroundItem);
-					ItemSlot->SetItem(Arr[i].Item);
+					ItemSlot->SetItem(Arr[i]);
 					ItemGrid->AddChildToWrapBox(ItemSlot);
 				}
 				if (!InventoryComponent->OnOverlappedItemUpdate.IsBound())

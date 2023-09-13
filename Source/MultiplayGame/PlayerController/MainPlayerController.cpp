@@ -21,6 +21,8 @@
 #include "../HUD/CustomizingWidget.h"
 #include "../PlayerState/MainPlayerState.h"
 #include "../SaveGameData/SaveGameData.h"
+#include "Engine/LevelScriptActor.h"
+#include "Misc/OutputDeviceNull.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -28,6 +30,7 @@ void AMainPlayerController::BeginPlay()
 
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
 	ServerCheckMatchState();
+
 
 	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
 	if (MainPlayerState)
@@ -42,10 +45,27 @@ void AMainPlayerController::BeginPlay()
 		}
 	}
 
-	if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
+	
+	if (HasAuthority())
 	{
-		Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
+		if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
+		{
+			Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
+		}
 	}
+	else
+	{
+		if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
+		{
+			ServerPossessCharacter();
+		}
+	}
+	Init();
+}
+
+void AMainPlayerController::ServerPossessCharacter_Implementation()
+{
+	Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
 }
 
 void AMainPlayerController::Init()
@@ -55,7 +75,7 @@ void AMainPlayerController::Init()
 		TArray<AActor*> Locs;
 		UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MeshCaptureLocation"), Locs);
 		if (Locs.Num() > 0 && Locs[0])
-		{
+		{;
 			Locs[0]->SetActorHiddenInGame(true);
 			UObject* SpawnActor = Cast<UObject>(StaticLoadObject(UObject::StaticClass(), NULL,
 				TEXT("/Script/Engine.Blueprint'/Game/Blueprints/CharacterMeshCapture/BP_CharacterMeshCapture.BP_CharacterMeshCapture'")));
@@ -79,24 +99,44 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
-	if (MainCharacter)
+	if (MainCharacter) 
 	{
 		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
-		Init();
-
+	}
+	if (MainCharacter)
+	{
 		FTimerHandle WaitHandle;
 		float WaitTime = 0.05f;
-		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([WeakThis = TWeakObjectPtr<AMainPlayerController>(this), InPawn]()
+		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([WeakThis = TWeakObjectPtr<AMainPlayerController>(this), InPawn, MainCharacter]()
 			{
+				WeakThis->SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
 				if (WeakThis.IsValid())
 				{
 					AMainGameMode* GameMode = Cast<AMainGameMode>(WeakThis->GetWorld()->GetAuthGameMode());
 					if (GameMode)
 					{
+						WeakThis->PollInit();
 						GameMode->OnPlayerPossessCharacter(WeakThis.Get(), InPawn);
 					}
+					else
+					{
+						AGameMode* NormalGameMode = Cast<AGameMode>(WeakThis->GetWorld()->GetAuthGameMode());
+						if (NormalGameMode)
+						{
+							FOutputDeviceNull ar;
+							if (WeakThis->GetLevel() && WeakThis->GetLevel()->GetLevelScriptActor())
+							{
+								WeakThis->GetLevel()->GetLevelScriptActor()->CallFunctionByNameWithArguments(TEXT("SetCamera"), ar, NULL, true);
+							}
+							WeakThis->OwningCharacter = Cast<AMainCharacter>(WeakThis->GetPawn());
+							if (WeakThis->OwningCharacter)
+							{
+								WeakThis->OwningCharacter->SetCustomizingInfoToMesh(WeakThis->GetSaveGameData());
+							}
+						}
+					}
 				}
-				
+
 			}), WaitTime, false);
 	}
 }
@@ -325,9 +365,12 @@ void AMainPlayerController::OnRep_Pawn()
 	Super::OnRep_Pawn();
 	OwningCharacter = Cast<AMainCharacter>(GetPawn());
 
-	if (OwningCharacter)
+	if (!HasAuthority())
 	{
-		Init();
+		if (OwningCharacter)
+		{
+			Init();
+		}
 	}
 }
 
@@ -412,7 +455,7 @@ void AMainPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 	{
 		if (Ammo == -1)
 		{
-			PlayerHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString("-"));
+			PlayerHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString(""));
 		}
 		else
 		{
@@ -432,7 +475,7 @@ void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		if (Ammo == -1)
 		{
-			PlayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString("-"));
+			PlayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(""));
 		}
 		else
 		{
@@ -553,7 +596,7 @@ UCustomizingWidget* AMainPlayerController::CreateCustomizingWidget(TSubclassOf<U
 
 FCustomizingSaveDataStruct AMainPlayerController::GetSaveGameData()
 {
-	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState); 
 	if (MainPlayerState)
 	{
 		return MainPlayerState->GetSaveGameData();

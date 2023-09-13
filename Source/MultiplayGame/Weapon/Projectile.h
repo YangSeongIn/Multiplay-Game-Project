@@ -13,8 +13,8 @@ UCLASS()
 class MULTIPLAYGAME_API AProjectile : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	AProjectile();
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
@@ -23,47 +23,47 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-		virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void MulticastHitImpact(const FHitResult HitResult);
+	void MulticastHitImpact(const FHitResult HitResult);
 
 	UPROPERTY(EditAnywhere)
-		float Damage = 20.f;
+	float Damage = 20.f;
 
 	UPROPERTY(EditAnywhere)
-		class UProjectileMovementComponent* ProjectileMovementComponent;
+	class UProjectileMovementComponent* ProjectileMovementComponent;
 
 private:
 	UPROPERTY(EditAnywhere)
-		class UBoxComponent* CollisionBox;
+	class UBoxComponent* CollisionBox;
 
 	UPROPERTY(EditAnywhere)
-		UParticleSystem* Tracer;
+	UParticleSystem* Tracer;
 
 	UPROPERTY()
-		class UParticleSystemComponent* TracerComponent;
+	class UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY()
-		UParticleSystem* FinalImpactParticles;
+	UParticleSystem* FinalImpactParticles;
 	UPROPERTY()
-		USoundCue* FinalImpactSound;
+	USoundCue* FinalImpactSound;
 
 	UPROPERTY(EditAnywhere)
-		UParticleSystem* ImpactParticlesMetal;
+	UParticleSystem* ImpactParticlesMetal;
 
 	UPROPERTY(EditAnywhere)
-		UParticleSystem* ImpactParticlesBody;
+	UParticleSystem* ImpactParticlesBody;
 
 	UPROPERTY(EditAnywhere)
-		USoundCue* ImpactSoundMetal;
+	USoundCue* ImpactSoundMetal;
 
 	UPROPERTY(EditAnywhere)
-		USoundCue* ImpactSoundBody;
+	USoundCue* ImpactSoundBody;
 
 	void SetBulletMarks(UParticleSystem* Particle, USoundCue* SoundCue);
 
-public:	
-	
+public:
+
 
 };

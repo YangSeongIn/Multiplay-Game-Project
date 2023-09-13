@@ -56,7 +56,6 @@ public:
 
 public:
 	AActor* GetMeshCapture(int32 n);
-	bool CanAddPlayerNum();
 	FORCEINLINE int32 GetPlayerNum() { return PlayerNum; };
 	FORCEINLINE void SetPlayerNum(int32 NewNum) { PlayerNum = NewNum; };
 };

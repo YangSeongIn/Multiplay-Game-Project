@@ -108,7 +108,7 @@ void UCombatComponent::Fire()
 		StartFireTimer();
 
 		// Fix Text
-		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
+		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon);
 		InventoryComponent->UpdateAmmoSlot();
 	}
 }
@@ -162,24 +162,22 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-
 	// weapon inventory full
 	if (Weapon1 && Weapon2)
 	{
 		AWeapon*& WeaponTemp = EquippedWeapon == Weapon1 ? Weapon1 : Weapon2;
+		int32 idx = WeaponTemp == Weapon1 ? 0 : 1;
+		InventoryComponent->SetWeaponInfoID(idx, "");
 		EquippedWeapon->Dropped();
 
 		Character->DetachItemOnMeshCapture("RightHandSocket");
 		WeaponTemp = WeaponToEquip;
-		int32 Num = WeaponTemp == Weapon1 ? 0 : 1;
-		//Weapons[Num] = WeaponToEquip;
 		EquipOnHand(WeaponTemp);
 	}
 	// Weapon slot is empty
 	else if (Weapon1 == nullptr && Weapon2 == nullptr)
 	{
 		Weapon1 = WeaponToEquip;
-		//Weapons[0] = WeaponToEquip;
 		EquipOnHand(Weapon1);
 	}
 	// Empty weapon slot exist
@@ -188,12 +186,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		if (Weapon1 == nullptr) 
 		{
 			Weapon1 = WeaponToEquip;
-			//Weapons[0] = WeaponToEquip;
 		}
 		else if (Weapon2 == nullptr)
 		{
 			Weapon2 = WeaponToEquip;
-			//Weapons[1] = WeaponToEquip;
 		}
 
 		if (EquippedWeapon == nullptr)
@@ -205,7 +201,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 			EquipOnBack(WeaponToEquip);
 		}
 	}
-
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 
@@ -417,7 +412,6 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 	{
 		if (TargetWeapon)
 		{
-			FString s1 = TargetWeapon == Weapon1 ? "Weapon1" : "Weapon2";
 			// TargetWeapon -> Hand
 			if (TargetWeapon == EquippedWeapon)
 			{
@@ -425,7 +419,6 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 				TargetWeapon->Dropped();
 				Character->DetachItemOnMeshCapture("RightHandSocket");
 				TargetWeapon = DraggedWeapon;
-				//Weapons[Num] = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			// TargetWeapon -> Back
@@ -435,7 +428,6 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 				TargetWeapon->Dropped();
 				Character->DetachItemOnMeshCapture("WeaponSocket");
 				TargetWeapon = DraggedWeapon;
-				//Weapons[Num] = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
 		}
@@ -443,25 +435,21 @@ void UCombatComponent::EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString I
 		{
 			if (RestWeapon && RestWeapon == EquippedWeapon)
 			{
-				//Weapons[Num] = DraggedWeapon;
 				TargetWeapon = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
 			else if (RestWeapon && RestWeapon == SecondaryWeapon)
 			{
-				//Weapons[Num] = DraggedWeapon;
 				TargetWeapon = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			else if (NumOfWeapon == EWeaponNum::EWN_Weapon1)
 			{
-				//Weapons[0] = DraggedWeapon;
 				Weapon1 = DraggedWeapon;
 				EquipOnHand(DraggedWeapon);
 			}
 			else if (NumOfWeapon == EWeaponNum::EWN_Weapon2)
 			{
-				//Weapons[1] = DraggedWeapon;
 				Weapon2 = DraggedWeapon;
 				EquipOnBack(DraggedWeapon);
 			}
@@ -477,18 +465,11 @@ void UCombatComponent::DropWeaponByDragging(EWeaponNum WeaponNum)
 	AWeapon*& TargetStateWeapon = WeaponNum == EWeaponNum::EWN_Weapon1 ? EquippedWeapon : SecondaryWeapon;
 	PlayEquipWeaponSound(TargetStateWeapon);
 
-	/*if (Weapons[0] == TargetWeapon)
-	{
-		Weapons[0] = nullptr;
-	}
-	else if (Weapons[1] = TargetWeapon)
-	{
-		Weapons[1] = nullptr;
-	}*/
-
 	if (TargetWeapon == EquippedWeapon)
 	{
 		Character->DetachItemOnMeshCapture("RightHandSocket");
+		Character->GetCharacterMovement()->bOrientRotationToMovement = true;
+		Character->bUseControllerRotationYaw = false;
 	}
 	else if (TargetWeapon == SecondaryWeapon)
 	{
@@ -601,7 +582,6 @@ void UCombatComponent::Reload()
 void UCombatComponent::ServerReload_Implementation()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
-
 	CombatState = ECombatState::ECS_Reloading;
 	HandleReload();
 }
@@ -621,7 +601,8 @@ void UCombatComponent::FinishReloading()
 
 	if (InventoryComponent)
 	{
-		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
+		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon);
+		InventoryComponent->UpdateWeaponInfoSlot(SecondaryWeapon);
 	}
 }
 
@@ -640,6 +621,7 @@ void UCombatComponent::UpdateAmmoValues()
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
+
 	EquippedWeapon->AddAmmo(-ReloadAmount);
 }
 
@@ -652,13 +634,19 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 	}
 	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
 	{
-		
+		// Reload();
 	}
 
-	if (InventoryComponent && EquippedWeapon)
+	if (InventoryComponent)
 	{
-		InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), GetCarriedAmmo(EquippedWeapon->GetWeaponType()));
-		InventoryComponent->OnWeaponInfoUpdate.Broadcast();
+		if (EquippedWeapon)
+		{
+			InventoryComponent->UpdateWeaponInfoSlot(EquippedWeapon);
+		}
+		if (SecondaryWeapon)
+		{
+			InventoryComponent->UpdateWeaponInfoSlot(SecondaryWeapon);
+		}
 	}
 }
 
@@ -666,24 +654,60 @@ void UCombatComponent::SubAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 {
 	if (CarriedAmmoMap.Contains(WeaponType))
 	{
-		if (CarriedAmmoMap[WeaponType] < AmmoAmount)
+		if (EquippedWeapon && EquippedWeapon->GetWeaponType() == WeaponType)
 		{
-			AmmoAmount -= CarriedAmmoMap[WeaponType];
-			CarriedAmmoMap[WeaponType] = 0;
-
-			if (EquippedWeapon)
-			{
-				EquippedWeapon->SetAmmo(EquippedWeapon->GetAmmo() - AmmoAmount);
-			}
-			
+			SubEquippedWeaponAmmo(WeaponType, AmmoAmount);
+		}
+		else if (SecondaryWeapon && SecondaryWeapon->GetWeaponType() == WeaponType)
+		{
+			SubSecondaryWeaponAmmo(AmmoAmount);
 		}
 		else
 		{
-			CarriedAmmoMap[WeaponType] = CarriedAmmoMap[WeaponType] - AmmoAmount;
+			CarriedAmmoMap[WeaponType] -= AmmoAmount;
 		}
 		UpdateCarriedAmmo();
 	}
-	InventoryComponent->OnWeaponInfoUpdate.Broadcast();
+}
+
+void UCombatComponent::SubEquippedWeaponAmmo(EWeaponType WeaponType, int32& AmmoAmount)
+{
+	if (CarriedAmmoMap[WeaponType] <= AmmoAmount)
+	{
+		AmmoAmount -= CarriedAmmoMap[WeaponType];
+		CarriedAmmoMap[WeaponType] = 0;
+		if (EquippedWeapon->GetAmmo() < AmmoAmount)
+		{
+			AmmoAmount -= EquippedWeapon->GetAmmo();
+			EquippedWeapon->SetAmmo(0);
+			if (SecondaryWeapon && SecondaryWeapon->GetWeaponType() == WeaponType)
+			{
+				SecondaryWeapon->SetAmmo(SecondaryWeapon->GetAmmo() - AmmoAmount);
+			}
+		}
+		else
+		{
+			EquippedWeapon->SetAmmo(EquippedWeapon->GetAmmo() - AmmoAmount);
+		}
+	}
+	else
+	{
+		CarriedAmmoMap[WeaponType] -= AmmoAmount;
+	}
+}
+
+void UCombatComponent::SubSecondaryWeaponAmmo(int32& AmmoAmount)
+{
+	if (CarriedAmmoMap[SecondaryWeapon->GetWeaponType()] <= AmmoAmount)
+	{
+		AmmoAmount -= CarriedAmmoMap[SecondaryWeapon->GetWeaponType()];
+		CarriedAmmoMap[SecondaryWeapon->GetWeaponType()] = 0;
+		SecondaryWeapon->SetAmmo(SecondaryWeapon->GetAmmo() - AmmoAmount);
+	}
+	else
+	{
+		CarriedAmmoMap[SecondaryWeapon->GetWeaponType()] -= AmmoAmount;
+	}
 }
 
 void UCombatComponent::OnRep_CombatState()

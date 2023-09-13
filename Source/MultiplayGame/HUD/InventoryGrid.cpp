@@ -35,7 +35,7 @@ bool UInventoryGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 			AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 			if (Character)
 			{
-				Character->EquipButtonPressed();
+				Character->Equip(SlotForDragDrop->GetItem());
 			}
 		}
 	}
@@ -95,10 +95,8 @@ void UInventoryGrid::UpdatedInventory()
 
 void UInventoryGrid::MulticastBinding_Implementation()
 {
-	UE_LOG(LogTemp, Log, TEXT("SERVERBINDING 1"));
 	if (!InventoryComponent->OnInventoryUpdate.IsBound())
 	{
-		UE_LOG(LogTemp, Log, TEXT("SERVERBINDING 2"));
 		InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
 	}
 }

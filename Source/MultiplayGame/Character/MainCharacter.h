@@ -53,8 +53,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerAttachItemOnMeshCapture(const FString& SocketName);
 
-	UFUNCTION(Server, Reliable)
-	void ServerApplyCustomizingInfo(FCustomizingSaveDataStruct CustomizingSaveData);
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastApplyCustomizingInfo(FCustomizingSaveDataStruct CustomizingSaveData);
 	UFUNCTION(Client, Reliable)

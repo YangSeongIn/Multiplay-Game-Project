@@ -230,6 +230,7 @@ private:
 
 public:
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* InventoryComp) { InventoryComponent = InventoryComp; };
+	FORCEINLINE void SetPlayerController(class AMainPlayerController* PlayerController) { Controller = PlayerController; };
 	FORCEINLINE int32 GetCarriedAmmo(EWeaponType TypeOfWeapon) { return CarriedAmmoMap.Contains(TypeOfWeapon) ? CarriedAmmoMap[TypeOfWeapon] : -1; };
 	FORCEINLINE class AWeapon* GetWeapon1() { return Weapon1; };
 	FORCEINLINE class AWeapon* GetWeapon2() { return Weapon2; };

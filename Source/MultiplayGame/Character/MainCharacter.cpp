@@ -163,11 +163,6 @@ void AMainCharacter::ElimTimerFinished()
 	}
 }
 
-void AMainCharacter::ServerApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
-{
-	MulticastApplyCustomizingInfo(CustomizingSaveData);
-}
-
 void AMainCharacter::MulticastApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
 	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
@@ -175,20 +170,14 @@ void AMainCharacter::MulticastApplyCustomizingInfo_Implementation(FCustomizingSa
 	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
 	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
 	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
-	if (IsLocallyControlled())
-	{
-		ClientUpdateMeshCapture(CustomizingSaveData);
-	}
 }
 
 void AMainCharacter::ClientUpdateMeshCapture_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	if (Controller)
+	if (Controller == nullptr) return;
+	if (ACharacterMeshCapture* MeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture())
 	{
-		if (ACharacterMeshCapture* MeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture())
-		{
-			MeshCapture->ClientUpdateMeshCapture(this, CustomizingSaveData);
-		}
+		MeshCapture->UpdateMeshCapture(this, CustomizingSaveData);
 	}
 }
 
@@ -213,8 +202,6 @@ void AMainCharacter::BeginPlay()
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
-
-	OnApplyingCustomizingInfo.AddUFunction(this, FName("MulticastApplyCustomizingInfo"));
 }
 
 void AMainCharacter::OnRep_PlayerState()
@@ -314,16 +301,7 @@ void AMainCharacter::Destroyed()
 void AMainCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	//AMainPlayerController* PlayerController = Cast<AMainPlayerController>(NewController);
-	//if (PlayerController)
-	//{
-	//	FCustomizingSaveDataStruct SaveData = PlayerController->GetSaveGameData();
-	//	if (OnApplyingCustomizingInfo.IsBound())
-	//	{
-	//		OnApplyingCustomizingInfo.Broadcast(SaveData);
-	//	}
-	//	//ServerApplyCustomizingInfo(SaveData);
-	//}
+	
 }
 
 void AMainCharacter::PlayFireMontage(bool bAiming)
@@ -625,32 +603,6 @@ void AMainCharacter::SelectTertiaryWeapon()
 
 void AMainCharacter::InventoryKeyPressed()
 {
-	/*if (InventoryWidgetClass)
-	{
-		if (IsLocallyControlled())
-		{
-			if (InventoryWidget)
-			{
-				InventoryWidget->RemoveFromParent();
-				InventoryWidget = nullptr;
-			}
-			else
-			{
-				InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
-				if (InventoryWidget)
-				{
-					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
-					InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
-					InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
-					InventoryWidget->AddToViewport();
-				}
-			}
-		}
-		else
-		{
-			ServerInventoryWidget();
-		}
-	}*/
 	if (InventoryWidgetClass)
 	{
 		if (InventoryWidget)

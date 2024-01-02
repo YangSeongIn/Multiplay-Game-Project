@@ -48,7 +48,4 @@ private:
 	UPROPERTY()
 	FCustomizingSaveDataStruct CustomizingSaveData;
 
-	/*UPROPERTY()
-	FCustomizingCategoryArrays CustomizingDatas;*/
-
 };

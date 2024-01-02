@@ -28,9 +28,7 @@ public:
 	FOnOverlappedItemUpdate OnOverlappedItemUpdate;
 
 	void AddToInventory(class AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName, EWeaponType WeaponType);
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastUpdateInventory();
-	TTuple<int, bool> FindSlot(FString ItemID);
+
 	int32 GetMaxStackSize(FString ItemID);
 	void AddToStack(int Idx, int Quantity);
 	TTuple<bool, int> AnyEmptySlotAvailable();
@@ -46,18 +44,13 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastUpdate();
 
-	/*UFUNCTION(Server, Reliable)
-	void ServerTransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex);*/
-
 	void AddToWeaponSlot(class AWeapon* Weapon, FString ItemID, int32 AmmoQuantity, int32 CarriedAmmoQuantity, EItemType ItemType);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSwapTwoWeapons();
 
-	//void AddOverlappedItem(FString ItemID, int32 Quantity, EItemType ItemType, FString InherenceName, class AItem* Item);
-	//void RemoveOverlappedItem(FString InherenceName);
-
 	void UpdateWeaponInfoSlot(class AWeapon* WeaponToUpdate);
+
 	void UpdateAmmoSlot();
 
 	void AddToSelectedWeaponSlot(class AItem* Item, EWeaponNum WeaponNum);

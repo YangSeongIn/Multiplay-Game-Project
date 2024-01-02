@@ -54,7 +54,7 @@ protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
 	virtual void OnRep_Pawn() override;
-
+	virtual void OnRep_PlayerState() override;
 	/**
 	* Sync time between client and server
 	*/

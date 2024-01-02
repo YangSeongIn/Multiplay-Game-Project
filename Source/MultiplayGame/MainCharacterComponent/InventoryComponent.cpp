@@ -26,37 +26,39 @@ void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 UTexture2D* UInventoryComponent::GetWeaponImage(AWeapon* WeaponToFind, bool bDetailImage)
 {
 	FString ItemIDToFind = "";
-	if (WeaponToFind && WeaponToFind->GetItemDataComponent())
+
+	if (WeaponToFind == nullptr || WeaponToFind->GetItemDataComponent() == nullptr) 
+		return nullptr;
+
+	ItemIDToFind = WeaponToFind->GetItemDataComponent()->GetItemID().RowName.ToString();
+
+	if (ItemIDToFind == "") 
+		return nullptr;
+
+	FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemIDToFind), "");
+
+	if (ItemStruct == nullptr) 
+		return nullptr;
+
+	if (bDetailImage)
 	{
-		ItemIDToFind = WeaponToFind->GetItemDataComponent()->GetItemID().RowName.ToString();
-		if (ItemIDToFind != "")
-		{
-			FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemIDToFind), "");
-			if (ItemStruct)
-			{
-				if (bDetailImage)
-				{
-					return ItemStruct->DetailThumbnail;
-				}
-				else
-				{
-					return ItemStruct->Thumbnail;
-				}
-			}
-			else
-			{
-				return nullptr;
-			}
-		}
+		return ItemStruct->DetailThumbnail;
+	}
+	else
+	{
+		return ItemStruct->Thumbnail;
 	}
 	return nullptr;
 }
 
+// when player die
 void UInventoryComponent::RemoveAllContents()
 {
 	for (int32 i = 0; i < Slots.Num(); i++)
 	{
-		DropInventoryItemByDragging(i);
+		//DropInventoryItemByDragging(i);
+		AItem* ItemToSpawn = Slots[i].Item;
+		DropPickup(ItemToSpawn, i);
 	}
 }
 
@@ -128,28 +130,6 @@ void UInventoryComponent::AddToInventory(AItem* Item, int32 Quantity, EItemType 
 	{
 		OnInventoryUpdate.Broadcast();
 	}
-	//MulticastUpdateInventory();
-}
-
-void UInventoryComponent::MulticastUpdateInventory_Implementation()
-{
-	
-}
-
-TTuple<int, bool> UInventoryComponent::FindSlot(FString ItemID)
-{
-	for (int i = 0; i < Slots.Num(); i++)
-	{
-		FInventorySlotStruct x = Slots[i];
-		if (x.ItemID == ItemID)
-		{
-			if (x.Quantity < GetMaxStackSize(ItemID))
-			{
-				return MakeTuple(i, true);
-			}
-		}
-	}
-	return MakeTuple(-1, false);
 }
 
 int32 UInventoryComponent::GetMaxStackSize(FString ItemID)
@@ -334,7 +314,6 @@ void UInventoryComponent::DropPickup(AItem* ItemToSpawn, const int32& ContentInd
 	{
 		DropAmmo(Pickup, ContentIndex);
 		Pickup->SetActive(true, Character->GetGroundLocation());
-		//UpdateAmmoSlot();
 
 		Slots.RemoveAt(ContentIndex);
 

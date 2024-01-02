@@ -23,6 +23,7 @@
 #include "../SaveGameData/SaveGameData.h"
 #include "Engine/LevelScriptActor.h"
 #include "Misc/OutputDeviceNull.h"
+#include "../MainCharacterComponent/CombatComponent.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -98,46 +99,27 @@ void AMainPlayerController::Init()
 void AMainPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
-	if (MainCharacter) 
-	{
-		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
-	}
-	if (MainCharacter)
-	{
-		FTimerHandle WaitHandle;
-		float WaitTime = 0.05f;
-		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([WeakThis = TWeakObjectPtr<AMainPlayerController>(this), InPawn, MainCharacter]()
-			{
-				WeakThis->SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
-				if (WeakThis.IsValid())
-				{
-					AMainGameMode* GameMode = Cast<AMainGameMode>(WeakThis->GetWorld()->GetAuthGameMode());
-					if (GameMode)
-					{
-						WeakThis->PollInit();
-						GameMode->OnPlayerPossessCharacter(WeakThis.Get(), InPawn);
-					}
-					else
-					{
-						AGameMode* NormalGameMode = Cast<AGameMode>(WeakThis->GetWorld()->GetAuthGameMode());
-						if (NormalGameMode)
-						{
-							FOutputDeviceNull ar;
-							if (WeakThis->GetLevel() && WeakThis->GetLevel()->GetLevelScriptActor())
-							{
-								WeakThis->GetLevel()->GetLevelScriptActor()->CallFunctionByNameWithArguments(TEXT("SetCamera"), ar, NULL, true);
-							}
-							WeakThis->OwningCharacter = Cast<AMainCharacter>(WeakThis->GetPawn());
-							if (WeakThis->OwningCharacter)
-							{
-								WeakThis->OwningCharacter->SetCustomizingInfoToMesh(WeakThis->GetSaveGameData());
-							}
-						}
-					}
-				}
 
-			}), WaitTime, false);
+	FOutputDeviceNull ar;
+	GetLevel()->GetLevelScriptActor()->CallFunctionByNameWithArguments(TEXT("SetCamera"), ar, NULL, true);
+
+	if (HasAuthority())
+	{
+		AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
+		if (MainCharacter == nullptr) return;
+
+		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
+		AMainGameMode* GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+		if (GameMode)
+		{
+			PollInit();
+			//GameMode->OnPlayerPossessCharacter(this, InPawn);
+		}
+		OwningCharacter = Cast<AMainCharacter>(GetPawn());
+		if (OwningCharacter)
+		{
+			OwningCharacter->GetCombatComponent()->SetPlayerController(this);
+		}
 	}
 }
 
@@ -264,18 +246,6 @@ void AMainPlayerController::UpdateWeaponState()
 	}
 }
 
-void AMainPlayerController::UpdateMeshCaptureCustomizingInfo(FCustomizingSaveDataStruct Data)
-{
-	/*if (MeshCapture && OwningCharacter)
-	{
-		MeshCapture->HairMesh = OwningCharacter->Hairs[Data.HairIndex];
-		MeshCapture->GoggleMesh = OwningCharacter->Goggles[Data.GoggleIndex];
-		MeshCapture->BeardMesh = OwningCharacter->Beards[Data.BeardIndex];
-		MeshCapture->UpperBodyMesh = OwningCharacter->UpperBodies[Data.UpperBodyIndex];
-		MeshCapture->LowerBodyMesh = OwningCharacter->LowerBodies[Data.LowerBodyIndex];
-	}*/
-}
-
 void AMainPlayerController::SetWeaponImage(int32 Num)
 {
 	if (CharacterOverlay)
@@ -365,12 +335,35 @@ void AMainPlayerController::OnRep_Pawn()
 	Super::OnRep_Pawn();
 	OwningCharacter = Cast<AMainCharacter>(GetPawn());
 
-	if (!HasAuthority())
+	if (OwningCharacter)
 	{
-		if (OwningCharacter)
-		{
-			Init();
-		}
+		Init();
+	} 
+
+	AMainPlayerState* mainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	if (mainPlayerState)
+	{
+		mainPlayerState->SetMeshWithCustomizingInfo();
+	}
+}
+
+void AMainPlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	FOutputDeviceNull ar;
+	GetLevel()->GetLevelScriptActor()->CallFunctionByNameWithArguments(TEXT("SetCamera"), ar, NULL, true);
+
+	OwningCharacter = Cast<AMainCharacter>(GetPawn());
+	if (OwningCharacter)
+	{
+		OwningCharacter->GetCombatComponent()->SetPlayerController(this);
+	}
+	
+	AMainPlayerState* mainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	if (mainPlayerState)
+	{
+		mainPlayerState->SetMeshWithCustomizingInfo();
 	}
 }
 

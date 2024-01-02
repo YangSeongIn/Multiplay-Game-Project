@@ -119,5 +119,6 @@ void AMainPlayerState::SetMeshWithCustomizingInfo()
 	if (Character)
 	{
 		Character->MulticastApplyCustomizingInfo(SaveData);
+		Character->ClientUpdateMeshCapture(SaveData);
 	}
 }

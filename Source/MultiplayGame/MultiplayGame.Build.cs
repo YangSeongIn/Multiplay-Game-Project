@@ -8,7 +8,7 @@ public class MultiplayGame : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "MultiplayerSessions" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "MultiplayerSessions", "FCTween" });
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "OnlineSubsystem" });
         PublicIncludePaths.AddRange(new string[] { "MultiplayerSessions/Public" });
         PrivateIncludePaths.AddRange(new string[] { "MultiplayerSessions/Private" });

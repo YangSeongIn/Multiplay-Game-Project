@@ -51,7 +51,7 @@ ACharacterMeshCapture::ACharacterMeshCapture()
 	SkeletalMeshOnBack->SetupAttachment(UpperBodyMesh, FName("WeaponSocket"));
 }
 
-void ACharacterMeshCapture::ClientUpdateMeshCapture_Implementation(AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData)
+void ACharacterMeshCapture::UpdateMeshCapture(AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData)
 {
 	HairMesh->SetSkeletalMesh(MainCharacter->Hairs[CustomizingSaveData.HairIndex].Mesh);
 	GoggleMesh->SetSkeletalMesh(MainCharacter->Goggles[CustomizingSaveData.GoggleIndex].Mesh);

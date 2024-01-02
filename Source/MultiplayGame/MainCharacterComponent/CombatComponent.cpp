@@ -614,6 +614,7 @@ void UCombatComponent::UpdateAmmoValues()
 	{
 		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
 		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		UE_LOG(LogTemp, Log, TEXT("Ammo updated"));
 	}
 
 	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
@@ -907,8 +908,10 @@ bool UCombatComponent::CanFire()
 void UCombatComponent::OnRep_CarriedAmmo()
 {
 	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : nullptr;
+	UE_LOG(LogTemp, Log, TEXT("11Carried Ammo Changed"));
 	if (Controller)
 	{
+		UE_LOG(LogTemp, Log, TEXT("Carried Ammo Changed"));
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 }

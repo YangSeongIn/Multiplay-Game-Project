@@ -58,17 +58,6 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientUpdateMeshCapture(FCustomizingSaveDataStruct CustomizingSaveData);
 
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> Hairs;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> Goggles;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> Beards;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> UpperBodies;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> LowerBodies;
-
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* UpperBodyMesh;
 

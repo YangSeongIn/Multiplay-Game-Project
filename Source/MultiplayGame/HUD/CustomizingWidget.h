@@ -10,6 +10,7 @@
 #include "CustomizingWidget.generated.h"
 
 class UButton;
+class UCostomizingDataAsset;
 
 UCLASS()
 class MULTIPLAYGAME_API UCustomizingWidget : public UUserWidget
@@ -35,44 +36,51 @@ private:
 	UPROPERTY()
 	TArray<class USkeletalMesh*> HeadMeshes;
 
-	UPROPERTY(EditAnywhere)
-	UDataTable* DataTable;
-
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	class AMainCharacter* Character;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_Hair;
+
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_Goggle;
+
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_Beard;
+
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_UpperBody;
+
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_LowerBody;
+
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_Back;
 
 	UPROPERTY(meta=(BindWidget))
 	class UWrapBox* Grid;
 
+	TArray<class UCustomizingSlot*> Slots;
+
 	UFUNCTION()
 	void OnClicked_Btn_Hair();
+
 	UFUNCTION()
 	void OnClickedBtn_Goggle();
+
 	UFUNCTION()
 	void OnClicked_Btn_Beard();
+
 	UFUNCTION()
 	void OnClicked_Btn_UpperBody();
+
 	UFUNCTION()
 	void OnClicked_Btn_LowerBody();
-
-	TArray<class UCustomizingSlot*> Slots;
 
 	void SetMeshVisibility(USkeletalMesh* MeshToSet, USkeletalMeshComponent* TargetMesh);
 
 	void SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, ECustomizingCategory Category, int32 BodyIndex);
+
 public:
 	FORCEINLINE TArray<class UCustomizingSlot*> GetSlots() { return Slots; };
 	FORCEINLINE class AMainCharacter* GetCharacter() { return Character; };

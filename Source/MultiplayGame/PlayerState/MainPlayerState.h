@@ -34,6 +34,7 @@ public:
 	class USaveGameData* SaveGameData;
 	FString SaveDataName = "SaveData";
 
+	void SetSaveGameData();
 	void SetMeshWithCustomizingInfo();
 
 private:

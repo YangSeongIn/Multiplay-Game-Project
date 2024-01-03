@@ -71,6 +71,18 @@ void AMainPlayerState::OnRep_Defeats()
 	}
 }
 
+void AMainPlayerState::SetSaveGameData()
+{
+	if (UGameplayStatics::DoesSaveGameExist(SaveDataName, 0))
+	{
+		SaveGameData = Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0));
+	}
+	else
+	{
+		SaveGameData = Cast<USaveGameData>(UGameplayStatics::CreateSaveGameObject(USaveGameData::StaticClass()));
+	}
+}
+
 void AMainPlayerState::ApplyCustomizingInfo()
 {
 	Character = Character == nullptr ? Cast<AMainCharacter>(GetPawn()) : Character;
@@ -92,7 +104,8 @@ void AMainPlayerState::UpdateCustomizingInfo()
 
 FCustomizingSaveDataStruct AMainPlayerState::GetSaveGameData()
 {
-	SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
+	SetSaveGameData();
+	// SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
 	if (SaveGameData)
 	{
 		CustomizingSaveData = SaveGameData->GetCutomizingSaveData();
@@ -103,7 +116,8 @@ FCustomizingSaveDataStruct AMainPlayerState::GetSaveGameData()
 
 void AMainPlayerState::SaveData(FCustomizingSaveDataStruct DataToSave)
 {
-	SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
+	SetSaveGameData();
+	// SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
 	if (SaveGameData)
 	{
 		SaveGameData->SetCutomizingSaveData(DataToSave);

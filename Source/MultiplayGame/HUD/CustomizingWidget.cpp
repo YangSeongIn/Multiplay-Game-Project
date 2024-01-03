@@ -14,6 +14,8 @@
 #include "GameFramework/PlayerState.h"
 #include "../PlayerController/MainPlayerController.h"
 #include "../PlayerState/MainPlayerState.h"
+#include "../Data/CostomizingDataAsset.h"
+#include "../GameInstance/MainGameInstance.h"
 
 void UCustomizingWidget::NativeConstruct()
 {
@@ -117,27 +119,37 @@ void UCustomizingWidget::HighlightingSlot(int32 TargetIdx)
 
 void UCustomizingWidget::OnClicked_Btn_Hair()
 {
-	SetCustomizingSlot(Character->Hairs, ECustomizingCategory::ECC_Hair, CustomizingSaveDataStruct.HairIndex);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	SetCustomizingSlot(GameInstance->GetCustomizingDataAsset()->HairMeshes, ECustomizingCategory::ECC_Hair, CustomizingSaveDataStruct.HairIndex);
 }
 
 void UCustomizingWidget::OnClickedBtn_Goggle()
 {
-	SetCustomizingSlot(Character->Goggles, ECustomizingCategory::ECC_Goggle, CustomizingSaveDataStruct.GoggleIndex);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	SetCustomizingSlot(GameInstance->GetCustomizingDataAsset()->GoggleMeshes, ECustomizingCategory::ECC_Goggle, CustomizingSaveDataStruct.GoggleIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_Beard()
 {
-	SetCustomizingSlot(Character->Beards, ECustomizingCategory::ECC_Beard, CustomizingSaveDataStruct.BeardIndex);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	SetCustomizingSlot(GameInstance->GetCustomizingDataAsset()->BeardsMeshes, ECustomizingCategory::ECC_Beard, CustomizingSaveDataStruct.BeardIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_UpperBody()
 {
-	SetCustomizingSlot(Character->UpperBodies, ECustomizingCategory::ECC_UpperBody, CustomizingSaveDataStruct.UpperBodyIndex);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	SetCustomizingSlot(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes, ECustomizingCategory::ECC_UpperBody, CustomizingSaveDataStruct.UpperBodyIndex);
 }
 
 void UCustomizingWidget::OnClicked_Btn_LowerBody()
 {
-	SetCustomizingSlot(Character->LowerBodies, ECustomizingCategory::ECC_LowerBody, CustomizingSaveDataStruct.LowerBodyIndex);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	SetCustomizingSlot(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes, ECustomizingCategory::ECC_LowerBody, CustomizingSaveDataStruct.LowerBodyIndex);
 }
 
 void UCustomizingWidget::SetCustomizingSlot(const TArray<FCustomizingInfoStruct>& InfoStructToCustomize, ECustomizingCategory Category, int32 BodyIndex)

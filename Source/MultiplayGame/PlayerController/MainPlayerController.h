@@ -75,6 +75,8 @@ protected:
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime);
 	void PollInit();
+	void PossessInit();
+	void HUDInit();
 
 	UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
@@ -89,6 +91,9 @@ protected:
 private:
 	UPROPERTY()
 	class APlayerHUD* PlayerHUD;
+
+	UPROPERTY()
+	class AStartupHUD* MenuHUD;
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;

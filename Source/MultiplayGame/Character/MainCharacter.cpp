@@ -38,6 +38,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "../SaveGameData/SaveGameData.h"
 #include "../HUD/CustomizingWidget.h"
+#include "../Data/CostomizingDataAsset.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -165,11 +166,13 @@ void AMainCharacter::ElimTimerFinished()
 
 void AMainCharacter::MulticastApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
-	GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
-	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
-	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
-	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	HairMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->HairMeshes[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->GoggleMeshes[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->BeardsMeshes[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes[CustomizingSaveData.LowerBodyIndex].Mesh);
 }
 
 void AMainCharacter::ClientUpdateMeshCapture_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
@@ -211,11 +214,13 @@ void AMainCharacter::OnRep_PlayerState()
 
 void AMainCharacter::SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
-	GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
-	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
-	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
-	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	HairMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->HairMeshes[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->GoggleMeshes[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->BeardsMeshes[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes[CustomizingSaveData.LowerBodyIndex].Mesh);
 }
 
 // Called every frame

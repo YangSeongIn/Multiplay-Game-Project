@@ -24,43 +24,15 @@
 #include "Engine/LevelScriptActor.h"
 #include "Misc/OutputDeviceNull.h"
 #include "../MainCharacterComponent/CombatComponent.h"
+#include "../HUD/StartupHUD.h"
 
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PlayerHUD = Cast<APlayerHUD>(GetHUD());
+	HUDInit();
 	ServerCheckMatchState();
-
-
-	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
-	if (MainPlayerState)
-	{
-		if (UGameplayStatics::DoesSaveGameExist(SaveDataName, 0))
-		{
-			MainPlayerState->SaveGameData = Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0));
-		}
-		else
-		{
-			MainPlayerState->SaveGameData = Cast<USaveGameData>(UGameplayStatics::CreateSaveGameObject(USaveGameData::StaticClass()));
-		}
-	}
-
-	
-	if (HasAuthority())
-	{
-		if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
-		{
-			Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
-		}
-	}
-	else
-	{
-		if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
-		{
-			ServerPossessCharacter();
-		}
-	}
+	PossessInit();
 	Init();
 }
 
@@ -71,55 +43,50 @@ void AMainPlayerController::ServerPossessCharacter_Implementation()
 
 void AMainPlayerController::Init()
 {
-	if (MeshCapture == nullptr)
-	{
-		TArray<AActor*> Locs;
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MeshCaptureLocation"), Locs);
-		if (Locs.Num() > 0 && Locs[0])
-		{;
-			Locs[0]->SetActorHiddenInGame(true);
-			UObject* SpawnActor = Cast<UObject>(StaticLoadObject(UObject::StaticClass(), NULL,
-				TEXT("/Script/Engine.Blueprint'/Game/Blueprints/CharacterMeshCapture/BP_CharacterMeshCapture.BP_CharacterMeshCapture'")));
-			if (SpawnActor)
-			{
-				UBlueprint* GeneratedBP = Cast<UBlueprint>(SpawnActor);
-				if (GeneratedBP)
-				{
-					UWorld* World = GetWorld();
-					FActorSpawnParameters SpawnParams;
-					SpawnParams.Owner = this;
-					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-					MeshCapture = World->SpawnActor<ACharacterMeshCapture>(GeneratedBP->GeneratedClass, Locs[0]->GetActorLocation(), Locs[0]->GetActorRotation(), SpawnParams);
-				}
-			}
-		}
-	}
+	if (MeshCapture) return;
+	TArray<AActor*> Locs;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MeshCaptureLocation"), Locs);
+	if (Locs.Num() == 0 || Locs[0] == nullptr) return;
+
+	Locs[0]->SetActorHiddenInGame(true);
+
+	UObject* SpawnActor = Cast<UObject>(StaticLoadObject(UObject::StaticClass(), NULL, TEXT("/Script/Engine.Blueprint'/Game/Blueprints/CharacterMeshCapture/BP_CharacterMeshCapture.BP_CharacterMeshCapture'")));
+	if (SpawnActor == nullptr) return;
+	
+	UBlueprint* GeneratedBP = Cast<UBlueprint>(SpawnActor);
+	if (GeneratedBP == nullptr) return;
+		
+	UWorld* World = GetWorld();
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	MeshCapture = World->SpawnActor<ACharacterMeshCapture>(GeneratedBP->GeneratedClass, Locs[0]->GetActorLocation(), Locs[0]->GetActorRotation(), SpawnParams);
 }
 
 void AMainPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	FOutputDeviceNull ar;
-	GetLevel()->GetLevelScriptActor()->CallFunctionByNameWithArguments(TEXT("SetCamera"), ar, NULL, true);
-
-	if (HasAuthority())
+	// Lobby Setting
+	TArray<AActor*> LobbyCamera;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("LobbyCamera"), LobbyCamera);
+	if (LobbyCamera.Num() > 0)
 	{
-		AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
-		if (MainCharacter == nullptr) return;
+		SetViewTargetWithBlend(LobbyCamera[0]);
+	}
+	
+	AMainCharacter* MainCharacter = Cast<AMainCharacter>(InPawn);
+	if (MainCharacter == nullptr) 
+		return;
 
-		SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
-		AMainGameMode* GameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
-		if (GameMode)
-		{
-			PollInit();
-			//GameMode->OnPlayerPossessCharacter(this, InPawn);
-		}
-		OwningCharacter = Cast<AMainCharacter>(GetPawn());
-		if (OwningCharacter)
-		{
-			OwningCharacter->GetCombatComponent()->SetPlayerController(this);
-		}
+	SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
+	PollInit();
+	MainCharacter->GetCombatComponent()->SetPlayerController(this);
+
+	AMainPlayerState* mainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	if (mainPlayerState)
+	{
+		mainPlayerState->SetMeshWithCustomizingInfo();
 	}
 }
 
@@ -148,6 +115,31 @@ void AMainPlayerController::PollInit()
 			}
 		}
 	}
+}
+
+void AMainPlayerController::PossessInit()
+{
+	if (HasAuthority())
+	{
+		if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
+		{
+			Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
+		}
+	}
+	else
+	{
+		if (UGameplayStatics::GetCurrentLevelName(GetWorld()) == "GameStartupMap")
+		{
+			ServerPossessCharacter();
+		}
+	}
+}
+
+void AMainPlayerController::HUDInit()
+{
+	PlayerHUD = Cast<APlayerHUD>(GetHUD());
+	MenuHUD = Cast<AStartupHUD>(GetHUD());
+	if (MenuHUD) MenuHUD->AddMenuOvelay();
 }
 
 void AMainPlayerController::HighPingWarning()
@@ -218,7 +210,6 @@ void AMainPlayerController::UpdateWeaponState()
 	{
 		if (MainCharacter->GetWeapon1() == nullptr)
 		{
-			//CharacterOverlay->ActivateWeapon(false, 0);
 			CharacterOverlay->SetWeaponImage(nullptr, 0);
 		}
 		else if (MainCharacter->GetWeapon1() && MainCharacter->GetWeapon1() == MainCharacter->GetEquippedWeapon())
@@ -232,7 +223,6 @@ void AMainPlayerController::UpdateWeaponState()
 
 		if (MainCharacter->GetWeapon2() == nullptr)
 		{
-			// CharacterOverlay->ActivateWeapon(false, 1);
 			CharacterOverlay->SetWeaponImage(nullptr, 1);
 		}
 		else if (MainCharacter->GetWeapon2() && MainCharacter->GetWeapon2() == MainCharacter->GetEquippedWeapon())

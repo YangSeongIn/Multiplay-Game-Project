@@ -9,46 +9,57 @@
 #include "ItemDataComponent.h"
 #include "../Pickups/Pickup.h"
 #include "../Pickups/AmmoPickup.h"
+#include "Net/UnrealNetwork.h"
 
 UInventoryComponent::UInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-
 }
 
 void UInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(UInventoryComponent, Slots);
 }
 
 UTexture2D* UInventoryComponent::GetWeaponImage(AWeapon* WeaponToFind, bool bDetailImage)
 {
 	FString ItemIDToFind = "";
-	if (WeaponToFind && WeaponToFind->GetItemDataComponent())
+
+	if (WeaponToFind == nullptr || WeaponToFind->GetItemDataComponent() == nullptr) 
+		return nullptr;
+
+	ItemIDToFind = WeaponToFind->GetItemDataComponent()->GetItemID().RowName.ToString();
+
+	if (ItemIDToFind == "") 
+		return nullptr;
+
+	FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemIDToFind), "");
+
+	if (ItemStruct == nullptr) 
+		return nullptr;
+
+	if (bDetailImage)
 	{
-		ItemIDToFind = WeaponToFind->GetItemDataComponent()->GetItemID().RowName.ToString();
-		if (ItemIDToFind != "")
-		{
-			FItemStruct* ItemStruct = InventoryDataTable->FindRow<FItemStruct>(FName(ItemIDToFind), "");
-			if (ItemStruct)
-			{
-				if (bDetailImage)
-				{
-					return ItemStruct->DetailThumbnail;
-				}
-				else
-				{
-					return ItemStruct->Thumbnail;
-				}
-			}
-			else
-			{
-				return nullptr;
-			}
-		}
+		return ItemStruct->DetailThumbnail;
+	}
+	else
+	{
+		return ItemStruct->Thumbnail;
 	}
 	return nullptr;
+}
+
+// when player die
+void UInventoryComponent::RemoveAllContents()
+{
+	for (int32 i = 0; i < Slots.Num(); i++)
+	{
+		//DropInventoryItemByDragging(i);
+		AItem* ItemToSpawn = Slots[i].Item;
+		DropPickup(ItemToSpawn, i);
+	}
 }
 
 void UInventoryComponent::BeginPlay()
@@ -89,11 +100,8 @@ void UInventoryComponent::AddToWeaponSlot(AWeapon* Weapon, FString ItemID, int32
 		WeaponInfos[1].Weapon = Weapon;
 		WeaponInfos[1].WeaponNum = EWeaponNum::EWN_Weapon2;
 	}
-	if (OnWeaponInfoUpdate.IsBound())
-	{
-		OnWeaponInfoUpdate.Broadcast();
-	}
-	UpdateWeaponInfoSlot(Weapon, AmmoQuantity, CarriedAmmoQuantity);
+	UpdateWeaponInfoSlot(CombatComponent->GetEquippedWeapon());
+	UpdateWeaponInfoSlot(CombatComponent->GetSecondaryWeapon());
 }
 
 void UInventoryComponent::AddToSelectedWeaponSlot(AItem* Item, EWeaponNum WeaponNum)
@@ -109,43 +117,19 @@ void UInventoryComponent::AddToSelectedWeaponSlot(AItem* Item, EWeaponNum Weapon
 		WeaponInfos[n].ItemType = EItemType::EIT_Weapon;
 		WeaponInfos[n].Weapon = Cast<AWeapon>(Item);
 	}
-	if (OnWeaponInfoUpdate.IsBound())
-	{
-		OnWeaponInfoUpdate.Broadcast();
-	}
+	UpdateWeaponInfoSlot(CombatComponent->GetEquippedWeapon());
+	UpdateWeaponInfoSlot(CombatComponent->GetSecondaryWeapon());
 }
 
-TTuple<bool, int> UInventoryComponent::AddToInventory(AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName, EWeaponType WeaponType)
+void UInventoryComponent::AddToInventory(AItem* Item, int32 Quantity, EItemType ItemType, FString ItemID, FString InherenceName, EWeaponType WeaponType)
 {
 	FInventorySlotStruct Slot{ Quantity, ItemType, ItemID, InherenceName, Item, WeaponType };
 	Slots.Add(Slot);
-	
+
 	if (OnInventoryUpdate.IsBound())
 	{
 		OnInventoryUpdate.Broadcast();
 	}
-	return MakeTuple(true, 0);
-}
-
-void UInventoryComponent::RemoveFromInventory(FString ItemID, int Quantity)
-{
-	//Slots.Remove(Item);
-}
-
-TTuple<int, bool> UInventoryComponent::FindSlot(FString ItemID)
-{
-	for (int i = 0; i < Slots.Num(); i++)
-	{
-		FInventorySlotStruct x = Slots[i];
-		if (x.ItemID == ItemID)
-		{
-			if (x.Quantity < GetMaxStackSize(ItemID))
-			{
-				return MakeTuple(i, true);
-			}
-		}
-	}
-	return MakeTuple(-1, false);
 }
 
 int32 UInventoryComponent::GetMaxStackSize(FString ItemID)
@@ -193,6 +177,20 @@ void UInventoryComponent::DEBUGPrintContents()
 	}
 }
 
+void UInventoryComponent::DEBUGPrintOverlappedItems()
+{
+	for (int i = 0; i < OverlappedItems.Num(); i++)
+	{
+		FInventorySlotStruct x = OverlappedItems[i];
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			5,
+			FColor::Blue,
+			FString::Printf(TEXT("%d : %s, %d"), i, *x.ItemID, x.Quantity)
+		);
+	}
+}
+
 void UInventoryComponent::TransferSlots(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
 {
 	if (SourceInventory == nullptr || Slots.Num() <= SourceIndex) return;
@@ -219,10 +217,8 @@ void UInventoryComponent::TransferWeaponInfos(/*UInventoryComponent* SourceInven
 		WeaponInfos[0].WeaponNum = EWeaponNum::EWN_Weapon1;
 		WeaponInfos[1].WeaponNum = EWeaponNum::EWN_Weapon2;
 
-		if (OnWeaponInfoUpdate.IsBound())
-		{
-			OnWeaponInfoUpdate.Broadcast();
-		}
+		UpdateWeaponInfoSlot(CombatComponent->GetEquippedWeapon());
+		UpdateWeaponInfoSlot(CombatComponent->GetSecondaryWeapon());
 		if (Character && Character->GetCombatComponent())
 		{
 			if (Character->HasAuthority())
@@ -260,10 +256,8 @@ void UInventoryComponent::DropWeaponByDragging(EWeaponNum WeaponNum)
 		CombatComponent->DropWeaponByDragging(WeaponNum);
 		int32 Num = WeaponNum == EWeaponNum::EWN_Weapon1 ? 0 : 1;
 		WeaponInfos[Num] = { -1, -1, EItemType::EIT_MAX, EWeaponNum(Num), "", nullptr };
-		if (OnWeaponInfoUpdate.IsBound())
-		{
-			OnWeaponInfoUpdate.Broadcast();
-		}
+		UpdateWeaponInfoSlot(CombatComponent->GetEquippedWeapon());
+		UpdateWeaponInfoSlot(CombatComponent->GetSecondaryWeapon());
 	}
 }
 
@@ -276,13 +270,39 @@ void UInventoryComponent::DropInventoryItemByDragging(int32 ContentIndex)
 		DropPickup(ItemToSpawn, ContentIndex);
 	}
 
-	Slots.RemoveAt(ContentIndex);
+	AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon();
+	if (EquippedWeapon)
+	{
+		UpdateWeaponInfoSlot(EquippedWeapon);
+	}
+
+	//MulticastBroadCast();
+	OnInventoryUpdate.Broadcast();
+	OnOverlappedItemUpdate.Broadcast();
+}
+
+void UInventoryComponent::MulticastBroadCast_Implementation()
+{
+	OnInventoryUpdate.Broadcast();
+	OnOverlappedItemUpdate.Broadcast();
+}
+
+void UInventoryComponent::ServerRemoveItemFromSlot_Implementation(const int32& ContentIndex)
+{
+	AItem* ItemToSpawn = Slots[ContentIndex].Item;
+	UWorld* World = GetOwner()->GetWorld();
+	if (World && ItemToSpawn && Character)
+	{
+		DropPickup(ItemToSpawn, ContentIndex);
+	}
 
 	AWeapon* EquippedWeapon = CombatComponent->GetEquippedWeapon();
 	if (EquippedWeapon)
 	{
-		UpdateWeaponInfoSlot(EquippedWeapon, EquippedWeapon->GetAmmo(), EquippedWeapon->GetCarriedAmmo());
+		UpdateWeaponInfoSlot(EquippedWeapon);
 	}
+
+	//MulticastBroadCast();
 	OnInventoryUpdate.Broadcast();
 	OnOverlappedItemUpdate.Broadcast();
 }
@@ -292,10 +312,16 @@ void UInventoryComponent::DropPickup(AItem* ItemToSpawn, const int32& ContentInd
 	APickup* Pickup = Cast<APickup>(ItemToSpawn);
 	if (Pickup)
 	{
-		Pickup->SetActive(true, Character->GetGroundLocation());
 		DropAmmo(Pickup, ContentIndex);
-		UpdateAmmoSlot();
-		CombatComponent->GetEquippedWeapon()->SetHUDAmmo();
+		Pickup->SetActive(true, Character->GetGroundLocation());
+
+		Slots.RemoveAt(ContentIndex);
+
+
+		if (CombatComponent->GetEquippedWeapon())
+		{
+			CombatComponent->GetEquippedWeapon()->SetHUDAmmo();
+		}
 	}
 }
 
@@ -306,61 +332,8 @@ void UInventoryComponent::DropAmmo(APickup* Pickup, const int32& ContentIndex)
 	{
 		CombatComponent->SubAmmo(AmmoPickup->GetWeaponType(), Slots[ContentIndex].Quantity);
 		AmmoPickup->GetItemDataComponent()->SetQuantity(Slots[ContentIndex].Quantity);
-	}
-}
-
-int32 UInventoryComponent::GetAmmoIndexFromInventory()
-{
-	for (int32 i = 0; i < Slots.Num(); i++)
-	{
-		if (Slots[i].ItemType == EItemType::EIT_Ammo && CombatComponent && Slots[i].WeaponType == CombatComponent->GetEquippedWeapon()->GetWeaponType())
-		{
-			return  i;
-		}
-	}
-	return -1;
-}
-
-void UInventoryComponent::ServerTransferSlots_Implementation(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
-{
-	TransferSlots(SourceIndex, SourceInventory, TargetIndex);
-}
-
-void UInventoryComponent::AddOverlappedItem(FString ItemID, int32 Quantity, EItemType ItemType, FString InherenceName, AItem* Item)
-{
-	FInventorySlotStruct SlotStruct;
-	SlotStruct.ItemID = ItemID;
-	SlotStruct.Quantity = Quantity;
-	SlotStruct.ItemType = ItemType;
-	SlotStruct.InherenceName = InherenceName;
-	SlotStruct.Item = Item;
-	OverlappedItems.Add(SlotStruct);
-}
-
-void UInventoryComponent::RemoveOverlappedItem(FString InherenceName)
-{
-	for (int32 i = 0; i < OverlappedItems.Num(); i++)
-	{
-		if (OverlappedItems[i].InherenceName == InherenceName)
-		{
-			OverlappedItems.RemoveAt(i);
-		}
-	}
-}
-
-void UInventoryComponent::UpdateWeaponInfoSlot(AWeapon* EquippedWeapon, int32 Ammo, int32 CarriedAmmo)
-{
-	for (FEquippedWeaponSlotStruct& Slot : WeaponInfos)
-	{
-		if (Slot.Weapon == EquippedWeapon)
-		{
-			Slot.AmmoQuantity = Ammo;
-			Slot.CarriedAmmoQuantity = CarriedAmmo;
-		}
-	}
-	if (OnWeaponInfoUpdate.IsBound())
-	{
-		OnWeaponInfoUpdate.Broadcast();
+		UpdateWeaponInfoSlot(CombatComponent->GetEquippedWeapon());
+		UpdateWeaponInfoSlot(CombatComponent->GetSecondaryWeapon());
 	}
 }
 
@@ -370,10 +343,84 @@ void UInventoryComponent::UpdateAmmoSlot()
 	if (Index == -1) return;
 	Slots[Index].Quantity--;
 
-	if (Slots[GetAmmoIndexFromInventory()].Quantity <= 0)
+	if (Slots[Index].Quantity <= 0)
 	{
 		Slots.RemoveAt(Index);
 	}
 
 	OnInventoryUpdate.Broadcast();
+	//MulticastBroadCast();
+}
+
+int32 UInventoryComponent::GetAmmoIndexFromInventory()
+{
+	for (int32 i = 0; i < Slots.Num(); i++)
+	{
+		if (Slots[i].ItemType == EItemType::EIT_Ammo && CombatComponent && CombatComponent->GetEquippedWeapon() && Slots[i].WeaponType == CombatComponent->GetEquippedWeapon()->GetWeaponType())
+		{
+			return  i;
+		}
+	}
+	return -1;
+}
+
+//void UInventoryComponent::ServerTransferSlots_Implementation(int SourceIndex, UInventoryComponent* SourceInventory, int TargetIndex)
+//{
+//	TransferSlots(SourceIndex, SourceInventory, TargetIndex);
+//}
+//
+//void UInventoryComponent::AddOverlappedItem(FString ItemID, int32 Quantity, EItemType ItemType, FString InherenceName, AItem* Item)
+//{
+//	FInventorySlotStruct SlotStruct;
+//	SlotStruct.ItemID = ItemID;
+//	SlotStruct.Quantity = Quantity;
+//	SlotStruct.ItemType = ItemType;
+//	SlotStruct.InherenceName = InherenceName;
+//	SlotStruct.Item = Item;
+//	OverlappedItems.Add(SlotStruct);
+//}
+//
+//void UInventoryComponent::RemoveOverlappedItem(FString InherenceName)
+//{
+//	for (int32 i = 0; i < OverlappedItems.Num(); i++)
+//	{
+//		if (OverlappedItems[i].InherenceName == InherenceName)
+//		{
+//			OverlappedItems.RemoveAt(i);
+//			return;
+//		}
+//	}
+//}
+
+void UInventoryComponent::UpdateWeaponInfoSlot(AWeapon* WeaponToUpdate)
+{
+	bool bCheckWeapon1 = CombatComponent->GetEquippedWeapon() 
+		&& CombatComponent->GetEquippedWeapon()->GetItemDataComponent() 
+		&& CombatComponent->GetCarriedAmmoMap().Contains(CombatComponent->GetEquippedWeapon()->GetWeaponType());
+	if (bCheckWeapon1)
+	{
+		WeaponInfos[0].AmmoQuantity = CombatComponent->GetEquippedWeapon()->GetAmmo();
+		WeaponInfos[0].CarriedAmmoQuantity = CombatComponent->GetCarriedAmmoMap()[CombatComponent->GetEquippedWeapon()->GetWeaponType()];
+		WeaponInfos[0].ItemID = CombatComponent->GetEquippedWeapon()->GetItemDataComponent()->GetItemID().RowName.ToString();
+		WeaponInfos[0].ItemType = CombatComponent->GetEquippedWeapon()->GetItemDataComponent()->GetItemType();
+		WeaponInfos[0].Weapon = CombatComponent->GetEquippedWeapon();
+		WeaponInfos[0].WeaponNum = EWeaponNum::EWN_Weapon1;
+	}
+	bool bCheckWeapon2 = CombatComponent->GetSecondaryWeapon()
+		&& CombatComponent->GetSecondaryWeapon()->GetItemDataComponent()
+		&& CombatComponent->GetCarriedAmmoMap().Contains(CombatComponent->GetSecondaryWeapon()->GetWeaponType());
+	if (bCheckWeapon2)
+	{
+		WeaponInfos[1].AmmoQuantity = CombatComponent->GetSecondaryWeapon()->GetAmmo();
+		WeaponInfos[1].CarriedAmmoQuantity = CombatComponent->GetCarriedAmmoMap()[CombatComponent->GetSecondaryWeapon()->GetWeaponType()];
+		WeaponInfos[1].ItemID = CombatComponent->GetSecondaryWeapon()->GetItemDataComponent()->GetItemID().RowName.ToString();
+		WeaponInfos[1].ItemType = CombatComponent->GetSecondaryWeapon()->GetItemDataComponent()->GetItemType();
+		WeaponInfos[1].Weapon = CombatComponent->GetSecondaryWeapon();
+		WeaponInfos[1].WeaponNum = EWeaponNum::EWN_Weapon2;
+	}
+	
+	if (OnWeaponInfoUpdate.IsBound())
+	{
+		OnWeaponInfoUpdate.Broadcast();
+	}
 }

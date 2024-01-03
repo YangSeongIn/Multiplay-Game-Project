@@ -11,8 +11,6 @@
 UItemDataComponent::UItemDataComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-
-
 }
 
 
@@ -43,7 +41,6 @@ void UItemDataComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 {
 	if (MainCharacter == nullptr || MainCharacter->GetInventoryComponent() == nullptr) return;
-
 	if (OwningActor)
 	{
 		if (ItemType != EItemType::EIT_Weapon)
@@ -51,22 +48,9 @@ void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 			AItem* Item = Cast<AItem>(OwningActor);
 			if (Item)
 			{
-				TTuple<bool, int> ItemTuple = MainCharacter->GetInventoryComponent()->AddToInventory(Item, Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName(), WeaponType);
-				if (ItemType == EItemType::EIT_Ammo)
-				{
-					UCombatComponent* Combat = MainCharacter->GetCombatComponent();
-					if (Combat)
-					{
-						Combat->PickupAmmo(WeaponType, Quantity);
-					}
-
-					// Hard cording. Fix later.
-					APickup* Pickup = Cast<APickup>(OwningActor);
-					if (Pickup)
-					{
-						Pickup->SetActive(false);
-					}
-				}
+				MainCharacter->GetInventoryComponent()->AddToInventory(Item, Quantity, ItemType, ItemID.RowName.ToString(), OwningActor->GetName(), WeaponType);
+				AddAmmoToInventory(MainCharacter);
+				SetPickupActiveFalse();
 			}	
 		}
 		else
@@ -76,6 +60,27 @@ void UItemDataComponent::Interact(AMainCharacter* MainCharacter)
 			{
 				MainCharacter->GetInventoryComponent()->AddToWeaponSlot(Weapon, ItemID.RowName.ToString(), 0, Weapon->GetCarriedAmmo(), ItemType);
 			}
+		}
+	}
+}
+
+void UItemDataComponent::SetPickupActiveFalse()
+{
+	APickup* Pickup = Cast<APickup>(OwningActor);
+	if (Pickup)
+	{
+		Pickup->SetActive(false);
+	}
+}
+
+void UItemDataComponent::AddAmmoToInventory(AMainCharacter* MainCharacter)
+{
+	if (ItemType == EItemType::EIT_Ammo)
+	{
+		UCombatComponent* Combat = MainCharacter->GetCombatComponent();
+		if (Combat)
+		{
+			Combat->PickupAmmo(WeaponType, Quantity);
 		}
 	}
 }

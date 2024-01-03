@@ -8,13 +8,13 @@
 #include "MainPlayerController.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYGAME_API AMainPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+
 public:
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
@@ -47,37 +47,42 @@ public:
 
 	void SaveData(FCustomizingSaveDataStruct Data);
 
+	UFUNCTION(Server, Reliable)
+	void ServerPossessCharacter();
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
 	virtual void OnRep_Pawn() override;
-
+	virtual void OnRep_PlayerState() override;
 	/**
 	* Sync time between client and server
 	*/
 
 	// Requests the current server time, passing in the client's time when the request was sent
 	UFUNCTION(Server, Reliable)
-		void ServerRequestServerTime(float TimeOfClientRequest);
+	void ServerRequestServerTime(float TimeOfClientRequest);
 
 	// Reports the current server time to the client in response to ServerRequestServerTime
 	UFUNCTION(Client, Reliable)
-		void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
+	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
 
 	float ClientServerDelta = 0.f;	// abs(server time - client time)
 
 	UPROPERTY(EditAnywhere, Category = Time)
-		float TimeSyncFrequency = 5.f;
+	float TimeSyncFrequency = 5.f;
 
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime);
 	void PollInit();
+	void PossessInit();
+	void HUDInit();
 
 	UFUNCTION(Server, Reliable)
-		void ServerCheckMatchState();
+	void ServerCheckMatchState();
 
 	UFUNCTION(Client, Reliable)
-		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);
 
 	void HighPingWarning();
 	void StopHighPingWarning();
@@ -85,21 +90,25 @@ protected:
 
 private:
 	UPROPERTY()
-		class APlayerHUD* PlayerHUD;
+	class APlayerHUD* PlayerHUD;
+
+	UPROPERTY()
+	class AStartupHUD* MenuHUD;
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
 	float WarmupTime = 0.f;
 	uint32 CountdownInt = 0;
+	bool bIsAlreadyPossessed = false;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
-		FName MatchState;
+	FName MatchState;
 
 	UFUNCTION()
-		void OnRep_MatchState();
+	void OnRep_MatchState();
 
 	UPROPERTY()
-		class UCharacterOverlay* CharacterOverlay;
+	class UCharacterOverlay* CharacterOverlay;
 
 	bool bInitializeCharacterOvelay = false;
 
@@ -111,13 +120,13 @@ private:
 	float HighPingRunningTime = 0.f;
 
 	UPROPERTY(EditAnywhere)
-		float HighPingDuration = 5.f;
+	float HighPingDuration = 5.f;
 
 	UPROPERTY(EditAnywhere)
-		float CheckPingFrequency = 20.f;
+	float CheckPingFrequency = 20.f;
 
 	UPROPERTY(EditAnywhere)
-		float HighPingThreshold = 50.f;
+	float HighPingThreshold = 50.f;
 
 	float PingAnimationRunningTime = 0.f;
 
@@ -131,4 +140,5 @@ private:
 public:
 	FORCEINLINE class ACharacterMeshCapture* GetMeshCapture() { return MeshCapture; };
 	FCustomizingSaveDataStruct GetSaveGameData();
+	FORCEINLINE TObjectPtr<class AMainCharacter> GetOwningCharacter() { return OwningCharacter; };
 };

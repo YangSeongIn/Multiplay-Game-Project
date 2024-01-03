@@ -12,8 +12,6 @@ APickup::APickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
 	PickupMesh->SetupAttachment(RootComponent);
@@ -87,7 +85,7 @@ void APickup::MulticastSetActive_Implementation(bool bIsActive)
 	if (bIsActive)
 	{
 		PickupMesh->SetVisibility(true);
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 	else
 	{

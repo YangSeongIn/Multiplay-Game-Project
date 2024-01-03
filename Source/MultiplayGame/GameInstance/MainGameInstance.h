@@ -29,4 +29,11 @@ private:
 	USaveGameData* SaveGameData;
 
 	FString SaveData = "SaveData";
+
+	UPROPERTY(EditAnywhere)
+	class UCostomizingDataAsset* CustomizingDataAsset;
+
+public:
+	FORCEINLINE class UCostomizingDataAsset* GetCustomizingDataAsset() { return CustomizingDataAsset; };
+
 };

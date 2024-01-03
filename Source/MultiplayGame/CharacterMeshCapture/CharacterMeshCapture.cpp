@@ -8,6 +8,8 @@
 #include "../HUD/Inventory.h"
 #include "Components/Image.h"
 #include "../Character/MainCharacter.h"
+#include "../GameInstance/MainGameInstance.h"
+#include "../Data/CostomizingDataAsset.h"
 
 ACharacterMeshCapture::ACharacterMeshCapture()
 {
@@ -51,13 +53,17 @@ ACharacterMeshCapture::ACharacterMeshCapture()
 	SkeletalMeshOnBack->SetupAttachment(UpperBodyMesh, FName("WeaponSocket"));
 }
 
-void ACharacterMeshCapture::ClientUpdateMeshCapture_Implementation(AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData)
+void ACharacterMeshCapture::UpdateMeshCapture(AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	HairMesh->SetSkeletalMesh(MainCharacter->Hairs[CustomizingSaveData.HairIndex].Mesh);
-	GoggleMesh->SetSkeletalMesh(MainCharacter->Goggles[CustomizingSaveData.GoggleIndex].Mesh);
-	BeardMesh->SetSkeletalMesh(MainCharacter->Beards[CustomizingSaveData.BeardIndex].Mesh);
-	UpperBodyMesh->SetSkeletalMesh(MainCharacter->UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
-	LowerBodyMesh->SetSkeletalMesh(MainCharacter->LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	HairMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->HairMeshes[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->GoggleMeshes[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->BeardsMeshes[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes[CustomizingSaveData.LowerBodyIndex].Mesh);
+
+	MainCharacter->UpperBodyMesh->SetMaterial(0, UpperBodyMesh->GetMaterial(0));
 }
 
 void ACharacterMeshCapture::BeginPlay()

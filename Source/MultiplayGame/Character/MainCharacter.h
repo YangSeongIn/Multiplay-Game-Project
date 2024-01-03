@@ -27,6 +27,7 @@ public:
 	virtual void PostInitializeComponents() override;
 	virtual void Destroyed() override;
 	virtual void PossessedBy(AController* NewController) override;
+
 	void PlayFireMontage(bool bAiming);
 	void PlayElimMontage();
 	void PlayReloadMontage();
@@ -44,29 +45,18 @@ public:
 
 	void EquipButtonPressed();
 
+	void Equip(class AItem* ItemOverlapped);
+
 	void AttachItemOnMeshCapture(const FString SocketName);
 	void DetachItemOnMeshCapture(const FString SocketName);
 
 	UFUNCTION(Server, Reliable)
 	void ServerAttachItemOnMeshCapture(const FString& SocketName);
-	
-	UFUNCTION(Server, Reliable)
-	void ServerApplyCustomizingInfo(FCustomizingSaveDataStruct CustomizingSaveData);
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastApplyCustomizingInfo(FCustomizingSaveDataStruct CustomizingSaveData);
 	UFUNCTION(Client, Reliable)
 	void ClientUpdateMeshCapture(FCustomizingSaveDataStruct CustomizingSaveData);
-
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> Hairs;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> Goggles;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> Beards;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> UpperBodies;
-	UPROPERTY(EditAnywhere)
-	TArray<FCustomizingInfoStruct> LowerBodies;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* UpperBodyMesh;
@@ -93,6 +83,8 @@ public:
 
 	FOnApplyingCustomizingInfo OnApplyingCustomizingInfo;
 
+	void UpdateHUDHealth();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnRep_PlayerState() override;
@@ -118,7 +110,6 @@ protected:
 	virtual void Jump() override;
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-	void UpdateHUDHealth();
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
@@ -137,7 +128,9 @@ private:
 	class UWidgetComponent* OverheadWidget;
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_OverlappingItem) // Using Callback when property update
-		class AItem* OverlappingItem;
+	class AItem* OverlappingItem;
+	UPROPERTY(VisibleAnywhere, Replicated)
+	TArray<class AItem*> OverlappingItems;
 
 	UFUNCTION()
 	void OnRep_OverlappingItem(class AItem* Item);
@@ -323,4 +316,8 @@ public:
 	int32 GetCarriedAmmo(class AWeapon* Weapon);
 	FVector GetGroundLocation();
 	//FORCEINLINE class USaveGameData* GetSaveGameData() { return SaveGameData; };
+
+	FORCEINLINE TArray<class AItem*> GetOverlappingItems() { return OverlappingItems; };
+	FORCEINLINE void AddToOverlappingItems(class AItem* ItemToAdd) { OverlappingItems.Add(ItemToAdd); };
+	FORCEINLINE void RemoveFromOveralappingItems(class AItem* ItemToRemove) { OverlappingItems.Remove(ItemToRemove); };
 };

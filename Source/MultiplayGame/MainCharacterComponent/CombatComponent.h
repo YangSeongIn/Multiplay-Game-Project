@@ -36,6 +36,10 @@ public:
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 	void SubAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 
+	void SubSecondaryWeaponAmmo(int32& AmmoAmount);
+
+	void SubEquippedWeaponAmmo(EWeaponType WeaponType, int32& AmmoAmount);
+
 	void SwapWeapon(int32 WeaponNum);
 	void SwapTwoWeapons();
 	void EquipWeaponByAroundItem(EWeaponNum NumOfWeapon, FString InherenceName, class AItem* DraggedItem);
@@ -189,19 +193,19 @@ private:
 		int32 StartingSubmachineGunAmmo = 0; // 20
 
 	UPROPERTY(EditAnywhere)
-		int32 MaxARAmmo = 90;
+		int32 MaxARAmmo = 500;
 
 	UPROPERTY(EditAnywhere)
-		int32 MaxRocketAmmo = 24;
+		int32 MaxRocketAmmo = 500;
 
 	UPROPERTY(EditAnywhere)
-		int32 MaxPistolAmmo = 56;
+		int32 MaxPistolAmmo = 500;
 
 	UPROPERTY(EditAnywhere)
-		int32 MaxSniperAmmo = 40;
+		int32 MaxSniperAmmo = 500;
 
 	UPROPERTY(EditAnywhere)
-		int32 MaxSubmachineGunAmmo = 40;
+		int32 MaxSubmachineGunAmmo = 500;
 
 	void InitializeCarriedAmmo();
 
@@ -226,8 +230,11 @@ private:
 
 public:
 	FORCEINLINE void SetInventoryComponent(class UInventoryComponent* InventoryComp) { InventoryComponent = InventoryComp; };
+	FORCEINLINE void SetPlayerController(class AMainPlayerController* PlayerController) { Controller = PlayerController; };
 	FORCEINLINE int32 GetCarriedAmmo(EWeaponType TypeOfWeapon) { return CarriedAmmoMap.Contains(TypeOfWeapon) ? CarriedAmmoMap[TypeOfWeapon] : -1; };
 	FORCEINLINE class AWeapon* GetWeapon1() { return Weapon1; };
 	FORCEINLINE class AWeapon* GetWeapon2() { return Weapon2; };
 	FORCEINLINE class AWeapon* GetEquippedWeapon() { return EquippedWeapon; };
+	FORCEINLINE class AWeapon* GetSecondaryWeapon() { return SecondaryWeapon; };
+	FORCEINLINE TMap<EWeaponType, int32> GetCarriedAmmoMap() { return CarriedAmmoMap; };
 };

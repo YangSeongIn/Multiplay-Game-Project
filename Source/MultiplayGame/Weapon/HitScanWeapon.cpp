@@ -7,6 +7,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "Particles/ParticleSystem.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -48,10 +50,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						UDamageType::StaticClass()
 					);
 				}
-				if (ImpactParticles)
-				{
-					UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
-				}
+				MulticastSpawnHitImpact(FireHit);
 			}
 			if (HitSound)
 			{
@@ -74,5 +73,37 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 		}
+	}
+}
+
+void AHitScanWeapon::MulticastSpawnHitImpact_Implementation(const FHitResult HitResult)
+{
+		switch (UGameplayStatics::GetSurfaceType(HitResult))
+		{
+		case SurfaceType1:
+			SetBulletMarks(ImpactParticlesMetal, ImpactSoundMetal, HitResult);
+			break;
+		case SurfaceType2:
+			break;
+		case SurfaceType3:
+			break;
+		case SurfaceType4:
+			SetBulletMarks(ImpactParticlesBody, ImpactSoundBody, HitResult);
+			break;
+		default:
+			SetBulletMarks(ImpactParticlesBody, ImpactSoundBody, HitResult);
+			break;
+		}
+}
+
+void AHitScanWeapon::SetBulletMarks(UParticleSystem* Particle, USoundCue* SoundCue, const FHitResult HitResult)
+{
+	if (Particle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Particle, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
+	}
+	if (SoundCue)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundCue, HitResult.ImpactPoint);
 	}
 }

@@ -38,6 +38,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "../SaveGameData/SaveGameData.h"
 #include "../HUD/CustomizingWidget.h"
+#include "../Data/CostomizingDataAsset.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -63,10 +64,10 @@ AMainCharacter::AMainCharacter()
 	OverheadWidget->SetupAttachment(RootComponent);
 
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	CombatComponent->SetIsReplicated(true);
+	CombatComponent->SetIsReplicatedByDefault(true);
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
-	InventoryComponent->SetIsReplicated(true);
+	InventoryComponent->SetIsReplicatedByDefault(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -117,6 +118,8 @@ void AMainCharacter::Elim()
 	if (CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		CombatComponent->EquippedWeapon->Dropped();
+		CombatComponent->SecondaryWeapon->Dropped();
+		InventoryComponent->RemoveAllContents();
 	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
@@ -161,34 +164,23 @@ void AMainCharacter::ElimTimerFinished()
 	}
 }
 
-void AMainCharacter::ServerApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
-{
-	UE_LOG(LogTemp, Log, TEXT("Received"));
-	MulticastApplyCustomizingInfo(CustomizingSaveData);
-}
-
 void AMainCharacter::MulticastApplyCustomizingInfo_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	UE_LOG(LogTemp, Log, TEXT("MULTICAST"));
-	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
-	GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
-	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
-	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
-	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
-	if (IsLocallyControlled())
-	{
-		ClientUpdateMeshCapture(CustomizingSaveData);
-	}
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	HairMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->HairMeshes[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->GoggleMeshes[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->BeardsMeshes[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes[CustomizingSaveData.LowerBodyIndex].Mesh);
 }
 
 void AMainCharacter::ClientUpdateMeshCapture_Implementation(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	if (Controller)
+	if (Controller == nullptr) return;
+	if (ACharacterMeshCapture* MeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture())
 	{
-		if (ACharacterMeshCapture* MeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture())
-		{
-			MeshCapture->ClientUpdateMeshCapture(this, CustomizingSaveData);
-		}
+		MeshCapture->UpdateMeshCapture(this, CustomizingSaveData);
 	}
 }
 
@@ -204,7 +196,7 @@ void AMainCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	
+
 	UpdateHUDHealth();
 
 	if (HasAuthority())
@@ -213,38 +205,22 @@ void AMainCharacter::BeginPlay()
 		Delegate_OnMontageNotifyBegin.BindUFunction(this, FName("OnMontageNotifyBegin"));
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.Add(Delegate_OnMontageNotifyBegin);
 	}
-
-	/*MainPlayerState = MainPlayerState == nullptr ? GetPlayerState<AMainPlayerState>() : MainPlayerState;
-	if (MainPlayerState)
-	{
-		FCustomizingSaveDataStruct SaveData = MainPlayerState->GetSaveGameData();
-		MulticastApplyCustomizingInfo_Implementation(SaveData);
-	}*/
-
-	OnApplyingCustomizingInfo.AddUFunction(this, FName("MulticastApplyCustomizingInfo"));
 }
 
 void AMainCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-	MainPlayerState = MainPlayerState == nullptr ? GetPlayerState<AMainPlayerState>() : MainPlayerState;
-	if (MainPlayerState)
-	{
-		/*UE_LOG(LogTemp, Log, TEXT("OnRep_PlayerState"));
-		MainPlayerState->SetMeshWithCustomizingInfo();*/
-		/*FCustomizingSaveDataStruct CustomizingSaveData = MainPlayerState->GetSaveGameData();
-		ServerApplyCustomizingInfo(CustomizingSaveData);*/
-		
-	}
 }
 
 void AMainCharacter::SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData)
 {
-	HairMesh->SetSkeletalMesh(Hairs[CustomizingSaveData.HairIndex].Mesh);
-	GoggleMesh->SetSkeletalMesh(Goggles[CustomizingSaveData.GoggleIndex].Mesh);
-	BeardMesh->SetSkeletalMesh(Beards[CustomizingSaveData.BeardIndex].Mesh);
-	UpperBodyMesh->SetSkeletalMesh(UpperBodies[CustomizingSaveData.UpperBodyIndex].Mesh);
-	LowerBodyMesh->SetSkeletalMesh(LowerBodies[CustomizingSaveData.LowerBodyIndex].Mesh);
+	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
+	if (GameInstance == nullptr) return;
+	HairMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->HairMeshes[CustomizingSaveData.HairIndex].Mesh);
+	GoggleMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->GoggleMeshes[CustomizingSaveData.GoggleIndex].Mesh);
+	BeardMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->BeardsMeshes[CustomizingSaveData.BeardIndex].Mesh);
+	UpperBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes[CustomizingSaveData.UpperBodyIndex].Mesh);
+	LowerBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes[CustomizingSaveData.LowerBodyIndex].Mesh);
 }
 
 // Called every frame
@@ -300,6 +276,7 @@ void AMainCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME_CONDITION(AMainCharacter, OverlappingItem, COND_OwnerOnly);
 	DOREPLIFETIME(AMainCharacter, Health);
 	DOREPLIFETIME_CONDITION(AMainCharacter, InventoryWidget, COND_OwnerOnly);
+	DOREPLIFETIME(AMainCharacter, OverlappingItems);
 }
 
 void AMainCharacter::PostInitializeComponents()
@@ -329,17 +306,7 @@ void AMainCharacter::Destroyed()
 void AMainCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	UE_LOG(LogTemp, Log, TEXT("2222222222222"));
-	//AMainPlayerController* PlayerController = Cast<AMainPlayerController>(NewController);
-	//if (PlayerController)
-	//{
-	//	FCustomizingSaveDataStruct SaveData = PlayerController->GetSaveGameData();
-	//	if (OnApplyingCustomizingInfo.IsBound())
-	//	{
-	//		OnApplyingCustomizingInfo.Broadcast(SaveData);
-	//	}
-	//	//ServerApplyCustomizingInfo(SaveData);
-	//}
+	
 }
 
 void AMainCharacter::PlayFireMontage(bool bAiming)
@@ -500,25 +467,30 @@ void AMainCharacter::EquipButtonPressed()
 {
 	if (CombatComponent && OverlappingItem)
 	{
-		if (HasAuthority())
+		Equip(OverlappingItem);
+	}
+}
+
+void AMainCharacter::Equip(AItem* ItemOverlapped)
+{
+	if (HasAuthority())
+	{
+		AWeapon* WeaponToEquip = Cast<AWeapon>(ItemOverlapped);
+		// weapon
+		if (WeaponToEquip)
 		{
-			UE_LOG(LogTemp, Log, TEXT("EQUIPED"));
-			AWeapon* WeaponToEquip = Cast<AWeapon>(OverlappingItem);
-			// weapon
-			if (WeaponToEquip)
-			{
-				CombatComponent->EquipWeapon(WeaponToEquip);
-			}
-			// item
-			else if (OverlappingItem->GetItemDataComponent())
-			{
-				OverlappingItem->GetItemDataComponent()->Interact(this);
-			}
+			CombatComponent->EquipWeapon(WeaponToEquip);
 		}
-		else
+		// item
+		else if (ItemOverlapped->GetItemDataComponent())
 		{
-			ServerEquipButtonPressed();
+			ItemOverlapped->GetItemDataComponent()->Interact(this);
 		}
+		OverlappingItems.Num() == 0 ? OverlappingItem = nullptr : OverlappingItem = OverlappingItems[0];
+	}
+	else
+	{
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -638,28 +610,21 @@ void AMainCharacter::InventoryKeyPressed()
 {
 	if (InventoryWidgetClass)
 	{
-		if (IsLocallyControlled())
+		if (InventoryWidget)
 		{
-			if (InventoryWidget)
-			{
-				InventoryWidget->RemoveFromParent();
-				InventoryWidget = nullptr;
-			}
-			else
-			{
-				InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
-				if (InventoryWidget)
-				{
-					InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
-					InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
-					InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
-					InventoryWidget->AddToViewport();
-				}
-			}
+			InventoryWidget->RemoveFromParent();
+			InventoryWidget = nullptr;
 		}
 		else
 		{
-			ServerInventoryWidget();
+			InventoryWidget = Cast<UInventory>(CreateWidget(GetWorld(), InventoryWidgetClass));
+			if (InventoryWidget)
+			{
+				InventoryWidget->InventoryGrid->DisplayInventory(InventoryComponent);
+				InventoryWidget->InventoryWeaponInfo->DisplayWeaponInfo(InventoryComponent);
+				InventoryWidget->AroundItemGrid->DisplayOverlappedItems(InventoryComponent);
+				InventoryWidget->AddToViewport();
+			}
 		}
 	}
 }
@@ -930,6 +895,7 @@ void AMainCharacter::ServerEquipButtonPressed_Implementation()
 		{
 			OverlappingItem->GetItemDataComponent()->Interact(this);
 		}
+		OverlappingItems.Num() == 0 ? OverlappingItem = nullptr : OverlappingItem = OverlappingItems[0];
 	}
 }
 
@@ -948,7 +914,6 @@ void AMainCharacter::SetOverlappingItem(AItem* Item)
 		OverlappingItem->ShowPickupWidget(false);
 	}
 	OverlappingItem = Item;
-
 	// for server
 	if (IsLocallyControlled())
 	{

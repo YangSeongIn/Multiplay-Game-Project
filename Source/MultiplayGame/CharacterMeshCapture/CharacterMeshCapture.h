@@ -44,8 +44,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* HandMesh;
 
-	UFUNCTION(Client, Reliable)
-	void ClientUpdateMeshCapture(class AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData);
+	void UpdateMeshCapture(class AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData);
 
 protected:
 	virtual void BeginPlay() override;

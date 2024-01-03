@@ -26,29 +26,29 @@ UCLASS()
 class MULTIPLAYGAME_API APlayerHUD : public AHUD
 {
 	GENERATED_BODY()
-	
+
 public:
 	virtual void DrawHUD() override;
 
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
-		TSubclassOf<class UUserWidget> CharacterOverlayClass;
+	TSubclassOf<class UUserWidget> CharacterOverlayClass;
 
 	UPROPERTY()
-		class UCharacterOverlay* CharacterOverlay;
+	class UCharacterOverlay* CharacterOverlay;
 
 	void AddCharacterOvelay();
 
 	UPROPERTY(EditAnywhere, Category = "Announcements")
-		TSubclassOf<class UUserWidget> AnnouncementClass;
+	TSubclassOf<class UUserWidget> AnnouncementClass;
 
 	UPROPERTY()
-		class UAnnouncement* Announcement;
+	class UAnnouncement* Announcement;
 
 	void AddAnnouncement();
 
 protected:
 	virtual void BeginPlay() override;
-	
+
 
 private:
 	FHUDPackage HUDPackage;
@@ -56,7 +56,7 @@ private:
 	void DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread, FLinearColor CrosshairColor);
 
 	UPROPERTY(EditAnywhere)
-		float CrosshairSpreadMax = 16.f;
+	float CrosshairSpreadMax = 16.f;
 
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; };

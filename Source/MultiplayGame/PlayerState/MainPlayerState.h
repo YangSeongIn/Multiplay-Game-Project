@@ -34,6 +34,7 @@ public:
 	class USaveGameData* SaveGameData;
 	FString SaveDataName = "SaveData";
 
+	void SetSaveGameData();
 	void SetMeshWithCustomizingInfo();
 
 private:
@@ -47,8 +48,5 @@ private:
 
 	UPROPERTY()
 	FCustomizingSaveDataStruct CustomizingSaveData;
-
-	/*UPROPERTY()
-	FCustomizingCategoryArrays CustomizingDatas;*/
 
 };

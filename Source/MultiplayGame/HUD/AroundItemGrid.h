@@ -7,7 +7,7 @@
 #include "AroundItemGrid.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYGAME_API UAroundItemGrid : public UUserWidget
@@ -21,19 +21,21 @@ protected:
 
 private:
 	UPROPERTY()
-		class UInventoryComponent* InventoryComponent;
+	class UInventoryComponent* InventoryComponent;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), meta = (AllowPrivateAccess = "true"))
-		class UWrapBox* ItemGrid;
+	class UWrapBox* ItemGrid;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<UUserWidget> InventorySlotWidgetClass;
+	TSubclassOf<UUserWidget> InventorySlotWidgetClass;
 
 public:
 	UFUNCTION()
-		void DisplayOverlappedItems(class UInventoryComponent* InventoryComp);
+	void DisplayOverlappedItems(class UInventoryComponent* InventoryComp);
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateInventory();
 	UFUNCTION()
-		void UpdateInventory();
+	void UpdateInventory();
 	UFUNCTION()
-		void UpdatedInventory();
+	void UpdatedInventory();
 };

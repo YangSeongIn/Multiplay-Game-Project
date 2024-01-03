@@ -20,6 +20,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void Interact(class AMainCharacter* MainCharacter);
+	void SetPickupActiveFalse();
+	void AddAmmoToInventory(class AMainCharacter* MainCharacter);
 
 protected:
 	virtual void BeginPlay() override;

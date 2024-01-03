@@ -7,7 +7,7 @@
 #include "HitScanWeapon.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYGAME_API AHitScanWeapon : public AWeapon
@@ -18,20 +18,36 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere)
-		float Damage = 20.f;
+	float Damage = 20.f;
 
 	UPROPERTY(EditAnywhere)
-		class UParticleSystem* ImpactParticles;
+	class UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
-		UParticleSystem* BeamParticles;
+	UParticleSystem* BeamParticles;
 
 	UPROPERTY(EditAnywhere)
-		UParticleSystem* MuzzleFlash;
+	UParticleSystem* MuzzleFlash;
 
 	UPROPERTY(EditAnywhere)
-		class USoundCue* FireSound;
+	class USoundCue* FireSound;
 
 	UPROPERTY(EditAnywhere)
-		class USoundCue* HitSound;
+	class USoundCue* HitSound;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSpawnHitImpact(const FHitResult HitResult);
+	void SetBulletMarks(UParticleSystem* Particle, USoundCue* SoundCue, const FHitResult HitResult);
+
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* ImpactParticlesMetal;
+
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* ImpactParticlesBody;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactSoundMetal;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactSoundBody;
 };

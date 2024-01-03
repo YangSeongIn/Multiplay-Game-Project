@@ -35,7 +35,7 @@ bool UInventoryGrid::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEv
 			AMainCharacter* Character = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 			if (Character)
 			{
-				Character->EquipButtonPressed();
+				Character->Equip(SlotForDragDrop->GetItem());
 			}
 		}
 	}
@@ -71,9 +71,16 @@ void UInventoryGrid::UpdateInventory()
 					ItemSlot->SetWeaponType(Arr[i].WeaponType);
 					ItemGrid->AddChildToWrapBox(ItemSlot);
 				}
-				if (!InventoryComponent->OnInventoryUpdate.IsBound())
+				if (Character->HasAuthority())
 				{
-					InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
+					if (!InventoryComponent->OnInventoryUpdate.IsBound())
+					{
+						InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
+					}
+				}
+				else
+				{
+					ServerBinding();
 				}
 			}
 		}
@@ -84,4 +91,17 @@ void UInventoryGrid::UpdatedInventory()
 {
 	ItemGrid->ClearChildren();
 	UpdateInventory();
+}
+
+void UInventoryGrid::MulticastBinding_Implementation()
+{
+	if (!InventoryComponent->OnInventoryUpdate.IsBound())
+	{
+		InventoryComponent->OnInventoryUpdate.AddUFunction(this, FName("UpdatedInventory"));
+	}
+}
+
+void UInventoryGrid::ServerBinding_Implementation()
+{
+	MulticastBinding();
 }

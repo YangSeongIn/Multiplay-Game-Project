@@ -82,7 +82,6 @@ void UEquippedSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPoi
 		if (DragItemVisual)
 		{
 			DragItemVisual->SetItemID(ItemID);
-			UE_LOG(LogTemp, Log, TEXT("ItemID : %s"), *ItemID);
 			if (DragDropSlot)
 			{
 				DragDropSlot->SetEquippedSlotType(EquippedSlotType);

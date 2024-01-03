@@ -29,25 +29,33 @@ void AMainGameMode::BeginPlay()
 
 	LevelStartingTime = GetWorld()->GetTimeSeconds();
 
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacterMeshCapture::StaticClass(), MeshCaptures);
+	/*UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacterMeshCapture::StaticClass(), MeshCaptures);*/
 }
 
+void AMainGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+}
+
+void AMainGameMode::OnPlayerPossessCharacter(AMainPlayerController* PossessedController, APawn* PossessedPawn)
+{
+	Controllers.Add(PossessedController);
+	for (AMainPlayerController* CurrentController : Controllers)
+	{
+		AMainCharacter* Character = Cast<AMainCharacter>(CurrentController->GetPawn());
+		if (Character)
+		{
+			Character->MulticastApplyCustomizingInfo(CurrentController->GetSaveGameData());
+		}
+	}
+}
 
 AActor* AMainGameMode::GetMeshCapture(int32 n)
 {
-	
-	//UE_LOG(LogTemp, Warning, TEXT("Instance MeshCaptures Num 22 : %d"), MeshCaptures.Num());
 	if (MeshCaptures.Num() <= n) return nullptr;
 	return MeshCaptures[n];
 }
-
-bool AMainGameMode::CanAddPlayerNum()
-{
-	if (PlayerNum + 1 < MeshCaptures.Num()) return true;
-	return false;
-}
-
-
 
 void AMainGameMode::Tick(float DeltaTime)
 {

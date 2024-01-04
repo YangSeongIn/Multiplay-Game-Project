@@ -27,7 +27,7 @@ AItem::AItem()
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	ItemDataComponent = CreateDefaultSubobject<UItemDataComponent>(TEXT("ItemDataComponent"));
-	ItemDataComponent->SetIsReplicatedByDefault(true);
+	ItemDataComponent->SetIsReplicated(true);
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);

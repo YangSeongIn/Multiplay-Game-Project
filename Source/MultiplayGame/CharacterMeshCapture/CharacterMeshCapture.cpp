@@ -53,7 +53,7 @@ ACharacterMeshCapture::ACharacterMeshCapture()
 	SkeletalMeshOnBack->SetupAttachment(UpperBodyMesh, FName("WeaponSocket"));
 }
 
-void ACharacterMeshCapture::UpdateMeshCapture(AMainCharacter* MainCharacter, FCustomizingSaveDataStruct CustomizingSaveData)
+void ACharacterMeshCapture::UpdateMeshCapture(FCustomizingSaveDataStruct CustomizingSaveData)
 {
 	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
 	if (GameInstance == nullptr) return;
@@ -62,8 +62,6 @@ void ACharacterMeshCapture::UpdateMeshCapture(AMainCharacter* MainCharacter, FCu
 	BeardMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->BeardsMeshes[CustomizingSaveData.BeardIndex].Mesh);
 	UpperBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes[CustomizingSaveData.UpperBodyIndex].Mesh);
 	LowerBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes[CustomizingSaveData.LowerBodyIndex].Mesh);
-
-	MainCharacter->UpperBodyMesh->SetMaterial(0, UpperBodyMesh->GetMaterial(0));
 }
 
 void ACharacterMeshCapture::BeginPlay()

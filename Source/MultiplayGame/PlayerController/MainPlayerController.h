@@ -74,6 +74,7 @@ protected:
 
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime);
+	void MeshCaptureInit();
 	void PollInit();
 	void PossessInit();
 	void HUDInit();
@@ -132,8 +133,6 @@ private:
 
 	UPROPERTY()
 	class ACharacterMeshCapture* MeshCapture;
-
-	void Init();
 
 	FString SaveDataName = "SaveData";
 

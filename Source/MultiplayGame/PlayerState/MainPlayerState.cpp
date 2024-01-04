@@ -7,6 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "../SaveGameData/SaveGameData.h"
 #include "Kismet/GameplayStatics.h"
+#include "../CharacterMeshCapture/CharacterMeshCapture.h"
 
 void AMainPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -105,7 +106,6 @@ void AMainPlayerState::UpdateCustomizingInfo()
 FCustomizingSaveDataStruct AMainPlayerState::GetSaveGameData()
 {
 	SetSaveGameData();
-	// SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
 	if (SaveGameData)
 	{
 		CustomizingSaveData = SaveGameData->GetCutomizingSaveData();
@@ -117,7 +117,6 @@ FCustomizingSaveDataStruct AMainPlayerState::GetSaveGameData()
 void AMainPlayerState::SaveData(FCustomizingSaveDataStruct DataToSave)
 {
 	SetSaveGameData();
-	// SaveGameData == nullptr ? Cast<USaveGameData>(UGameplayStatics::LoadGameFromSlot(SaveDataName, 0)) : SaveGameData;
 	if (SaveGameData)
 	{
 		SaveGameData->SetCutomizingSaveData(DataToSave);
@@ -133,6 +132,10 @@ void AMainPlayerState::SetMeshWithCustomizingInfo()
 	if (Character)
 	{
 		Character->MulticastApplyCustomizingInfo(SaveData);
-		Character->ClientUpdateMeshCapture(SaveData);
+
+		if (!HasAuthority())
+		{
+			Character->ClientUpdateMeshCapture(SaveData);
+		}	
 	}
 }

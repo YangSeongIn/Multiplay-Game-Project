@@ -30,10 +30,10 @@ void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	MeshCaptureInit();
 	HUDInit();
 	ServerCheckMatchState();
 	PossessInit();
-	Init();
 }
 
 void AMainPlayerController::ServerPossessCharacter_Implementation()
@@ -41,26 +41,35 @@ void AMainPlayerController::ServerPossessCharacter_Implementation()
 	Possess(Cast<AMainCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AMainCharacter::StaticClass())));
 }
 
-void AMainPlayerController::Init()
+void AMainPlayerController::MeshCaptureInit()
 {
-	if (MeshCapture) return;
+	if (MeshCapture) 
+		return;
+
 	TArray<AActor*> Locs;
 	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MeshCaptureLocation"), Locs);
-	if (Locs.Num() == 0 || Locs[0] == nullptr) return;
+	if (Locs.Num() == 0 || Locs[0] == nullptr) 
+		return;
 
 	Locs[0]->SetActorHiddenInGame(true);
 
 	UObject* SpawnActor = Cast<UObject>(StaticLoadObject(UObject::StaticClass(), NULL, TEXT("/Script/Engine.Blueprint'/Game/Blueprints/CharacterMeshCapture/BP_CharacterMeshCapture.BP_CharacterMeshCapture'")));
-	if (SpawnActor == nullptr) return;
+	if (SpawnActor == nullptr) 
+		return;
 	
 	UBlueprint* GeneratedBP = Cast<UBlueprint>(SpawnActor);
-	if (GeneratedBP == nullptr) return;
+	if (GeneratedBP == nullptr) 
+		return;
 		
 	UWorld* World = GetWorld();
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	MeshCapture = World->SpawnActor<ACharacterMeshCapture>(GeneratedBP->GeneratedClass, Locs[0]->GetActorLocation(), Locs[0]->GetActorRotation(), SpawnParams);
+
+	AMainPlayerState* MainPlayerState = Cast<AMainPlayerState>(PlayerState);
+	if (MainPlayerState)
+		MeshCapture->UpdateMeshCapture(MainPlayerState->GetSaveGameData());
 }
 
 void AMainPlayerController::OnPossess(APawn* InPawn)
@@ -82,12 +91,6 @@ void AMainPlayerController::OnPossess(APawn* InPawn)
 	SetHUDHealth(MainCharacter->GetHealth(), MainCharacter->GetMaxHealth());
 	PollInit();
 	MainCharacter->GetCombatComponent()->SetPlayerController(this);
-
-	AMainPlayerState* mainPlayerState = Cast<AMainPlayerState>(PlayerState);
-	if (mainPlayerState)
-	{
-		mainPlayerState->SetMeshWithCustomizingInfo();
-	}
 }
 
 void AMainPlayerController::Tick(float DeltaTime)
@@ -323,37 +326,17 @@ void AMainPlayerController::SetHUDTime()
 void AMainPlayerController::OnRep_Pawn()
 {
 	Super::OnRep_Pawn();
-	OwningCharacter = Cast<AMainCharacter>(GetPawn());
 
-	if (OwningCharacter)
-	{
-		Init();
-	} 
-
-	AMainPlayerState* mainPlayerState = Cast<AMainPlayerState>(PlayerState);
-	if (mainPlayerState)
-	{
-		mainPlayerState->SetMeshWithCustomizingInfo();
-	}
 }
 
 void AMainPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	FOutputDeviceNull ar;
-	GetLevel()->GetLevelScriptActor()->CallFunctionByNameWithArguments(TEXT("SetCamera"), ar, NULL, true);
-
 	OwningCharacter = Cast<AMainCharacter>(GetPawn());
 	if (OwningCharacter)
 	{
 		OwningCharacter->GetCombatComponent()->SetPlayerController(this);
-	}
-	
-	AMainPlayerState* mainPlayerState = Cast<AMainPlayerState>(PlayerState);
-	if (mainPlayerState)
-	{
-		mainPlayerState->SetMeshWithCustomizingInfo();
 	}
 }
 

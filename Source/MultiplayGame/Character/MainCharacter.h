@@ -40,9 +40,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerInventoryWidget();
 
-	/*UFUNCTION(Server, Reliable)
-		void ServerAddPlayerNum();*/
-
 	void EquipButtonPressed();
 
 	void Equip(class AItem* ItemOverlapped);
@@ -55,6 +52,7 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastApplyCustomizingInfo(FCustomizingSaveDataStruct CustomizingSaveData);
+
 	UFUNCTION(Client, Reliable)
 	void ClientUpdateMeshCapture(FCustomizingSaveDataStruct CustomizingSaveData);
 
@@ -79,8 +77,6 @@ public:
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "SkeletalMesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* HandMesh;
 
-	void SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData);
-
 	FOnApplyingCustomizingInfo OnApplyingCustomizingInfo;
 
 	void UpdateHUDHealth();
@@ -88,6 +84,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnRep_PlayerState() override;
+
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartJump();

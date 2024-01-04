@@ -64,10 +64,10 @@ AMainCharacter::AMainCharacter()
 	OverheadWidget->SetupAttachment(RootComponent);
 
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	CombatComponent->SetIsReplicatedByDefault(true);
+	CombatComponent->SetIsReplicated(true);
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
-	InventoryComponent->SetIsReplicatedByDefault(true);
+	InventoryComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -145,7 +145,6 @@ void AMainCharacter::MulticastElim_Implementation()
 	{
 		CombatComponent->FireButtonPressed(false);
 	}
-	//GetCharacterMovement()->StopMovementImmediately();
 	if (MainPlayerController)
 	{
 		DisableInput(MainPlayerController);
@@ -180,7 +179,7 @@ void AMainCharacter::ClientUpdateMeshCapture_Implementation(FCustomizingSaveData
 	if (Controller == nullptr) return;
 	if (ACharacterMeshCapture* MeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture())
 	{
-		MeshCapture->UpdateMeshCapture(this, CustomizingSaveData);
+		MeshCapture->UpdateMeshCapture(CustomizingSaveData);
 	}
 }
 
@@ -210,17 +209,23 @@ void AMainCharacter::BeginPlay()
 void AMainCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+
+	MainPlayerState = Cast<AMainPlayerState>(GetPlayerState());
+	if (MainPlayerState == nullptr) 
+		return;
+
+	MainPlayerState->SetMeshWithCustomizingInfo();
 }
 
-void AMainCharacter::SetCustomizingInfoToMesh(FCustomizingSaveDataStruct CustomizingSaveData)
+void AMainCharacter::PossessedBy(AController* NewController)
 {
-	UMainGameInstance* GameInstance = Cast<UMainGameInstance>(GetGameInstance());
-	if (GameInstance == nullptr) return;
-	HairMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->HairMeshes[CustomizingSaveData.HairIndex].Mesh);
-	GoggleMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->GoggleMeshes[CustomizingSaveData.GoggleIndex].Mesh);
-	BeardMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->BeardsMeshes[CustomizingSaveData.BeardIndex].Mesh);
-	UpperBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->UpperBodyMeshes[CustomizingSaveData.UpperBodyIndex].Mesh);
-	LowerBodyMesh->SetSkeletalMesh(GameInstance->GetCustomizingDataAsset()->LowerBodyMeshes[CustomizingSaveData.LowerBodyIndex].Mesh);
+	Super::PossessedBy(NewController);
+
+	MainPlayerState = Cast<AMainPlayerState>(GetPlayerState());
+	if (MainPlayerState == nullptr)
+		return;
+
+	MainPlayerState->SetMeshWithCustomizingInfo();
 }
 
 // Called every frame
@@ -301,12 +306,6 @@ void AMainCharacter::Destroyed()
 	{
 		CombatComponent->EquippedWeapon->Destroy();
 	}
-}
-
-void AMainCharacter::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-	
 }
 
 void AMainCharacter::PlayFireMontage(bool bAiming)
@@ -498,7 +497,7 @@ void AMainCharacter::AttachItemOnMeshCapture(const FString SocketName)
 {
 	if (IsLocallyControlled())
 	{
-		CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
+		CharacterMeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture();
 		if (SocketName == "RightHandSocket" && GetEquippedWeapon() && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
@@ -518,7 +517,7 @@ void AMainCharacter::DetachItemOnMeshCapture(const FString SocketName)
 {
 	if (IsLocallyControlled())
 	{
-		CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
+		CharacterMeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture();
 		if (SocketName == "RightHandSocket" && CharacterMeshCapture)
 		{
 			CharacterMeshCapture->SetSkeletalMeshOnHand(nullptr);
@@ -536,7 +535,7 @@ void AMainCharacter::DetachItemOnMeshCapture(const FString SocketName)
 
 void AMainCharacter::ServerAttachItemOnMeshCapture_Implementation(const FString& SocketName)
 {
-	CharacterMeshCapture = Cast<AMainPlayerController>(GetOwner())->GetMeshCapture();
+	CharacterMeshCapture = Cast<AMainPlayerController>(Controller)->GetMeshCapture();
 	if (SocketName == "RightHandSocket" && GetEquippedWeapon() && CharacterMeshCapture)
 	{
 		CharacterMeshCapture->SetSkeletalMeshOnHand(GetEquippedWeapon()->GetWeaponMesh()->GetSkeletalMeshAsset());
